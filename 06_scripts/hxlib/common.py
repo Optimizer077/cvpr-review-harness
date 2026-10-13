@@ -33,6 +33,9 @@ SECTION_KEYS: tuple[str, ...] = (
     "supplementary",
     "references",
 )
+# Key of numbered sections that are not scored (acknowledgements, funding, reproducibility statement).
+# It is not in SECTION_KEYS, so no job scores it; its text stays out of the scored sections.
+UNSCORED_SECTION = "excluded"
 
 
 def load_json(path: Path) -> Any:

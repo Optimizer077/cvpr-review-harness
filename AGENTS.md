@@ -54,15 +54,24 @@ Every card needs an entry in `personas.json`.
 ## The loop
 1. `hx.py new --paper main.pdf --supp supplement.pdf --tex <paper src> --name <paper> [--figures]`
    freezes round 1 and writes prompts. `--figures` adds the FIG job (persona F01): section-only,
-   it scores every main-paper figure and table and lists located defects.
+   it scores every main-paper figure and table and lists located defects. `new` and `round` refuse
+   a PDF with anonymity flags (author block, e-mail, CVF/arXiv stamp, acknowledgements, grant
+   numbers, own code URL). Pass `--allow-identified` only when the user wants that copy reviewed
+   (every reviewer prompt then says to ignore it), plus `--cutoff <original submission deadline>`
+   for a camera-ready or preprint copy.
 2. Root starts one fresh sub-agent per `prompts/initial/*.md`, all in parallel, with exactly:
    "Read <prompt> and follow it exactly. Write only the files it names."
 3. `hx.py validate <session>` must report every job OK. Use `hx.py status <session>` to launch
    only missing or invalid jobs; valid outputs are complete. Repair a failed job once with the
    concrete validation error. If the same failure recurs without new evidence or a changed
    approach, report the blocker instead of repeating identical launches. Never hand-edit a review.
-4. `hx.py aggregate <session>` writes `SCORES.md` and `PROGRESS.md`. If only reviews were asked
-   for, stop here and report.
+   `validate` also prints warnings that do not fail a job (`review.md` more than 20% outside the
+   persona's word band, more weaknesses than `max_weaknesses`, review.md and review.json point
+   counts differ, grounding problems). Report them; do not relaunch a valid job for a warning.
+4. `hx.py aggregate <session>` writes `SCORES.md`, `GROUNDING.md` and `PROGRESS.md`. The
+   `Grounding:` line under the SCORES.md headline counts verified quotes and bad references;
+   `GROUNDING.md` lists them (held-out details only in `heldout/GROUNDING.md`). If only reviews
+   were asked for, stop here and report.
 5. `aggregate` also writes `FEEDBACK.md`: every open point from the feedback group with the
    reviewer's suggested fix and what would satisfy them, plus all section scores (and figure
    scores with FIG). `hx.py stage <session> writer` works on the latest non-retest round, refuses
@@ -113,7 +122,8 @@ Every card needs an entry in `personas.json`.
 8. Prompt hashes are stored in `ROUND.json`. Do not edit a prompt after it is launched.
 9. Check the "Injection / hidden-text flags" line in `SCORES.md` (key `injection_flags` in
    `SCORES.json`; hidden text or reviewer-directed sentences found in the PDF). Any flag must be
-   removed from the paper before the round counts.
+   removed from the paper before the round counts. An "Anonymity flags" line (key
+   `anonymity_flags`) means the copy identifies its authors: tell the user before submission.
 
 ## Multi-agent practice
 - Start one sub-agent per job (in Claude Code: individual Agent calls, not the Workflow tool).
@@ -126,9 +136,11 @@ Every card needs an entry in `personas.json`.
 - Python: `python3` >= 3.9 with PyMuPDF (`pip install pymupdf`); everything else is the standard
   library. Use `python` where that is the interpreter's name.
 - Tests: `python3 06_scripts/hx.py personas`, `smoke_test.py`, `test_venues.py`,
-  `test_efficiency.py`, `test_figures.py`, `test_figure_job.py`, `test_loop_regressions.py` and
-  `test_validation_regressions.py` (all in `06_scripts/`) must pass after any change to scripts,
-  personas, panels or protocol.
+  `test_efficiency.py`, `test_figures.py`, `test_figure_job.py`, `test_figure_locate.py`,
+  `test_loop_regressions.py`, `test_validation_regressions.py`, `test_grounding.py`,
+  `test_anonymity.py`, `test_prompts.py` and `test_integration.py` (all in `06_scripts/`; run each
+  as `python3 06_scripts/<name>.py`) must pass after any change to scripts, personas, panels or
+  protocol.
 - Public copy: `python3 06_scripts/export_public.py` writes a `release/` folder and zip (no
   sessions, no build notes, no raw downloads). It fails if exported text matches a generic
   identity pattern (home-directory paths, e-mail addresses) or a private pattern from

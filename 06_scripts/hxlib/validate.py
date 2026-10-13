@@ -2,9 +2,12 @@
 
 Agent output must be UTF-8 (a byte-order mark is accepted); other encodings are reported as a
 validation failure, so `status` lists the job as pending instead of crashing. Required text fields
-must be non-empty strings (null is not text). Section-only jobs have no first impression.
+must be non-empty strings (null is not text). A section criterion is an int on the criterion scale,
+or null when the reviewer could not observe it. Section-only jobs have no first impression.
 `previous_rating` in a satisfaction verdict must be null or a rating on the overall scale; aggregation
 takes the authoritative value from the job's recorded rating (`aggregate.recorded_rating`).
+Advisory findings that do not invalidate a job (length, number of points, grounding) are in
+`review_warnings`.
 """
 from __future__ import annotations
 
@@ -156,7 +159,7 @@ def _check_sections(job: dict, data: dict, scales: dict, criteria: dict[str, lis
         if set(crit) != set(criteria.get(sec, [])):
             errs.append(f"{sec}.criteria keys {sorted(crit)} != {criteria.get(sec)}")
         for cname, val in crit.items():
-            if not _in_range(val, scales["criterion"]):
+            if val is not None and not _in_range(val, scales["criterion"]):  # null = not observed
                 errs.append(f"{sec}.criteria.{cname} {val!r} out of range")
         for field in ("main_issue", "location", "one_point_fix"):
             if not _text(entry.get(field)):

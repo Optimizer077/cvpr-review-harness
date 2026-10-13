@@ -13,9 +13,10 @@ import re
 from pathlib import Path
 from typing import Optional
 
+from .anonymity import identified_line
 from .common import PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, list_rounds, load_json, load_scales, \
     review_dir, round_dir, save_json, scale_wording
-from .prompts import read_text, rubric_for
+from .prompts import has_line_numbers, read_text, rubric_for, targets_block
 from .figure_job import figure_summary, figure_table
 
 from .venues import instrument, scales_for, reviewer_card, common_rules, venue_block, careful
@@ -163,6 +164,24 @@ def _block_text(lines: list[str]) -> str:
     return "\n".join(lines[:end]).strip()
 
 
+def _read_answers(path: Path) -> str:
+    """Text of an answer sheet: UTF-8 (BOM accepted), UTF-16 with a BOM (PowerShell 5 `>`), else
+    cp1252 (Windows editors) with a warning.
+
+    The authors write this file with their own editor; a wrong encoding must not stop the next
+    round. Bytes cp1252 does not define are replaced.
+    """
+    data = path.read_bytes()
+    if data[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        return data.decode("utf-16")
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        logger.warning("%s is not UTF-8 (%s at byte %d); reading it as Windows-1252. Save it as UTF-8 to be "
+                       "sure every character reaches the reviewers.", path, exc.reason, exc.start)
+        return data.decode("cp1252", errors="replace")
+
+
 def parse_response(path: Path, open_ids: Optional[set[str]] = None) -> dict[str, str]:
     """Map item id -> the authors' block text.
 
@@ -170,13 +189,15 @@ def parse_response(path: Path, open_ids: Optional[set[str]] = None) -> dict[str,
     and ends at the next such heading, even inside a code fence, or at any other markdown heading
     outside a code fence. So neither an annotated heading nor a trailing summary section ends up in
     another reviewer's block. With `open_ids`, every `###` heading that names no open point is logged
-    as a warning: its text reaches no reviewer.
+    as a warning: its text reaches no reviewer. The file is read as UTF-8 (a byte-order mark is
+    accepted) or UTF-16 with a byte-order mark; any other file falls back to cp1252 with a warning
+    (`_read_answers`).
     """
     if not path.exists():
         return {}
     segments: dict[str, list[list[str]]] = {}
     current: Optional[list[str]] = None
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in _read_answers(path).splitlines():
         level3, key = _item_heading(line)
         if level3 and open_ids is not None and key not in open_ids:
             logger.warning("%s: heading %r names no open point; no reviewer sees its text", path, line.strip())
@@ -243,7 +264,10 @@ def _thread(session_path: Path, job_id: str, upto: int) -> list[str]:
 
 def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict], rpath: Path,
                    session_path: Path) -> str:
-    """Prompt for one reviewer to judge the authors' answers against the new draft."""
+    """Prompt for one reviewer to judge the authors' answers against the new draft.
+
+    It opens with the Targets box of the initial prompts (`prompts.targets_block`, satisfy variant).
+    """
     from .figure_render import figure_reading_line
 
     persona = personas[job["reviewer"]]
@@ -252,9 +276,11 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     view = {"front": "view_front.txt", "skim": "view_skim.txt", "main": "view_main.txt",
             "full": "view_full.txt"}[job["view"]]
     figures = figure_reading_line(snap, job["view"])
+    identified = identified_line(rnd["paper"])
     parts = [
         f"# Answer check {job['job_id']} - {session['venue']}, round {rnd['round']:02d}: the authors "
         "answered your review and revised the paper",
+        targets_block(session, persona, job, has_line_numbers(rnd, snap), stage="satisfy"),
         "## 1. Who you are\n\n" + reviewer_card(session, persona),
         "## 2. Rules for every reviewer\n\n" + common_rules(session),
         "## 3. How to judge the answers\n\n" + instrument(session, PROTOCOL_DIR / (
@@ -266,7 +292,7 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
         f"- The authors' answers to them: `{sdir / 'AUTHOR_RESPONSE.md'}`.\n"
         f"- The NEW draft: `{snap / view}` and `{snap / 'main.pdf'}`"
         + (f", supplement `{snap / 'supplement.pdf'}`" if (snap / "supplement.pdf").exists() else "") + ".\n"
-        + (f"- {figures}\n" if figures else "") +
+        + (f"- {figures}\n" if figures else "") + (f"- {identified}\n" if identified else "") +
         "- Nothing else: no other reviewers, no held-out folders, no LaTeX, no project folders.",
     ]
     if job["sections"]:

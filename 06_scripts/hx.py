@@ -3,8 +3,10 @@
 
     hx.py personas [--venue V]                       list reviewer personas (all, or one venue's)
     hx.py new --paper main.pdf [--supp s.pdf] [--tex DIR] --name mypaper [--venue V] [--panel P]
-              [--reviewers IDS] [--heldout IDS] [--figures] [--mode full|sections|both] [--sections KEYS] ...
-    hx.py round SESSION --paper main.pdf [--supp s.pdf] [--tex DIR]   next round on a revised draft
+              [--reviewers IDS] [--heldout IDS] [--figures] [--mode full|sections|both] [--sections KEYS]
+              [--cutoff YYYY-MM-DD] [--allow-identified] ...
+    hx.py round SESSION --paper main.pdf [--supp s.pdf] [--tex DIR] [--allow-identified]
+                                                     next round on a revised draft
     hx.py retest SESSION [--of N]                    same draft again, fresh reviewers (noise floor)
     hx.py stage SESSION {fixcheck,pairwise,writer} [--round N]   writer loop helpers; default: the last
                                                      review round (retest rounds are refused)
@@ -13,6 +15,8 @@
     hx.py status SESSION [--round N]                 jobs, files present, launch lines for the orchestrator
 
 `round` and `stage writer` refuse to build on a review round with pending or invalid jobs.
+`new` and `round` refuse a PDF that shows author or publication information (hxlib/anonymity.py)
+unless `--allow-identified` is given; `validate` prints advisory warnings (hxlib/review_warnings.py).
 """
 from __future__ import annotations
 
@@ -27,11 +31,14 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from hxlib.aggregate import aggregate_round, write_progress, write_round_report  # noqa: E402
+from hxlib.anonymity import IdentifiedCopyError, check_identified, flag_report  # noqa: E402
+from hxlib.cli_status import (identified_notice, invalid_jobs, print_launch, print_personas,  # noqa: E402
+                              print_status, round_arg, round_is_valid, stage_round, user_cutoff)
 from hxlib.common import (PROTOCOL_DIR, SESSIONS_DIR, TEMPLATE_DIR, list_rounds, load_json,  # noqa: E402
-                          load_scales, now_iso, resolve_session, review_dir, round_dir, save_json, today)
+                          load_scales, now_iso, resolve_session, round_dir, save_json, today)
 from hxlib.panel import (build_jobs, check_section_keys, draw_panel, is_reviewer, load_personas,  # noqa: E402
                          load_section_map)
-from hxlib.figure_job import figure_personas, inventory_ids, is_figure_job, load_inventory  # noqa: E402
+from hxlib.figure_job import figure_personas, is_figure_job  # noqa: E402
 from hxlib.figure_prompts import figure_satisfy_prompt  # noqa: E402
 from hxlib.venues import profile_for, freeze  # noqa: E402
 from hxlib.paper import snapshot_paper  # noqa: E402
@@ -39,6 +46,7 @@ from hxlib.prompts import write_initial_prompts  # noqa: E402
 from hxlib import dialogue  # noqa: E402
 from hxlib import prompts_stages as stages  # noqa: E402
 from hxlib.validate import validate_round  # noqa: E402
+from hxlib.review_warnings import round_warnings, validation_report  # noqa: E402
 from hxlib.efficiency import response_fingerprint, same_paper, changed_sections  # noqa: E402
 
 logger = logging.getLogger("hx")
@@ -87,7 +95,8 @@ def _build_round(session_path: Path, session: dict, number: int, rpath: Path, pd
     """Fill a new round folder: snapshot, jobs, answer-check inputs, prompts, then ROUND.json.
 
     A non-retest round whose PDFs equal the previous review round's gets no held-out jobs: the
-    held-out reviewers already judged that draft, and only the authors' answers changed.
+    held-out reviewers already judged that draft, and only the authors' answers changed. A new
+    snapshot with anonymity flags raises IdentifiedCopyError unless the session allows it.
     """
     personas = session.get("instruments", {}).get("personas") or load_personas()
     if retest_of is not None:
@@ -96,6 +105,7 @@ def _build_round(session_path: Path, session: dict, number: int, rpath: Path, pd
         paper = load_json(src / "ROUND.json")["paper"]
     else:
         paper = snapshot_paper(pdf, rpath / "snapshot", supp, tex)
+        check_identified(paper, bool(session.get("allow_identified")))
     prev_n = dialogue.last_dialogue_round(session_path, number) if retest_of is None and number > 1 else None
     previous = round_dir(session_path, prev_n) if prev_n else None
     prev_rnd = load_json(previous / "ROUND.json") if previous else None
@@ -132,6 +142,9 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
         raise FileExistsError(f"{rpath} already exists")
     try:
         _build_round(session_path, session, number, rpath, pdf, supp, tex, retest_of)
+    except IdentifiedCopyError:  # an expected refusal: the caller prints the flags
+        shutil.rmtree(rpath, ignore_errors=True)
+        raise
     except BaseException:  # any failure, Ctrl-C included: never leave a partial round behind
         logger.warning("round %d failed; removing the partial folder %s", number, rpath)
         shutil.rmtree(rpath, ignore_errors=True)
@@ -141,24 +154,7 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
     return rpath
 
 
-def _invalid_jobs(rnd: dict, rpath: Path) -> dict[str, list[str]]:
-    """Jobs of a round whose outputs are missing or fail validation."""
-    return {jid: errors for jid, errors in validate_round(rnd, rpath).items() if errors}
-
-
-def _round_is_valid(action: str, spath: Path, number: int, rnd: dict, rpath: Path) -> bool:
-    """Gate for commands that build on a round's reviews (the gate `aggregate` uses); prints why not."""
-    invalid = _invalid_jobs(rnd, rpath)
-    if not invalid:
-        return True
-    print(f"{action} refused: round {number} has pending or invalid jobs: {', '.join(invalid)}")
-    for jid, errors in invalid.items():
-        print(f"    {jid}: {errors[0]}" + (f" (+{len(errors) - 1} more)" if len(errors) > 1 else ""))
-    print(f"Run `hx.py status {spath.name} --round {number}`, finish or repair these jobs, then retry.")
-    return False
-
-
-def cmd_new(args: argparse.Namespace) -> None:
+def cmd_new(args: argparse.Namespace) -> int:
     pdf, supp, tex = Path(args.paper), Path(args.supp) if args.supp else None, Path(args.tex) if args.tex else None
     _require_inputs(pdf, supp, tex)
     only_sections = check_section_keys([s.strip() for s in args.sections.split(",")]) if args.sections else None
@@ -197,6 +193,7 @@ def cmd_new(args: argparse.Namespace) -> None:
                "panel_ids": panel_ids, "seed": args.seed, "mode": args.mode,
                "heldout_ids": args.heldout.split(",") if args.heldout else [], "loop": args.loop,
                "figures": bool(args.figures), "only_sections": only_sections,
+               "allow_identified": bool(args.allow_identified),
                "tex_dir": str(tex.resolve()) if tex else None, "rounds": []}
     freeze(session, personas, load_section_map(venue))
     spath.mkdir(parents=True)
@@ -205,12 +202,18 @@ def cmd_new(args: argparse.Namespace) -> None:
         constraints = constraints.replace("8 content pages + references; supplement unlimited.", profile["page_budget"])
         (spath / "AUTHOR_CONSTRAINTS.md").write_text(constraints, encoding="utf-8")
         rpath = _make_round(spath, session, 1, pdf, supp, tex)
+    except IdentifiedCopyError as exc:  # refused: no session is created
+        shutil.rmtree(spath, ignore_errors=True)
+        print(flag_report(exc.flags, "new", allowed=False, cutoff_set=bool(args.cutoff)))
+        return 1
     except BaseException:  # a session without a usable round 1 would only block the name
         logger.warning("session %s failed; removing %s", name, spath)
         shutil.rmtree(spath, ignore_errors=True)
         raise
     print(f"session {spath}\npanel {panel_ids}\nround 1 -> {rpath}")
-    _print_launch(rpath, "initial")
+    identified_notice(rpath, "new", bool(args.cutoff))
+    print_launch(rpath, "initial")
+    return 0
 
 
 def cmd_round(args: argparse.Namespace) -> int:
@@ -222,7 +225,7 @@ def cmd_round(args: argparse.Namespace) -> int:
     prev_n = dialogue.last_dialogue_round(spath, number)
     previous_path = round_dir(spath, prev_n)
     previous = load_json(previous_path / "ROUND.json")
-    if not _round_is_valid("round", spath, prev_n, previous, previous_path):
+    if not round_is_valid("round", spath, prev_n, previous, previous_path):
         return 1
     paper_unchanged = same_paper(pdf, supp, previous)
     open_ids = {item["id"] for item in dialogue.round_items(previous, previous_path)}
@@ -234,13 +237,20 @@ def cmd_round(args: argparse.Namespace) -> int:
               "Use status to resume pending jobs, or retest for an intentional repeat review.")
         return 0
     tex = Path(args.tex) if args.tex else (Path(session["tex_dir"]) if session.get("tex_dir") else None)
-    rpath = _make_round(spath, session, number, pdf, supp, tex)
+    if args.allow_identified:  # kept in SESSION.json once the round is built
+        session["allow_identified"] = True
+    try:
+        rpath = _make_round(spath, session, number, pdf, supp, tex)
+    except IdentifiedCopyError as exc:
+        print(flag_report(exc.flags, "round", allowed=False, cutoff_set=user_cutoff(session)))
+        return 1
     print(f"round {number} -> {rpath}")
+    identified_notice(rpath, "round", user_cutoff(session))
     skipped = load_json(rpath / "ROUND.json").get("heldout_skipped")
     if skipped:
         print(f"held-out reviewers skipped: {skipped}")
-    _print_launch(rpath, "initial")
-    _print_launch(rpath, "satisfy")
+    print_launch(rpath, "initial")
+    print_launch(rpath, "satisfy")
     return 0
 
 
@@ -251,29 +261,7 @@ def cmd_retest(args: argparse.Namespace) -> None:
     base = args.of or max(n for n in rounds if not load_json(round_dir(spath, n) / "ROUND.json").get("retest_of"))
     rpath = _make_round(spath, session, rounds[-1] + 1, None, None, None, retest_of=base)
     print(f"retest of round {base} -> {rpath}")
-    _print_launch(rpath, "initial")
-
-
-def _round_arg(spath: Path, value: Optional[int]) -> tuple[int, Path, dict]:
-    number = value or list_rounds(spath)[-1]
-    rpath = round_dir(spath, number)
-    return number, rpath, load_json(rpath / "ROUND.json")
-
-
-def _stage_round(spath: Path, value: Optional[int]) -> tuple[int, Path, dict]:
-    """Round a writer-loop stage works on: `--round N`, else the last review (non-retest) round.
-
-    A retest repeats an older draft with fresh reviewers: the writer answers review rounds, and
-    fixcheck and pairwise compare review rounds, so a retest round is refused.
-    """
-    latest = dialogue.last_dialogue_round(spath, list_rounds(spath)[-1] + 1)
-    number = value or latest
-    rpath = round_dir(spath, number)
-    rnd = load_json(rpath / "ROUND.json")
-    if rnd.get("retest_of"):
-        raise ValueError(f"round {number} is a retest of round {rnd['retest_of']}; writer-loop stages work "
-                         f"on review rounds (latest: {latest}). Omit --round or name a review round.")
-    return number, rpath, rnd
+    print_launch(rpath, "initial")
 
 
 def _writer_brief(session: dict, rnd: dict, rpath: Path, spath: Path) -> str:
@@ -288,9 +276,9 @@ def _writer_brief(session: dict, rnd: dict, rpath: Path, spath: Path) -> str:
 def cmd_stage(args: argparse.Namespace) -> int:
     spath = resolve_session(args.session)
     session = load_json(spath / "SESSION.json")
-    number, rpath, rnd = _stage_round(spath, args.round)
+    number, rpath, rnd = stage_round(spath, args.round)
     if args.stage == "writer":
-        if not _round_is_valid("stage writer", spath, number, rnd, rpath):
+        if not round_is_valid("stage writer", spath, number, rnd, rpath):
             return 1
         text = _writer_brief(session, rnd, rpath, spath)
     elif args.stage == "fixcheck":
@@ -300,22 +288,17 @@ def cmd_stage(args: argparse.Namespace) -> int:
     pdir = rpath / "prompts" / args.stage
     pdir.mkdir(parents=True, exist_ok=True)
     (pdir / f"{args.stage.upper()}.md").write_text(text, encoding="utf-8")
-    _print_launch(rpath, args.stage)
+    print_launch(rpath, args.stage)
     return 0
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
     spath = resolve_session(args.session)
-    number, rpath, rnd = _round_arg(spath, args.round)
+    number, rpath, rnd = round_arg(spath, args.round)
     results = validate_round(rnd, rpath)
-    bad = 0
-    for jid, errs in results.items():
-        print(f"{jid}: {'OK' if not errs else 'FAIL'}")
-        for err in errs:
-            print(f"    - {err}")
-        bad += bool(errs)
-    print(f"round {number}: {len(results) - bad}/{len(results)} valid")
-    return 1 if bad else 0
+    warnings = round_warnings(rnd, rpath, [jid for jid, errs in results.items() if not errs])
+    print(validation_report(number, results, warnings))
+    return 1 if any(results.values()) else 0
 
 
 def cmd_aggregate(args: argparse.Namespace) -> int:
@@ -324,7 +307,7 @@ def cmd_aggregate(args: argparse.Namespace) -> int:
     numbers = list_rounds(spath) if args.all else [args.round or list_rounds(spath)[-1]]
     for n in numbers:
         rp = round_dir(spath, n)
-        invalid = _invalid_jobs(load_json(rp / "ROUND.json"), rp)
+        invalid = invalid_jobs(load_json(rp / "ROUND.json"), rp)
         if invalid:
             print(f"round {n}: aggregation refused; validate and repair invalid jobs: {', '.join(invalid)}")
             return 1
@@ -342,57 +325,14 @@ def cmd_aggregate(args: argparse.Namespace) -> int:
     return 0
 
 
-def _print_launch(rpath: Path, stage: str, checks: Optional[dict] = None) -> None:
-    pdir = rpath / "prompts" / stage
-    if not pdir.exists():
-        return
-    paths = sorted(pdir.glob("*.md"))
-    if stage in ("initial", "satisfy"):
-        if checks is None:
-            checks = validate_round(load_json(rpath / "ROUND.json"), rpath)
-        paths = [p for p in paths if checks.get(p.stem)]
-    if not paths:
-        return
-    print(f"\nLaunch one fresh agent per pending prompt ({stage}); give each exactly this instruction:")
-    for p in paths:
-        print(f"  [{p.stem}] Read {p} and follow it exactly. Write only the files it names.")
-
-
 def cmd_status(args: argparse.Namespace) -> None:
     spath = resolve_session(args.session)
-    number, rpath, rnd = _round_arg(spath, args.round)
-    checks = validate_round(rnd, rpath)
-    print(f"{spath.name} round {number} (retest_of={rnd.get('retest_of')}), mode {rnd['mode']}")
-    if rnd.get("heldout_skipped"):
-        print(f"  held-out reviewers skipped: {rnd['heldout_skipped']}")
-    for job in rnd["jobs"]:
-        if job.get("stage") == "satisfy":
-            have = [f for f in ("reply.md", "satisfaction.json")
-                    if (rpath / "satisfaction" / job["job_id"] / f).exists()]
-        else:
-            have = [f for f in ("review.md", "review.json", "debrief.md") if (review_dir(rpath, job) / f).exists()]
-        print(f"  {job['job_id']:<8} {job.get('group', 'feedback'):<8} {job.get('stage', 'initial'):<7} view={job['view']:<5} overall={job['overall']!s:<5} "
-              f"sections={len(job['sections'])} files={have}" + (_figure_status(rpath) if is_figure_job(job) else ""))
-    pending = sum(bool(errors) for errors in checks.values())
-    print(f"{len(checks) - pending} complete; {pending} pending. Valid jobs do not need to run again.")
-    _print_launch(rpath, "initial", checks)
-    _print_launch(rpath, "satisfy", checks)
-
-
-def _figure_status(rpath: Path) -> str:
-    """Suffix for the FIG job in `status`: how many figures/tables the snapshot inventory lists."""
-    items = load_inventory(rpath / "snapshot")
-    if items is None:
-        return " kind=figures inventory=missing"
-    main, every = inventory_ids(items)
-    return f" kind=figures figures={len(main)} main/{len(every)} total"
+    number, rpath, rnd = round_arg(spath, args.round)
+    print_status(spath, number, rpath, rnd)
 
 
 def cmd_personas(args: argparse.Namespace) -> None:
-    for pid, p in load_personas(profile_for(args.venue)["venue"] if args.venue else None).items():
-        print(f"{pid:<4} {p.get('name', ''):<34} role={p.get('role', 'reviewer'):<15} "
-              f"pool={','.join(p.get('pool', [])) or '-':<16} "
-              f"view={p.get('reading_view', '-'):<5} w={p.get('draw_weight', '-')}")
+    print_personas(args.venue)
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -426,12 +366,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--scale", default=None, help="rating profile in 02_protocol/scales.json (default: selected venue profile)")
     p.add_argument("--figures", action="store_true",
                    help="add the opt-in figure review job FIG (persona F01) to every round of the session")
+    identified = ("review a PDF that shows author or publication information (author block, e-mail, "
+                  "camera-ready or arXiv stamp, acknowledgements); reviewers are told to ignore it")
+    p.add_argument("--allow-identified", action="store_true", help=identified)
     p.set_defaults(fn=cmd_new)
     q = sub.add_parser("round")
     q.add_argument("session")
     q.add_argument("--paper", required=True)
     q.add_argument("--supp")
     q.add_argument("--tex")
+    q.add_argument("--allow-identified", action="store_true", help=identified + " (kept for the session)")
     q.set_defaults(fn=cmd_round)
     q = sub.add_parser("retest")
     q.add_argument("session")

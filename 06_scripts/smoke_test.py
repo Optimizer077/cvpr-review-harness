@@ -266,6 +266,9 @@ def main() -> int:
         assert scores3["injection_flags"], "white injected text must be flagged"
         assert scores3["groups"]["heldout"]["overall"]["n"] == 2
         assert scores3["main_words"] > 50
+        paper1 = load_json(r1 / "ROUND.json")["paper"]
+        assert paper1["line_numbers"] is True and paper1["anonymity_flags"] == [], paper1
+        assert (r3 / "GROUNDING.md").exists() and "\nGrounding: " in (r3 / "SCORES.md").read_text(encoding="utf-8")
         assert writer_hint in (round_dir(session, 1) / "prompts" / "writer" / "WRITER.md").read_text()
         assert list_rounds(session) == [1, 2, 3]
         check_dialogue(tmpd, pdf1, pdf2)

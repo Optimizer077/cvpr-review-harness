@@ -9,6 +9,10 @@ stage only: a dialogue re-score (`satisfy`) is not a retest of an initial review
 Section-only jobs have no first impression. The previous rating of a dialogue verdict is the job's
 recorded overall rating in its previous dialogue round; the self-reported `previous_rating` is used
 only when no record exists.
+
+`aggregate_round` also runs the grounding check (`grounding_report`): it writes GROUNDING.md and keeps
+the summary line for SCORES.md; a grounding failure is logged and never blocks aggregation.
+SCORES.md lists the snapshot's injection and anonymity flags.
 """
 from __future__ import annotations
 
@@ -22,6 +26,7 @@ from typing import Any, Optional
 from .common import SECTION_KEYS, list_rounds, load_json, load_scales, review_dir, round_dir, save_json
 from .dialogue import round_items
 from .figure_job import figure_stats, figure_summary, figure_table, output_path
+from .grounding_report import round_grounding, write_grounding_md
 from .venues import scales_for
 
 logger = logging.getLogger(__name__)
@@ -112,6 +117,7 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
         "round": rnd["round"], "retest_of": rnd.get("retest_of"), "panel": rnd["panel"],
         "paper_sha256": rnd["paper"]["main_pdf_sha256"], "main_words": rnd["paper"].get("main_words"),
         "injection_flags": rnd["paper"].get("injection_flags", []),
+        "anonymity_flags": rnd["paper"].get("anonymity_flags", []),
         "reviews_found": len(rows), "jobs": len(rnd["jobs"]), "rows": rows, "groups": groups,
         "scale_max": scales_for(rnd)["overall"]["max"],
         "scale": scales_for(rnd)["overall"],
@@ -135,6 +141,12 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
     if isinstance(checks, list):
         out["fixcheck"] = dict(Counter(i.get("status") for i in checks if isinstance(i, dict)))
     out["pairwise"] = _decode_pairwise(round_path)
+    try:  # advisory: a grounding failure never blocks aggregation
+        grounding = round_grounding(rnd, round_path)
+        write_grounding_md(grounding, round_path)  # first: SCORES.md cites GROUNDING.md only if it exists
+        out["grounding"] = {"summary": grounding["summary"], "totals": grounding["totals"]}
+    except Exception as exc:  # noqa: BLE001 - any error in the grounding check leaves the scores intact
+        logger.warning("grounding report skipped for round %s: %s", rnd["round"], exc)
     return out
 
 
@@ -180,13 +192,17 @@ def write_round_report(agg: dict, round_path: Path) -> None:
     title = f"# Scores - round {agg['round']:02d}"
     if agg.get("retest_of"):
         title += f" (retest of round {agg['retest_of']:02d})"
-    lines = [title, "", headline(agg), "",
-             f"Reviews found: {agg['reviews_found']}/{agg['jobs']}. Panel: "
+    lines = [title, "", headline(agg), ""]
+    if agg.get("grounding"):
+        lines += [agg["grounding"]["summary"] + " Details: `GROUNDING.md`.", ""]
+    lines += [f"Reviews found: {agg['reviews_found']}/{agg['jobs']}. Panel: "
              f"{', '.join(agg['panel'])}. Main-text words: {agg.get('main_words', '-')}.", ""]
     lines += [f"Profile: {agg.get('venue_profile', 'legacy_cvpr')}; reading: {agg.get('reading_mode', 'persona')}; contribution: {agg.get('contribution_type', 'general')}.",
               f"Rating scale: {agg.get('scale', {}).get('profile', 'legacy')}. {agg.get('scale', {}).get('source', '')}", ""]
     if agg.get("injection_flags"):
         lines += ["**Injection / hidden-text flags:** " + "; ".join(agg["injection_flags"]), ""]
+    if agg.get("anonymity_flags"):
+        lines += ["**Anonymity flags:** " + "; ".join(agg["anonymity_flags"]), ""]
     for group in GROUPS:
         g_rows = {k: r for k, r in agg["rows"].items() if r["group"] == group}
         if not g_rows:

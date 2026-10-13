@@ -18,7 +18,7 @@ import re
 import shutil
 from pathlib import Path
 
-from .common import PROTOCOL_DIR, load_json, round_dir, save_json
+from .common import PROTOCOL_DIR, UNSCORED_SECTION, load_json, round_dir, save_json
 from .dialogue import last_dialogue_round, round_items
 from .figure_render import load_inventory, measured_facts
 from .prompts import read_text
@@ -107,7 +107,7 @@ def pairwise_prompt(session: dict, rnd: dict, round_path: Path, seed: int) -> st
     key: dict[str, dict] = {}
     for sec_file in sorted((round_path / "snapshot" / "sections").glob("*.txt")):
         old_file = prev / "snapshot" / "sections" / sec_file.name
-        if not old_file.exists():
+        if not old_file.exists() or sec_file.stem == UNSCORED_SECTION:  # acknowledgements etc. are not judged
             continue
         new_t, old_t = read_text(sec_file), read_text(old_file)
         if _norm(new_t) == _norm(old_t):

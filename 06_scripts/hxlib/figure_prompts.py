@@ -14,11 +14,13 @@ import re
 from pathlib import Path
 from typing import Optional
 
+from .anonymity import identified_line
 from .common import HARNESS_ROOT, PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, load_json, review_dir, \
     round_dir, sha256_file
 from .dialogue import _thread  # the reviewer's own earlier rounds, shared with satisfy_prompt
 from .figure_job import FALLBACK_TEXTS, FIGURE_SECTION, caption_ids, figure_criteria, image_path, \
     inventory_ids, load_inventory
+from .paper_text import line_numbered
 from .prompts import rubric_for
 from .venues import careful, instrument, scales_for, venue_block
 
@@ -26,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 # Weakness categories a figure finding can carry (the defect table's category column uses only these).
 FIGURE_CATEGORIES = ("figures", "visual_results", "notation", "overclaiming", "clarity", "correctness")
-ANCHORS_PER_PAGE = 10  # view_main.txt has margin line numbers when it averages this many `L###` lines a page
 _ANCHOR_LINE = re.compile(r"^L\d{3,4} ", re.MULTILINE)
 _PAGE_MARK = re.compile(r"^===== \[main p\.\d+\] =====$", re.MULTILINE)
 # The review.json rules that figure_schema.md does not show (it replaces review_schema.md here).
@@ -44,8 +45,9 @@ _REVIEW_RULES = (
 def has_line_anchors(rnd: dict, snap: Path) -> bool:
     """Whether the paper has margin line numbers (`L###` anchors in view_main.txt).
 
-    Uses `rnd["paper"]["line_numbers"]` when the snapshot recorded it; otherwise counts anchor
-    lines per page of view_main.txt (camera-ready PDFs have none, or a few stray numbers).
+    Uses `rnd["paper"]["line_numbers"]` when the snapshot recorded it; otherwise applies the
+    snapshot's rule (`paper_text.line_numbered`) to the anchors on each page of view_main.txt
+    (camera-ready PDFs have none, or a few stray numbers).
     """
     known = rnd.get("paper", {}).get("line_numbers")
     if known is not None:
@@ -53,9 +55,8 @@ def has_line_anchors(rnd: dict, snap: Path) -> bool:
     path = snap / "view_main.txt"
     if not path.exists():
         return False
-    text = path.read_text(encoding="utf-8")
-    pages = len(_PAGE_MARK.findall(text)) or rnd.get("paper", {}).get("main_pages") or 1
-    return len(_ANCHOR_LINE.findall(text)) >= ANCHORS_PER_PAGE * pages
+    pages = _PAGE_MARK.split(path.read_text(encoding="utf-8"))[1:]
+    return line_numbered([len(_ANCHOR_LINE.findall(page)) for page in pages])
 
 
 def optional_instrument(session: dict, path: Path) -> str:
@@ -129,7 +130,8 @@ def _rubric_block(session: dict) -> str:
 
 
 def _inputs_block(snap: Path, items: Optional[list[dict]], title: str, rnd: dict) -> str:
-    """Files the figure reader may open, with every crop and preview listed."""
+    """Files the figure reader may open, with every crop and preview listed (both FIG prompts), and the
+    identified-copy line when the snapshot has anonymity flags."""
     lines = [title]
     if items is None:
         lines.append(f"- No figure inventory or crops were produced for this snapshot: open the pages of "
@@ -147,8 +149,10 @@ def _inputs_block(snap: Path, items: Optional[list[dict]], title: str, rnd: dict
                      "figure at its place and print size.")
     anchors = ("with `L###` line anchors" if has_line_anchors(rnd, snap)
                else "no margin line numbers: cite page and figure panel")
+    identified = identified_line(rnd.get("paper", {}))
     lines += [f"- The main text `{snap / 'view_main.txt'}` ({anchors}) to check what the text "
               f"and the tables claim about each figure; `{snap / 'main.pdf'}` when a crop is cut or missing.",
+              *([f"- {identified}"] if identified else []),
               "- You open the supplement only if a main-paper figure defers to it; then record it in "
               "`reading.opened_supplement`." if (snap / "supplement.pdf").exists() else
               "- No supplement PDF was provided.",

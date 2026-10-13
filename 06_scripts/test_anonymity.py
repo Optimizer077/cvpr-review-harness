@@ -24,7 +24,7 @@ _CAMERA_READY = [
     "This CVPR paper is the Open Access version, provided by the Computer Vision Foundation.",
     "Except for this watermark, it is identical to the accepted version;",
     "A Toy Method for Toy Problems", "Jane Doe1 John Roe2", "1Example University 2Example Labs Inc.",
-    "jane.doe@example.org", "https://janedoe.github.io/toy", "Abstract", "We study a toy problem.",
+    "jane.doe@example.test", "https://janedoe.github.io/toy", "Abstract", "We study a toy problem.",
     "1. Introduction", "Building on our previous work [3], we extend the method.",
     "Acknowledgements", "This work was supported by grant No. ABC-12345.",
     "References", "[1] A. Author. A preprint. arXiv:2101.01234, 2021.",
