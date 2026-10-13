@@ -36,6 +36,14 @@ def load_section_map(venue: str = "cvpr") -> dict[str, list[str]]:
     return load_json(PANEL_DIR / ("section_panel.json" if venue == "cvpr" else f"{venue}.json"))["sections"]
 
 
+def check_section_keys(keys: list[str]) -> list[str]:
+    """Return `keys` if every one is a canonical section key; else raise ValueError naming the valid keys."""
+    unknown = [k for k in keys if k not in SECTION_KEYS]
+    if unknown or not keys:
+        raise ValueError(f"Unknown section keys {unknown or keys}; valid keys: {', '.join(SECTION_KEYS)}")
+    return keys
+
+
 def is_reviewer(persona: dict) -> bool:
     """Whether a persona is a sampled reviewer type (role 'reviewer'), not a harness instrument."""
     return persona.get("role", REVIEWER_ROLE) == REVIEWER_ROLE

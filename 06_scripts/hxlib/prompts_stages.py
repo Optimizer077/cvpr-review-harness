@@ -1,9 +1,14 @@
 """Prompts for the writer loop after the independent reviews.
 
-fixcheck    - a neutral checker marks each previous-round weakness as resolved or not in the new draft
+fixcheck    - a neutral checker marks each point the writer was asked to fix as resolved or not in
+              the new draft
 pairwise    - a blind judge compares changed sections and changed figure crops between two drafts
               (order randomized)
 writer      - the brief handed to the writer agent after a round
+
+fixcheck and pairwise compare a round with the last earlier review round, never a retest: a retest
+repeats an older draft, and in the dialogue loop the points to check are the open points that the
+writer answered after that review round (not only the first-round weaknesses).
 """
 from __future__ import annotations
 
@@ -14,35 +19,44 @@ import shutil
 from pathlib import Path
 
 from .common import PROTOCOL_DIR, load_json, round_dir, save_json
+from .dialogue import last_dialogue_round, round_items
 from .figure_render import load_inventory, measured_facts
 from .prompts import read_text
 from .venues import instrument
 
 logger = logging.getLogger(__name__)
+_POINT_FIELDS = ("id", "severity", "category", "location", "text", "fixable_by", "figure_id")
 
 
-def collect_weaknesses(round_path: Path) -> list[dict]:
-    """All weaknesses of a round with global ids '<job>:<W#>'."""
-    items: list[dict] = []
-    for path in sorted((round_path / "reviews").glob("*/review.json")):
-        data = load_json(path)
-        for w in data.get("weaknesses", []):
-            items.append({"id": f"{data['job_id']}:{w['id']}", "severity": w.get("severity"),
-                          "category": w.get("category"), "location": w.get("location"),
-                          "text": w.get("text"), "fixable_by": w.get("fixable_by")})
-    return items
+def previous_review_round(round_path: Path, rnd: dict) -> tuple[int, Path]:
+    """Number and folder of the last review (non-retest) round before this one."""
+    try:
+        number = last_dialogue_round(round_path.parent, rnd["round"])
+    except ValueError as exc:
+        raise ValueError(f"round {rnd['round']} has no earlier review round to compare with") from exc
+    return number, round_dir(round_path.parent, number)
+
+
+def open_points(round_path: Path) -> list[dict]:
+    """Points the writer was asked to fix after a round: FEEDBACK.json, else recomputed from outputs.
+
+    Feedback reviewers only; held-out points never reach the writer or the checker.
+    """
+    path = round_path / "FEEDBACK.json"
+    items = load_json(path) if path.exists() else round_items(load_json(round_path / "ROUND.json"), round_path)
+    return [{k: item[k] for k in _POINT_FIELDS if k in item} for item in items]
 
 
 def fixcheck_prompt(session: dict, rnd: dict, round_path: Path) -> str:
-    """Neutral check of previous-round weaknesses against the new draft."""
-    prev = round_dir(round_path.parent, rnd["round"] - 1)
-    items = collect_weaknesses(prev)
+    """Neutral check of the previous review round's open points against the new draft."""
+    prev_n, prev = previous_review_round(round_path, rnd)
+    items = open_points(prev)
     save_json(round_path / "fixcheck" / "previous_weaknesses.json", items)
     out = round_path / "fixcheck"
     lines = [
-        f"# Fix check - {session['name']}, round {rnd['round']:02d} vs round {rnd['round'] - 1:02d}",
+        f"# Fix check - {session['name']}, round {rnd['round']:02d} vs round {prev_n:02d}",
         instrument(session, PROTOCOL_DIR / "fixcheck_rules.md"),
-        f"- Weakness list from the previous draft: `{out / 'previous_weaknesses.json'}` ({len(items)} items).",
+        f"- Open points on the previous draft: `{out / 'previous_weaknesses.json'}` ({len(items)} items).",
         f"- New draft: `{round_path / 'snapshot' / 'view_full.txt'}` and `{round_path / 'snapshot' / 'main.pdf'}`.",
         f"- Previous draft (to see what changed): `{prev / 'snapshot' / 'view_full.txt'}`.",
         f"Write `{out / 'fixcheck.json'}` = [{{\"id\": str, \"status\": \"resolved|partly|unresolved|"
@@ -86,8 +100,8 @@ def _figure_pairs(old_snap: Path, new_snap: Path, pdir: Path,
 
 
 def pairwise_prompt(session: dict, rnd: dict, round_path: Path, seed: int) -> str:
-    """Blind A/B comparison of each section and figure that changed between the previous and this draft."""
-    prev = round_dir(round_path.parent, rnd["round"] - 1)
+    """Blind A/B comparison of each section and figure that changed since the previous review round."""
+    _, prev = previous_review_round(round_path, rnd)
     rng = random.Random(seed * 1000 + rnd["round"])
     pdir = round_path / "pairwise"
     key: dict[str, dict] = {}
@@ -137,13 +151,15 @@ def writer_prompt(session: dict, rnd: dict, round_path: Path, session_path: Path
         "Use the submission-stage page budget in AUTHOR_CONSTRAINTS.md. This is author preparation, not an official rebuttal submission.",
         "## Inputs",
         f"- The to-do list: `{round_path / 'FEEDBACK.md'}` - every open point with the reviewer's "
-        "suggested fix and what would satisfy them, most important first, then section scores.",
-        f"- Scores: `{round_path / 'SCORES.md'}`",
+        "suggested fix and what would satisfy them, most important first, then the section scores "
+        "(and the figure scores when the figure job ran). It carries every score you need.",
         f"- Reviews, replies and debriefs: `{round_path / 'reviews'}/<id>/` and "
-        f"`{round_path / 'satisfaction'}/<id>/reply.md` (if this was an answer round). Never open "
-        f"`{round_path / 'heldout'}`: those reviews judge your revision and must stay unseen.",
+        f"`{round_path / 'satisfaction'}/<id>/reply.md` (if this was an answer round).",
         f"- Author constraints: `{session_path / 'AUTHOR_CONSTRAINTS.md'}`",
         f"- Paper sources you may edit: `{session.get('tex_dir') or 'see SESSION.json'}`",
+        f"- Never open `{round_path / 'heldout'}`, `{round_path / 'SCORES.md'}`, "
+        f"`{round_path / 'SCORES.json'}` or `{session_path / 'PROGRESS.md'}`, nor these files of any "
+        "other round: they hold held-out reviews and scores that judge your revision and must stay unseen.",
         "## Outputs",
         f"1. `{round_path / 'writer' / 'RESPONSE.md'}` - the answer sheet is pre-filled with one block "
         "per point; fill in every block (decision, what changed where, answer to the reviewer). The "
