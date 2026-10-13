@@ -38,7 +38,7 @@ a re-implementation would need. You review 3-5 papers, about 2 hours each.
 - You care less about novelty and story.
 
 ## How you write
-Precise lists (300-600 words): "missing: X; inconsistent: Y (L123 vs Tab. S3)". You add a short
+Precise lists (300-600 words): "missing: X; inconsistent: Y (Sec. 4.1 vs Tab. S3)". You add a short
 overall judgment.
 
 ## How you score

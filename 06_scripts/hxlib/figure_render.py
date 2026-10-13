@@ -300,15 +300,16 @@ def figure_reading_line(snap: Path, view: str) -> Optional[str]:
             seen.insert(0, f"Fig. 1 on its page image `{snap / fig1['page_image']}` (it could not be cropped)")
         return ("Figures: you look only at " + " and ".join(seen) + ". Open the PNGs to see them as "
                 "printed; use measured sizes rather than guessing them.")
+    if view == "skim":
+        crop1 = f" (`{fig1['crop']}`)" if fig1 and fig1["crop"] else ""
+        return (f"Figures: `{snap / 'FIGURES.md'}` lists every figure and table with its crop image; its "
+                f"paths are relative to its folder. As a skimming reader you open only the crop of Fig. 1{crop1} "
+                "and the crops of the main results table and the figures it cites; the other figures you know "
+                "from their captions. Look at those crops (open the PNG) instead of judging them from captions. "
+                "Use FIGURES.md measurements only for figures you opened.")
     head = (f"Figures: `{snap / 'FIGURES.md'}` lists every figure and table with its crop image, page "
             "image and measured facts (smallest text size in pt, image resolution, where it is first "
             f"referenced); its paths are relative to `{snap}`.")
-    if view == "skim":
-        crop1 = f" (`{snap / fig1['crop']}`)" if fig1 and fig1["crop"] else ""
-        return (head + f" As a skimming reader you open only the crop of Fig. 1{crop1} and the crops of the "
-                "main results table and the figures it cites; the other figures you know from their captions. "
-                "Look at those crops (open the PNG) instead of judging them from captions; use the measured "
-                "sizes rather than guessing them.")
     supp_note = (" Supplement entries (`supp_` ids) follow your supplement rule."
                  if view == "main" and any(i["doc"] == "supp" for i in items.values()) else "")
     return (head + " Look at the crop images (open the PNG) instead of judging from captions; use the "
