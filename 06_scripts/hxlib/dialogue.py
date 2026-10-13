@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 from .common import PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, list_rounds, load_json, load_scales, \
     review_dir, round_dir, save_json, scale_wording
@@ -24,7 +25,11 @@ logger = logging.getLogger(__name__)
 STATUSES = ("satisfied", "partly", "not_satisfied")
 DECISIONS = ("fix_text", "use_existing_evidence", "contest", "constrained", "accept_as_limitation",
              "request_experiment", "low_value")
-_ITEM_HEAD = re.compile(r"(?m)^### (?P<id>[A-Za-z0-9\-]+:W\d+)\s*$")
+# Answer sheet parsing: a `###` heading that starts with a point id (`### R03:W1`, optionally followed
+# by text) starts a block; any other ATX heading outside a code fence ends it.
+_HEADING = re.compile(r"^ {0,3}(?P<hashes>#{1,6})(?:[ \t]+(?P<title>.*?))?[ \t]*$")
+_ITEM_ID = re.compile(r"^(?P<id>[A-Za-z0-9\-]+:W\d+)(?!\w)")
+_FENCE = re.compile(r"^ {0,3}(```|~~~)")
 _SEV = {"major": 0, "moderate": 1, "minor": 2}
 
 
@@ -118,23 +123,72 @@ def write_response_scaffold(round_path: Path) -> Path:
     items = load_json(round_path / "FEEDBACK.json")
     lines = ["# Author response", "", "One block per point. `Decision` is one of: " + ", ".join(DECISIONS) + ".",
              "Reviewers accept only answers that point to the NEW draft (line, section, table, figure).",
-             "Promises for later do not count. Do not rename the `###` headings.", ""]
+             "Promises for later do not count. Do not rename the `###` headings. Each reviewer sees only "
+             "the text under its own heading, up to the next heading of any level: put general notes "
+             "under a heading of their own, not inside a block.", ""]
     for i in items:
-        lines += [f"### {i['id']}", f"> {i['text']}", "", "Decision:", "Changed (where in the new draft):",
+        quote = [f"> {line}" for line in str(i["text"]).splitlines()] or [">"]
+        lines += [f"### {i['id']}", *quote, "", "Decision:", "Changed (where in the new draft):",
                   "Answer to the reviewer (cite lines/tables/figures of the new draft):", ""]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
 
 
-def parse_response(path: Path) -> dict[str, str]:
-    """Map item id -> the authors' block text."""
+def _item_heading(line: str) -> tuple[bool, Optional[str]]:
+    """(line is a `###` heading, the point id it starts with or None)."""
+    heading = _HEADING.match(line)
+    if heading is None or len(heading.group("hashes")) != 3:
+        return False, None
+    item = _ITEM_ID.match(heading.group("title") or "")
+    return True, item.group("id") if item else None
+
+
+def _block_text(lines: list[str]) -> str:
+    """Text of one answer block: its lines up to the first other heading outside a code fence.
+
+    If a code fence is left open, any heading ends the block, so a stray fence never pulls a later
+    section (such as a summary for all reviewers) into this block.
+    """
+    for fence_aware in (True, False):
+        fenced, end = False, len(lines)
+        for k, line in enumerate(lines):
+            if fence_aware and _FENCE.match(line):
+                fenced = not fenced
+            elif not fenced and _HEADING.match(line):
+                end = k
+                break
+        if not fenced:
+            break
+    return "\n".join(lines[:end]).strip()
+
+
+def parse_response(path: Path, open_ids: Optional[set[str]] = None) -> dict[str, str]:
+    """Map item id -> the authors' block text.
+
+    A block starts at a `### <job>:W<n>` heading (text may follow the id, e.g. `### R03:W1 (novelty)`)
+    and ends at the next such heading, even inside a code fence, or at any other markdown heading
+    outside a code fence. So neither an annotated heading nor a trailing summary section ends up in
+    another reviewer's block. With `open_ids`, every `###` heading that names no open point is logged
+    as a warning: its text reaches no reviewer.
+    """
     if not path.exists():
         return {}
-    text = path.read_text(encoding="utf-8")
-    heads = list(_ITEM_HEAD.finditer(text))
-    return {m.group("id"): text[m.end(): heads[k + 1].start() if k + 1 < len(heads) else len(text)].strip()
-            for k, m in enumerate(heads)}
+    segments: dict[str, list[list[str]]] = {}
+    current: Optional[list[str]] = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        level3, key = _item_heading(line)
+        if level3 and open_ids is not None and key not in open_ids:
+            logger.warning("%s: heading %r names no open point; no reviewer sees its text", path, line.strip())
+        if key is None:
+            if current is not None:
+                current.append(line)
+            continue
+        if key in segments:
+            logger.warning("%s: point %s has more than one block; the blocks are joined", path, key)
+        current = []
+        segments.setdefault(key, []).append(current)
+    return {key: "\n\n".join(t for t in map(_block_text, parts) if t) for key, parts in segments.items()}
 
 
 def last_dialogue_round(session_path: Path, before: int) -> int:
@@ -152,7 +206,7 @@ def prepare_satisfaction(session_path: Path, rnd: dict, rpath: Path) -> None:
     prev_path = round_dir(session_path, prev_n)
     prev_rnd = load_json(prev_path / "ROUND.json")
     open_items = round_items(prev_rnd, prev_path)
-    answers = parse_response(prev_path / "writer" / "RESPONSE.md")
+    answers = parse_response(prev_path / "writer" / "RESPONSE.md", {i["id"] for i in open_items})
     for job in (j for j in rnd["jobs"] if j.get("group", "feedback") == "feedback"):
         mine = [i for i in open_items if i["job_id"] == job["job_id"]]
         sdir = rpath / "satisfaction" / job["job_id"]
