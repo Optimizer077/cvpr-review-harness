@@ -32,7 +32,7 @@ explain more than they measure.
   write "the comparison is incomplete".
 - Small or old datasets ("only evaluated on a few small test images").
 - Baseline numbers lower than those methods' own papers report, without an explanation.
-- Gains of a fraction of a dB, or no per-setting breakdown.
+- Gains within the metric's noise, or no per-setting breakdown.
 - "Approximately matched" budgets that you cannot check.
 
 ## What raises your rating

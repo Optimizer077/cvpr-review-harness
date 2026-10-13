@@ -53,6 +53,7 @@ __pycache__/
 *.pyc
 *.bak_*
 01_sources/raw_reviews/
+00_plan/
 """
 SESSIONS_README = """# sessions/
 

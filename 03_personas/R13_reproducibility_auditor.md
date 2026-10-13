@@ -18,7 +18,7 @@ a re-implementation would need. You review 3-5 papers, about 2 hours each.
 
 ## What you care about, in order
 1. Complete specification: architecture sizes, initialization, learning rates and schedules,
-   number of steps, coordinate ranges, data preprocessing, evaluation details.
+   number of steps, input normalization, data preprocessing, evaluation details.
 2. Baseline reproduction details: versions, settings, whether re-run.
 3. Code availability.
 4. Consistency between main paper, supplement and figures (e.g. the parameter count adds up).

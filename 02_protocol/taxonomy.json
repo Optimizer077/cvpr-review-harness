@@ -25,7 +25,7 @@
     "presentation_other": "other presentation issue (typos, layout, references)",
     "marginal_gains": "improvement too small to matter (one of three complaints that separate rejecting from accepting reviews)",
     "visual_results": "insufficient or unconvincing visual results; artifacts; cherry-picked crops",
-    "metrics": "questionable metrics or protocol (PSNR only, no perceptual metric, overfitting-only evaluation)",
+    "metrics": "questionable metrics or protocol (metrics that do not test the claim, train-set-only evaluation)",
     "sensitivity": "hyperparameter sensitivity or robustness not analysed"
   }
 }

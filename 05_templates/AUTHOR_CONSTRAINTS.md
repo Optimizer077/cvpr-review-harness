@@ -6,7 +6,7 @@ here, the writer mitigates it by scoping or framing (decision `constrained`) and
 invent the result.
 
 ## Experiments and evidence
-- (e.g.) No new held-out-pixel experiments; the paper evaluates native fitting only.
+- (e.g.) No new large-scale experiments; the paper evaluates on its existing benchmarks only.
 - (e.g.) Single seed by default; no new seeds unless the user asks.
 - (e.g.) Baseline rows are copied from the existing tables; no reruns.
 

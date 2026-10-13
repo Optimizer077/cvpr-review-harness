@@ -76,7 +76,7 @@ What reviewers check: the main results table first, then the setup.
 - `benchmarks_scale` - standard benchmarks of adequate size and resolution for the claim.
 - `fairness_compute_tuning` - matched parameters AND compute/time; baselines tuned as carefully as the method.
 - `metrics_appropriate` - metrics fit the claim (perceptual metrics where perception matters, etc.).
-- `statistical_reliability` - variance, seeds or per-image spread where the margin is small.
+- `statistical_reliability` - variance, seeds or per-example spread where the margin is small.
 - `result_strength` - the gain is large enough to matter and consistent across settings.
 Typical failures: missing the one baseline the reviewer expects; numbers for baselines lower than in their own papers; only small or old datasets; no wall-clock comparison.
 
@@ -86,7 +86,7 @@ What reviewers check: does each component earn its place, and is the claimed mec
 - `mechanism_evidence` - analysis supports the paper's explanation, not only the final number.
 - `failure_cases` - shows where the method does not help.
 - `sensitivity` - robustness to key hyperparameters.
-Typical failures: ablations only on one image or one setting; "analysis" that is a restatement of results; mechanism claims with only correlational evidence.
+Typical failures: ablations only on one example or one setting; "analysis" that is a restatement of results; mechanism claims with only correlational evidence.
 
 ## figures_tables
 What reviewers check: legibility on paper, captions that stand alone, consistency with the text.

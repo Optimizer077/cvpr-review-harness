@@ -8,7 +8,7 @@ Every number below is a count over these 184 reviews unless it is labelled **[es
 
 ## 0. How this was built (read before using the numbers)
 
-**Sources.** openreview.net and api2.openreview.net returned a bot challenge (HTTP 403), so all data comes from public HuggingFace mirrors of OpenReview. Raw files are in `01_sources/raw_reviews/`.
+**Sources.** openreview.net and api2.openreview.net returned a bot challenge (HTTP 403), so all data comes from public HuggingFace mirrors of OpenReview. Raw files are in `01_sources/raw_reviews/` (not redistributed).
 
 | Venue | Mirror | What it contains |
 |---|---|---|
@@ -45,7 +45,7 @@ ICLR 2026 is therefore used only for review text, scores and the AI-text analysi
 Summary:
 - **46 papers / 184 reviews.**
 - By venue: ICLR 2024 11/43, ICLR 2025 10/41, ICLR 2026 10/40, NeurIPS 2024 8/31, NeurIPS 2025 7/29.
-- Four computer-vision subareas with 40–60 reviews each.
+- Four computer-vision subareas.
 - Decisions: 25 accepted (3 oral, 2 spotlight, 20 poster) and 21 rejected.
 
 **Rating scales.**
@@ -56,7 +56,7 @@ Summary:
 
 *Final ratings: these are post-rebuttal for ICLR 2024/25 and NeurIPS 2024/25, and pre-rebuttal (reverted) for ICLR 2026.
 
-The per-paper list (titles, forum ids, subareas, decisions and ratings) is withheld from this public copy. Quotes in §3 and cases in §6 keep their OpenReview forum ids.
+The per-paper list (titles, forum ids, subareas, decisions and ratings) is withheld from this public copy. Papers are cited by stable codes P01–P46; the mapping to OpenReview forums is kept privately.
 
 **Rating distribution (counts):**
 
@@ -158,164 +158,151 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 ### 3.1 By weakness type
 
 **Limited novelty / "combination of existing techniques" (NOV)**
-- [C] "The proposed AdaIR appears to be a straightforward combination of existing techniques, such as Restormer [3] and CBAM [4]." — `M5t0WvjfCg` (ICLR25, FFqs)
-- [D] "making this work seem more like a combination of existing methods (A+B stitching) rather than presenting original contributions or theoretical derivations." — `NU3tE3lIqf` (NeurIPS24, nPTW)
-- [D] "The paper is a direct combination of these previous works (pose-free feed-forward NVS from sparse-views + feed-forward 3DGS prediction)." — `P4o9akekdf` (ICLR25, tg6H; this reviewer later raised to 8)
-- [D] "The novelty of this work is very limited. I cannot see the technique novelty." — `AQqOC3FKPO` (ICLR25, 224k)
-- [D] "The tree-path KL loss is trivial." — `7HEMpBTb3R` (ICLR25, khL4)
-- [D] "Direct extension of Bökman et al. (2025) from D2 to D8" — `9zVPsVWUY1` (ICLR26, PPBJ ⚑)
-- [D] "Main issue: This paper is more of a position, benchmarking, tutorial, and/or a survey paper" — `OZljvntsto` (NeurIPS25, xxwx)
-- [D] "The proposed method is overly simplistic, as it merely concatenates the low-quality image to the input of FLUX and applies LoRA for fine-tuning, without any technical innovation." — `9D5ryI7now` (ICLR26, zDzX)
-- [D] "offers no new fundamental principles for representation learning, which is the focus of ICLR." — `9D5ryI7now` (ICLR26, uxXd)
-- [C] "The core concept of this paper shares similarities with "One-step Diffusion with Distribution Matching Distillation"." — `TPtXnpRvur` (NeurIPS24, KDhM)
-- [H] "Nevertheless, I would also admit that these novelty issues are not critical as each of them is not trivial in the task." — `DS5qRs0tQz` (ICLR24, sRML)
-- [H] "the methodological contribution may be seen as incremental rather than innovative." — `RKOgWtrWPe` (NeurIPS25, zhcb)
+- [C] "The proposed AdaIR appears to be a straightforward combination of existing techniques, such as Restormer [3] and CBAM [4]." — `P29` (ICLR25, FFqs)
+- [D] "making this work seem more like a combination of existing methods (A+B stitching) rather than presenting original contributions or theoretical derivations." — `P23` (NeurIPS24, nPTW)
+- [D] "The paper is a direct combination of these previous works (pose-free feed-forward NVS from sparse-views + feed-forward 3DGS prediction)." — `P18` (ICLR25, tg6H; this reviewer later raised to 8)
+- [D] "The novelty of this work is very limited. I cannot see the technique novelty." — `P40` (ICLR25, 224k)
+- [D] "The tree-path KL loss is trivial." — `P39` (ICLR25, khL4)
+- [D] "Direct extension of Bökman et al. (2025) from D2 to D8" — `P43` (ICLR26, PPBJ ⚑)
+- [D] "Main issue: This paper is more of a position, benchmarking, tutorial, and/or a survey paper" — `P14` (NeurIPS25, xxwx)
+- [D] "The proposed method is overly simplistic, as it merely concatenates the low-quality image to the input of FLUX and applies LoRA for fine-tuning, without any technical innovation." — `P32` (ICLR26, zDzX)
+- [D] "offers no new fundamental principles for representation learning, which is the focus of ICLR." — `P32` (ICLR26, uxXd)
+- [C] "The core concept of this paper shares similarities with "One-step Diffusion with Distribution Matching Distillation"." — `P34` (NeurIPS24, KDhM)
+- [H] "Nevertheless, I would also admit that these novelty issues are not critical as each of them is not trivial in the task." — `P38` (ICLR24, sRML)
+- [H] "the methodological contribution may be seen as incremental rather than innovative." — `P36` (NeurIPS25, zhcb)
 
 **Missing baselines (BASE)**
-- [C] "I find the use of FFN (Tancik, 2020) as the only baseline in the image task disappointing." — `4UiLqimGm5` (ICLR24, DCsj)
-- [C] "In particular, DVGO was explicitly designed to address this same issue of capturing sharp boundaries in 3D, so this method should also be compared against." — `jWxrIeWgir` (ICLR24, VTh6)
-- [D] "All the competing baselines in Section 4.2 are not SOTA methods any more, as they were published at least 3 years ago." — `OKOjkFrhSs` (ICLR24, WtP4)
-- [D] "As a submission to ICLR, it's not reasonable to only include 3DGS and Mip-Splatting for comparison." — `R9lgWYE508` (ICLR25, gqEX)
-- [C] "The architecture is mainly based on Restormer. However, Tab. 1 does not include Restormer's performance." — `M5t0WvjfCg` (ICLR25, K6x2)
-- [C] "why do you take 3DGS-accel as the baseline instead of the latest SOTA DashGaussian?" — `5PXMoN8e2W` (ICLR26, 1HVJ)
-- [C] "We are not looking for state of the art here, but to have an idea of whether the proposed setup is close or far from that." — `uZfjFyPAvn` (ICLR24, ksCd)
-- [D] "comparison with Finite-Difference (which is already built-in inside Instant NGP) and AD is like a typical strawman approach" — `HxHrRUHMOD` (ICLR24, DXqV)
+- [D] "All the competing baselines in Section 4.2 are not SOTA methods any more, as they were published at least 3 years ago." — `P28` (ICLR24, WtP4)
+- [D] "As a submission to ICLR, it's not reasonable to only include 3DGS and Mip-Splatting for comparison." — `P20` (ICLR25, gqEX)
+- [C] "The architecture is mainly based on Restormer. However, Tab. 1 does not include Restormer's performance." — `P29` (ICLR25, K6x2)
+- [C] "why do you take 3DGS-accel as the baseline instead of the latest SOTA DashGaussian?" — `P22` (ICLR26, 1HVJ)
+- [C] "We are not looking for state of the art here, but to have an idea of whether the proposed setup is close or far from that." — `P01` (ICLR24, ksCd)
 
 **Small / old benchmarks (BENCH)**
-- [C] "It is hard to gain generalizable insights from five toy images on a single task." — `muN3B40keb` (ICLR25, r32t)
-- [C] "I am very surprised there are no NeRF results as this a big experiment that requires hours to train" — `Sr5XaZzirA` (ICLR25, jBfM)
-- [D] "Finally, the experimental section of the work is severely lacking." — `uZfjFyPAvn` (ICLR24, 3UQT)
+- [C] "I am very surprised there are no NeRF results as this a big experiment that requires hours to train" — `P06` (ICLR25, jBfM)
+- [D] "Finally, the experimental section of the work is severely lacking." — `P01` (ICLR24, 3UQT)
 
 **Efficiency / wall-clock (EFF)**
-- [C] "In addition to FLOPs, there should also be comparison between inference time of different models." — `M5t0WvjfCg` (ICLR25, Jdae)
-- [C] "Lastly, the FLOPs seems to decrease but the wall clock time is higher for all variants." — `9zVPsVWUY1` (ICLR26, 5pGM)
-- [C] "total parameters instead of the training parameters are expected to be compared in the Table 2, which is more closely related to the deployment." — `TPtXnpRvur` (NeurIPS24, 4vqL)
-- [C] "Missing bits of context information - How much does it cost?" — `UyNXMqnN3c` (ICLR24, E7Ru)
+- [C] "In addition to FLOPs, there should also be comparison between inference time of different models." — `P29` (ICLR25, Jdae)
+- [C] "Lastly, the FLOPs seems to decrease but the wall clock time is higher for all variants." — `P43` (ICLR26, 5pGM)
+- [C] "total parameters instead of the training parameters are expected to be compared in the Table 2, which is more closely related to the deployment." — `P34` (NeurIPS24, 4vqL)
+- [C] "Missing bits of context information - How much does it cost?" — `P16` (ICLR24, E7Ru)
 
 **Unfair comparison / tuning (FAIR)**
-- [C] "Otherwise, we cannot tell whether the performance gain comes from better model design or using larger and high-quality data" — `P4o9akekdf` (ICLR25, tg6H)
-- [C] "The choice of number of training iterations to report performance is arbitrary and could reflect unfairly on the baselines." — `Sr5XaZzirA` (ICLR25, 3nXe)
-- [C] "In table 4, the runtime for some baselines are evaluated with different GPU models." — `4voMNlRWI7` (ICLR26, uR7S)
-- [H] "The numbers of the baseline models seem to be from the authors' own implementation, which makes it less appealing" — `4UiLqimGm5` (ICLR24, kCkz)
-- [D] "Clearly, there is an unfair comparison in your experiments." — `NU3tE3lIqf` (NeurIPS24, BAXf)
+- [C] "Otherwise, we cannot tell whether the performance gain comes from better model design or using larger and high-quality data" — `P18` (ICLR25, tg6H)
+- [C] "The choice of number of training iterations to report performance is arbitrary and could reflect unfairly on the baselines." — `P06` (ICLR25, 3nXe)
+- [C] "In table 4, the runtime for some baselines are evaluated with different GPU models." — `P21` (ICLR26, uR7S)
+- [H] "The numbers of the baseline models seem to be from the authors' own implementation, which makes it less appealing" — `P02` (ICLR24, kCkz)
+- [D] "Clearly, there is an unfair comparison in your experiments." — `P23` (NeurIPS24, BAXf)
 
 **Missing ablations (ABL)**
-- [C] "I suggest to add the missing ablations to better understand how much improvement each contribution brings separately" — `4voMNlRWI7` (ICLR26, uR7S)
-- [C] "It’s unclear how much improvement comes from the GAN refinement versus the soft-embedding relaxation itself." — `83pHDDmkXt` (ICLR26, jPZF)
-- [C] "Moreover, the ablation study in Figure 6 only provides a single example, which weakens the overall argument." — `84Hk01tFKq` (ICLR24, VyWD)
-- [C] "The ablations in table 6 and 7 do not show strong contribution of individual modeling choices except tight fusion. The authors dont explain this" — `DS5qRs0tQz` (ICLR24, jXst)
+- [C] "I suggest to add the missing ablations to better understand how much improvement each contribution brings separately" — `P21` (ICLR26, uR7S)
+- [C] "It’s unclear how much improvement comes from the GAN refinement versus the soft-embedding relaxation itself." — `P41` (ICLR26, jPZF)
+- [C] "Moreover, the ablation study in Figure 6 only provides a single example, which weakens the overall argument." — `P17` (ICLR24, VyWD)
+- [C] "The ablations in table 6 and 7 do not show strong contribution of individual modeling choices except tight fusion. The authors dont explain this" — `P38` (ICLR24, jXst)
 
 **Clarity / writing (CLAR)**
-- [D] "Concretely, the paper looks and reads like a draft that is 80-90% complete." — `0Lqyut1y7M` (ICLR24, REJk)
-- [C] "The Prompt Guided DCM module section is just 6 lines long, where it is one of the two claims of this paper!" — `OKOjkFrhSs` (ICLR24, axMK)
-- [C] "Are the proposed frequency multipliers applied only to the first layer, or to all hidden layers? This is not clearly specified in the paper." — `ZXJ74KEVUu` (ICLR26, zW1b)
-- [H] "As someone whose primary area of research or background is not in classical signal processing, I found the paper quite confusing." — `uZfjFyPAvn` (ICLR24, 3UQT)
-- [C] "the work reads more like a paper written for a computer vision conference without providing sufficient background to a broader audience at the ICLR community." — `UyNXMqnN3c` (ICLR24, L9mE)
-- [C] "Why not be clear and up front that the architecture is essentially just a transformer?" — `LDkyhsiCZQ` (NeurIPS25, avfu)
+- [D] "Concretely, the paper looks and reads like a draft that is 80-90% complete." — `P03` (ICLR24, REJk)
+- [C] "The Prompt Guided DCM module section is just 6 lines long, where it is one of the two claims of this paper!" — `P28` (ICLR24, axMK)
+- [C] "the work reads more like a paper written for a computer vision conference without providing sufficient background to a broader audience at the ICLR community." — `P16` (ICLR24, L9mE)
+- [C] "Why not be clear and up front that the architecture is essentially just a transformer?" — `P15` (NeurIPS25, avfu)
 
 **Overclaiming (OVER)**
-- [D] "The paper's core flaw is over-packaging." — `9D5ryI7now` (ICLR26, uxXd)
-- [D] "Absent these, “efficient” remains asserted, not demonstrated." — `2XP4HD0NBy` (ICLR26, 2JaX ⚑)
-- [D] "Contribution no. 4 is not a contribution." — `P4o9akekdf` (ICLR25, wkJy)
-- [C] "claiming that training GAN-based models for ISR does not face instability issues is quite a bold claim" — `46mbA3vu25` (ICLR25, cAL4)
-- [C] "Clearly, in terms of stone carvings, wall details, and water surface textures, the original 3DGS appears sharper." — `NU3tE3lIqf` (NeurIPS24, nPTW)
-- [C] "There is no clear evidence that viewing MLP as a fully connected graph may help to improve the reconstruction and classification ability." — `A8Vuf2e8y6` (ICLR25, UBft)
-- [D] "The paper further tries to avoid making this connection to general transformers as much as possible, which feels very misleading" — `LDkyhsiCZQ` (NeurIPS25, avfu)
+- [D] "The paper's core flaw is over-packaging." — `P32` (ICLR26, uxXd)
+- [D] "Absent these, “efficient” remains asserted, not demonstrated." — `P42` (ICLR26, 2JaX ⚑)
+- [D] "Contribution no. 4 is not a contribution." — `P18` (ICLR25, wkJy)
+- [C] "claiming that training GAN-based models for ISR does not face instability issues is quite a bold claim" — `P30` (ICLR25, cAL4)
+- [C] "Clearly, in terms of stone carvings, wall details, and water surface textures, the original 3DGS appears sharper." — `P23` (NeurIPS24, nPTW)
+- [C] "There is no clear evidence that viewing MLP as a fully connected graph may help to improve the reconstruction and classification ability." — `P07` (ICLR25, UBft)
+- [D] "The paper further tries to avoid making this connection to general transformers as much as possible, which feels very misleading" — `P15` (NeurIPS25, avfu)
 
 **Theory gaps (THEO)**
-- [C] "are a bit handwavy, in the sense that they make a series of approximations that end up in a nice PDE that one can call a diffusion equation" — `muN3B40keb` (ICLR25, LUop)
-- [C] "The Discrete Sine Transform (DST) assumes the odd symmetry at the boundaries: How do you confirm that these datasets satisfy these assumptions?" — `ZXJ74KEVUu` (ICLR26, JJrD)
-- [C] "A theoretical argument (despite any assumptions made) would help the reader to appreciate the idea proposed more than an empirical hack" — `83pHDDmkXt` (ICLR26, rzsv)
-- [D] "The provable statements in the paper are not in any way non-obvious." — `uZfjFyPAvn` (ICLR24, ksCd)
-- [C] "The theoretical results are quite limited." — `Sr5XaZzirA` (ICLR25, svcN)
+- [C] "are a bit handwavy, in the sense that they make a series of approximations that end up in a nice PDE that one can call a diffusion equation" — `P08` (ICLR25, LUop)
+- [C] "A theoretical argument (despite any assumptions made) would help the reader to appreciate the idea proposed more than an empirical hack" — `P41` (ICLR26, rzsv)
+- [D] "The provable statements in the paper are not in any way non-obvious." — `P01` (ICLR24, ksCd)
+- [C] "The theoretical results are quite limited." — `P06` (ICLR25, svcN)
 
 **Marginal improvements (MARG)**
-- [D] "in this paper, the baseline PSNR is already above 40, making the improvement very marginal." — `RKOgWtrWPe` (NeurIPS25, umq2)
-- [D] "Bring 0.5-1min acceleration to existing SOTA, so what?" — `5PXMoN8e2W` (ICLR26, 1HVJ)
-- [C] "The downstream task performance improvement in Table 2 is marginal, although the reconstruction quality is high." — `A8Vuf2e8y6` (ICLR25, ewZN)
-- [C] "A closer look into Table 4 would also reveal that the performance on ODinW is actually on par with GLIPv2 if given the same pertaining data." — `DS5qRs0tQz` (ICLR24, sRML)
+- [D] "in this paper, the baseline PSNR is already above 40, making the improvement very marginal." — `P36` (NeurIPS25, umq2)
+- [D] "Bring 0.5-1min acceleration to existing SOTA, so what?" — `P22` (ICLR26, 1HVJ)
+- [C] "The downstream task performance improvement in Table 2 is marginal, although the reconstruction quality is high." — `P07` (ICLR25, ewZN)
+- [C] "A closer look into Table 4 would also reveal that the performance on ODinW is actually on par with GLIPv2 if given the same pertaining data." — `P38` (ICLR24, sRML)
 
 **Generalization / scope (GEN)**
-- [C] "there are no experiments on real out-of-distribution images." — `M5t0WvjfCg` (ICLR25, Jdae)
-- [H] "Blind deconvolution, when limited to the uniform case, may not be particularly useful for real-world problems." — `CFez7MFUFd` (NeurIPS24, QZrB)
+- [C] "there are no experiments on real out-of-distribution images." — `P29` (ICLR25, Jdae)
+- [H] "Blind deconvolution, when limited to the uniform case, may not be particularly useful for real-world problems." — `P33` (NeurIPS24, QZrB)
 
 **Metrics / protocol (METRIC)**
-- [C] "A fairer evaluation would follow the protocol of [1], where models are assessed on held-out subsets of pixel coordinates." — `ZXJ74KEVUu` (ICLR26, 6yc9)
-- [C] "The comparisons using only PSNR/SSIM seem insufficient to measure the quality of the resulting images." — `M5t0WvjfCg` (ICLR25, K6x2)
-- [C] "A simple way to game the metric (i.e. achieving low training CA) is to simply duplicate each Gaussian N times with opacities scaled" — `GrPo8NTtzK` (NeurIPS25, jvpz)
-- [D] "The current way of stopping and evaluating seems incredibly arbitrary and subjective." — `46mbA3vu25` (ICLR25, euHF)
+- [C] "The comparisons using only PSNR/SSIM seem insufficient to measure the quality of the resulting images." — `P29` (ICLR25, K6x2)
+- [C] "A simple way to game the metric (i.e. achieving low training CA) is to simply duplicate each Gaussian N times with opacities scaled" — `P25` (NeurIPS25, jvpz)
+- [D] "The current way of stopping and evaluating seems incredibly arbitrary and subjective." — `P30` (ICLR25, euHF)
 
 **Visual results (VIS)**
-- [C] "In Figure 7 (first and second scenarios), some generated details and textures appear to be creatively added rather than strictly reconstructed from the LQ input." — `TPtXnpRvur` (NeurIPS24, KDhM)
-- [C] "I also tried experimenting with the code (great codebase!) and observed that, for text to 3D, the texture in most cases was very saturated." — `UyNXMqnN3c` (ICLR24, MZY6)
-- [D] "There is a noticeable disparity in quality when compared to state-of-the-art techniques." — `84Hk01tFKq` (ICLR24, VyWD)
+- [C] "In Figure 7 (first and second scenarios), some generated details and textures appear to be creatively added rather than strictly reconstructed from the LQ input." — `P34` (NeurIPS24, KDhM)
+- [C] "I also tried experimenting with the code (great codebase!) and observed that, for text to 3D, the texture in most cases was very saturated." — `P16` (ICLR24, MZY6)
+- [D] "There is a noticeable disparity in quality when compared to state-of-the-art techniques." — `P17` (ICLR24, VyWD)
 
 **Related work (RW)**
-- [D] "The references are obviously inadequate, as no 2023 papers are included and cited in the paper." — `OKOjkFrhSs` (ICLR24, WtP4)
-- [D] "While the authors may and probably will try to defend the paper saying that these papers are not relevant, I would argue that they are." — `HxHrRUHMOD` (ICLR24, DXqV)
-- [H] "I recall some works a few years ago that applied similar ideas to arbitrary-scale super-resolution, but I forgot the names" — `SZvhmFntRA` (ICLR26, Jk3f)
-- [H] "Note there are also several relevant concurrent works that have since appeared (but which would be unreasonable to call out as a weakness)." — `NU3tE3lIqf` (NeurIPS24, 5zzk)
+- [D] "The references are obviously inadequate, as no 2023 papers are included and cited in the paper." — `P28` (ICLR24, WtP4)
+- [D] "While the authors may and probably will try to defend the paper saying that these papers are not relevant, I would argue that they are." — `P04` (ICLR24, DXqV)
+- [H] "I recall some works a few years ago that applied similar ideas to arbitrary-scale super-resolution, but I forgot the names" — `P31` (ICLR26, Jk3f)
+- [H] "Note there are also several relevant concurrent works that have since appeared (but which would be unreasonable to call out as a weakness)." — `P23` (NeurIPS24, 5zzk)
 
 **Motivation (MOT)**
-- [C] "I don’t see a compelling situation where the 3DGS optimizer must be initialized from a random 3D point cloud when accurate camera poses are already available." — `R9lgWYE508` (ICLR25, y9Vo)
-- [H] "I am not sure why the model should be croppable for such applications." — `jrVoZLF20h` (NeurIPS24, 45rR)
-- [C] "Combining them together without clear motivation make this paper like a technical report." — `6AeIDnrTN2` (NeurIPS24, bxja)
+- [C] "I don’t see a compelling situation where the 3DGS optimizer must be initialized from a random 3D point cloud when accurate camera poses are already available." — `P20` (ICLR25, y9Vo)
+- [C] "Combining them together without clear motivation make this paper like a technical report." — `P24` (NeurIPS24, bxja)
 
 **Variance, reproducibility, limitations, figures, hyperparameters (VAR / REPRO / LIM / FIG / HYP)**
-- [C] "Why omit statistical significance tests? Even simple bootstrapped confidence intervals would strengthen claims." — `13xP0J2d6E` (NeurIPS25, zo6q ⚑)
-- [C] "Would it be possible to include some measure of variance for some key results?" — `7HEMpBTb3R` (ICLR25, d3Ey)
-- [C] "The anonymous link provided by the author is empty, which cannot support reviewing the paper." — `9q4L2odBPh` (NeurIPS25, qds6)
-- [C] "The paper's primary limitation is the insufficient exploration of the failure modes of the sinc activation function." — `0Lqyut1y7M` (ICLR24, 9zZJ)
-- [C] "Figure 7 is a pastel, set of 3D overlapping bars with partial transparency that make the plot overly artistic and hard to read." — `25Zlvl7JxW` (ICLR25, s4XL)
-- [C] "Too much hyperparameter tuning to be generalizable (i.e. all of Appendix B). Authors should defend why this is ok." — `A8Vuf2e8y6` (ICLR25, GNWA)
-- [C] "Why does the method's performance degrade in networks deeper than three layers?" — `ZXJ74KEVUu` (ICLR26, JXTJ)
+- [C] "Why omit statistical significance tests? Even simple bootstrapped confidence intervals would strengthen claims." — `P35` (NeurIPS25, zo6q ⚑)
+- [C] "Would it be possible to include some measure of variance for some key results?" — `P39` (ICLR25, d3Ey)
+- [C] "The anonymous link provided by the author is empty, which cannot support reviewing the paper." — `P46` (NeurIPS25, qds6)
+- [C] "Figure 7 is a pastel, set of 3D overlapping bars with partial transparency that make the plot overly artistic and hard to read." — `P19` (ICLR25, s4XL)
+- [C] "Too much hyperparameter tuning to be generalizable (i.e. all of Appendix B). Authors should defend why this is ok." — `P07` (ICLR25, GNWA)
+- [C] "Why does the method's performance degrade in networks deeper than three layers?" — `P11` (ICLR26, JXTJ)
 
 ### 3.2 By tone: verdicts, hedges, praise, and rebuttal-phase language
 
 **Dismissive verdicts**
-- [D] "I believe the current version of this paper falls far below the NeurIPS standard in both novelty and rigor." — `OZljvntsto` (NeurIPS25, 4qxt)
-- [D] "For a top-tier conference with <10% acceptance, matching performance with some efficiency gains is insufficient" — `9zVPsVWUY1` (ICLR26, PPBJ ⚑; the acceptance-rate claim is wrong)
-- [D] "I believe the contribution is not enough." — `AQqOC3FKPO` (ICLR25, 224k)
-- [D] "In conclusion, the paper is not significantly better than the 3DGS compression baselines." — `6AeIDnrTN2` (NeurIPS24, yR9d; later raised 4→6)
+- [D] "I believe the current version of this paper falls far below the NeurIPS standard in both novelty and rigor." — `P14` (NeurIPS25, 4qxt)
+- [D] "For a top-tier conference with <10% acceptance, matching performance with some efficiency gains is insufficient" — `P43` (ICLR26, PPBJ ⚑; the acceptance-rate claim is wrong)
+- [D] "I believe the contribution is not enough." — `P40` (ICLR25, 224k)
+- [D] "In conclusion, the paper is not significantly better than the 3DGS compression baselines." — `P24` (NeurIPS24, yR9d; later raised 4→6)
 
 **Hedged (expertise disclaimers, venue doubts)**
-- [H] "I'm not an expert in hierarchical classification, so I may have missed some key parts of the problem, modeling, and overall reflection." — `7HEMpBTb3R` (ICLR25, YARY)
-- [H] "I do not see any clear weaknesses. However, I acknowledge that I am not familiar with hyperspherical theorems." — `8Hy3KMZTL5` (NeurIPS24, YGpA)
-- [H] "I might have missed it, but for me, the paper does not sufficiently discuss/explain the reasoning behind the choice of coordinates" — `4UiLqimGm5` (ICLR24, DCsj)
-- [H] "I'm not sure ICLR is a suitable venue for submitting this work, because it lean toward to more empirical side." — `46mbA3vu25` (ICLR25, cAL4)
-- [H] "while the idea is interesting and certainly worthy of further investigation, it seems the paper is not quite ready for publication in my opinion." — `A8Vuf2e8y6` (ICLR25, ewZN)
+- [H] "I'm not an expert in hierarchical classification, so I may have missed some key parts of the problem, modeling, and overall reflection." — `P39` (ICLR25, YARY)
+- [H] "I do not see any clear weaknesses. However, I acknowledge that I am not familiar with hyperspherical theorems." — `P45` (NeurIPS24, YGpA)
+- [H] "I'm not sure ICLR is a suitable venue for submitting this work, because it lean toward to more empirical side." — `P30` (ICLR25, cAL4)
+- [H] "while the idea is interesting and certainly worthy of further investigation, it seems the paper is not quite ready for publication in my opinion." — `P07` (ICLR25, ewZN)
 
 **Enthusiastic**
-- [E] "It is a pleasure to read - in fact it reads a bit like an advanced chapter of a wavelet applications textbook." — `uZfjFyPAvn` (ICLR24, ksCd)
-- [E] "I checked all proofs in detail and believe they are correct; they follow elegantly from reasonably elementary results from functional analysis." — `0Lqyut1y7M` (ICLR24, REJk)
-- [E] "The biggest strength of CAM is its simplicity and its plug-and-play nature." — `4UiLqimGm5` (ICLR24, 7EJV)
-- [E] "Overall maturity of the submitted package, which makes it very reasonably within camera ready territory." — `UyNXMqnN3c` (ICLR24, E7Ru)
+- [E] "I checked all proofs in detail and believe they are correct; they follow elegantly from reasonably elementary results from functional analysis." — `P03` (ICLR24, REJk)
+- [E] "Overall maturity of the submitted package, which makes it very reasonably within camera ready territory." — `P16` (ICLR24, E7Ru)
 
 **Constructive conditional offers (a very common closing move)**
-- [C] "I will give a reject first but I can raise the score to 5 if the author can differentiate their work from the missing related works and rephrase their contribution." — `P4o9akekdf` (ICLR25, tg6H)
-- [C] "I will consider raising my score if the author can provide experiments with half-image test-time optimization." — `NU3tE3lIqf` (NeurIPS24, BAXf)
-- [C] "If the authors improve the writing by the end of the rebuttal period, I will be happy to recommend acceptance for the paper." — `0Lqyut1y7M` (ICLR24, REJk)
-- [C] "the list of weaknesses is much longer than the list of strengths not because it is a bad paper, but because the weaknesses are "actionable,"" — `muN3B40keb` (ICLR25, LUop)
+- [C] "I will give a reject first but I can raise the score to 5 if the author can differentiate their work from the missing related works and rephrase their contribution." — `P18` (ICLR25, tg6H)
+- [C] "I will consider raising my score if the author can provide experiments with half-image test-time optimization." — `P23` (NeurIPS24, BAXf)
+- [C] "If the authors improve the writing by the end of the rebuttal period, I will be happy to recommend acceptance for the paper." — `P03` (ICLR24, REJk)
+- [C] "the list of weaknesses is much longer than the list of strengths not because it is a bad paper, but because the weaknesses are "actionable,"" — `P08` (ICLR25, LUop)
 
 **Post-rebuttal: raise, keep, lower, admit a misreading**
-- [C] "Despite my reservations regarding the novelty and contribution of this paper, I have decided to raise my rating." — `HKGQDDTuvZ` (ICLR24, fcgY)
-- [C] "I have moved my rating up by one as they have put a lot of effort into producing a variety of experiments." — `Sr5XaZzirA` (ICLR25, jBfM)
-- [C] "I agree with the performance of LightGaussian, thanks to detailed experiments, and all my concerns have been tackled. I will raise my score to 6." — `6AeIDnrTN2` (NeurIPS24, TPCr)
-- [D] "Consequently, I have only increased my score to 3 and still recommend against accepting the paper." — `OZljvntsto` (NeurIPS25, xxwx)
-- [C] "I appreciate the additional comparisons, I believe they increase the strength of the paper. However, I am not inclined to change my score." — `jWxrIeWgir` (ICLR24, Tuj3)
-- [H] "I find the comments provided by Reviewer AVfU to be important and well-considered, and I will therefore maintain my original score." — `LDkyhsiCZQ` (NeurIPS25, 52s2)
-- [D] "I kept my rating, since my concerns were not addressed." — `ZfNeovqQkn` (NeurIPS25, ugec)
-- [D] "Thus, I am lowering my score." — `AQqOC3FKPO` (ICLR25, 224k)
-- [H] "I would be willing to increase my rating slightly but would still not argue for acceptance given the concerns about technical contributions." — `ZfNeovqQkn` (NeurIPS25, s4ch)
-- [C] "I am impressed by the experiments on the RealEstate-10K dataset (I'm sorry to overlook this part)" — `R9lgWYE508` (ICLR25, pLoa)
-- [C] "I may have missed section 4.6. Thank you for pointing this out." — `jrVoZLF20h` (NeurIPS24, 45rR)
+- [C] "Despite my reservations regarding the novelty and contribution of this paper, I have decided to raise my rating." — `P27` (ICLR24, fcgY)
+- [C] "I have moved my rating up by one as they have put a lot of effort into producing a variety of experiments." — `P06` (ICLR25, jBfM)
+- [C] "I agree with the performance of LightGaussian, thanks to detailed experiments, and all my concerns have been tackled. I will raise my score to 6." — `P24` (NeurIPS24, TPCr)
+- [D] "Consequently, I have only increased my score to 3 and still recommend against accepting the paper." — `P14` (NeurIPS25, xxwx)
+- [C] "I appreciate the additional comparisons, I believe they increase the strength of the paper. However, I am not inclined to change my score." — `P05` (ICLR24, Tuj3)
+- [H] "I find the comments provided by Reviewer AVfU to be important and well-considered, and I will therefore maintain my original score." — `P15` (NeurIPS25, 52s2)
+- [D] "I kept my rating, since my concerns were not addressed." — `P26` (NeurIPS25, ugec)
+- [D] "Thus, I am lowering my score." — `P40` (ICLR25, 224k)
+- [H] "I would be willing to increase my rating slightly but would still not argue for acceptance given the concerns about technical contributions." — `P26` (NeurIPS25, s4ch)
+- [C] "I am impressed by the experiments on the RealEstate-10K dataset (I'm sorry to overlook this part)" — `P20` (ICLR25, pLoa)
+- [C] "I may have missed section 4.6. Thank you for pointing this out." — `P12` (NeurIPS24, 45rR)
 
 **Area-chair language**
-- [AC] "While agglomeration of design is a fine contribution when it bring about new insights, it is hard to draw such insights from the proposed design in the paper." — `DS5qRs0tQz` (ICLR24, reject)
-- [AC] "Reviewers were also lukewarm about the paper, with none of them willing to argue for accepting the paper." — `8Hy3KMZTL5` (NeurIPS24, reject)
-- [AC] "The major weakness is the limited novelty, as all the components and ideas were introduced before. However, the overall architecture and solution is non-trivial novel." — `HKGQDDTuvZ` (ICLR24, accept)
-- [AC] "the AC agrees that each individual component is not novel on its own, but the significant effectivity of the proposed component marriage is novel." — `6AeIDnrTN2` (NeurIPS24, spotlight)
-- [AC] "the claims are too strong given the evidence, since the claimed advantages/competitiveness do not extend to stronger baselines." — `9q4L2odBPh` (NeurIPS25, reject)
+- [AC] "While agglomeration of design is a fine contribution when it bring about new insights, it is hard to draw such insights from the proposed design in the paper." — `P38` (ICLR24, reject)
+- [AC] "Reviewers were also lukewarm about the paper, with none of them willing to argue for accepting the paper." — `P45` (NeurIPS24, reject)
+- [AC] "The major weakness is the limited novelty, as all the components and ideas were introduced before. However, the overall architecture and solution is non-trivial novel." — `P27` (ICLR24, accept)
+- [AC] "the AC agrees that each individual component is not novel on its own, but the significant effectivity of the proposed component marriage is novel." — `P24` (NeurIPS24, spotlight)
+- [AC] "the claims are too strong given the evidence, since the claimed advantages/competitiveness do not extend to stronger baselines." — `P46` (NeurIPS25, reject)
 
 ---
 
@@ -335,7 +322,7 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 
 - Median total length by venue: ICLR 2024 415, ICLR 2025 496, ICLR 2026 358, NeurIPS 2024 423, NeurIPS 2025 337.
 - The weaknesses section is about 2.5× the strengths section.
-- The questions field is a bare pointer in 36/184 reviews (20%): 6 words or fewer, e.g. "See the Weakness" (ZXJ74KEVUu). Elsewhere it often restates the weaknesses.
+- The questions field is a bare pointer in 36/184 reviews (20%): 6 words or fewer, e.g. "See the Weakness" (P11). Elsewhere it often restates the weaknesses.
 - **Weakness points per review** (coder count): median 3.5, mean 4.1, IQR 3–5. 16 reviews list 8 or more; the maximum is 21.
 - The rating is not predicted by length: Spearman ρ=0.06 between word count and normalised rating.
 
@@ -393,11 +380,11 @@ Even rejecting reviews are mostly written in a constructive register: 57 of 69 r
 - 20 of the 42 raises end exactly at the lowest accept-side score: 6 at ICLR, 5 at NeurIPS 2024, 4 at NeurIPS 2025.
 - 8 raises still end on the reject side.
 - 8 raises reach a clear-accept score:
-  - ICLR 8: 4UiLqimGm5 DCsj, P4o9akekdf tg6H and wkJy, AQqOC3FKPO LUqD.
+  - ICLR 8: P02 DCsj, P18 tg6H and wkJy, P40 LUqD.
   - NeurIPS 2024 7: two reviewers.
-  - NeurIPS 2025 ≥5: OZljvntsto y2xa, GrPo8NTtzK jews.
+  - NeurIPS 2025 ≥5: P14 y2xa, P25 jews.
 
-**Direction asymmetry.** There was 1 explicit lowering: AQqOC3FKPO 224k, who lowered because a *different* reviewer's questions were unanswered. One more is author-alleged and silent: jWxrIeWgir, where the authors say the rating went 8→5 and the reviewer never mentions it.
+**Direction asymmetry.** There was 1 explicit lowering: P40 224k, who lowered because a *different* reviewer's questions were unanswered. One more is author-alleged and silent: P05, where the authors say the rating went 8→5 and the reviewer never mentions it.
 
 **Supplementary scan [estimate].** A regex over all 1,206 keyword-matched CV forums (4,795 reviews) at ICLR 2024/25 and NeurIPS 2024 found an explicit score-raise statement for:
 - ICLR 2024: 120/1,469 reviews (8.2%).
@@ -439,9 +426,9 @@ Validated against the coded corpus, the regex has precision 39/40 and recall 39/
 
 - Confirmed misreadings by venue: ICLR 2024 1/43, ICLR 2025 3/41, NeurIPS 2024 1/31, NeurIPS 2025 4/29.
 - Typical confirmed cases:
-  - Overlooked an experiment: R9lgWYE508 pLoa, jrVoZLF20h 45rR, OZljvntsto y2xa.
-  - Misunderstood a loss: ZfNeovqQkn s4ch.
-  - Missed a stated advantage: 46mbA3vu25 cAL4.
+  - Overlooked an experiment: P20 pLoa, P12 45rR, P14 y2xa.
+  - Misunderstood a loss: P26 s4ch.
+  - Missed a stated advantage: P30 cAL4.
 - In 5 of the 9 confirmed cases the reviewer also explicitly raised the score.
 
 ---
@@ -466,15 +453,15 @@ Each review has one primary type assigned by the coder with the codebook definit
 Novelty-skeptic reviews are reject-side 18 of 23 times, against 51 of 161 for all other types (Fisher p<0.0001, odds ratio 7.8).
 
 **Example quotes per type**
-- **Expert-constructive:** "A closer look into Table 4 would also reveal that the performance on ODinW is actually on par with GLIPv2 if given the same pertaining data." — `DS5qRs0tQz` (sRML)
-- **Terse:** "The writing needs improvement." — `8Hy3KMZTL5` (zhUR)
-- **Novelty-skeptic:** "Applying variants of previous contributions to 3DGS is thus quite incremental." — `NU3tE3lIqf` (5zzk); "the contribution here is to merely apply these to the NoPoSplat framework." — `ZfNeovqQkn` (s4ch)
-- **Benchmark-table:** "The benchmark models referenced are somewhat outdated." — `M5t0WvjfCg` (FFqs)
-- **Checklist:** "I have a series of things to point out about the paper, which are the reason for the current score assigned to the paper." — `92d74WdgtG` (1Ux1, 21 bullets)
-- **Champion:** "The paper is a strong contribution and is ready for acceptance." — `yGJrvSU6wK` (7JKP); "Regarding the concerns about novelty raised by other reviewers, I believe that leveraging existing methodologies does not diminish the significance of the contribution" — `9q4L2odBPh` (fyfz)
-- **Theory-checker:** "Matching entrywise Jacobian variance does not ensure favorable singular-value spectra of end-to-end Jacobians (dynamical isometry)." — `92d74WdgtG` (s653 ⚑)
-- **LLM-generic:** "SOTA Validation: Validated at scale on SOTA training recipes, proving practical utility." — `9zVPsVWUY1` (EBbD ⚑)
-- **Hostile:** "I doubt the contribution of this paper beyond a published one [1] in NeurIPS 2023. The paper fails to cite it and may intend to mislead the readers." — `7HEMpBTb3R` (uxN6)
+- **Expert-constructive:** "A closer look into Table 4 would also reveal that the performance on ODinW is actually on par with GLIPv2 if given the same pertaining data." — `P38` (sRML)
+- **Terse:** "The writing needs improvement." — `P45` (zhUR)
+- **Novelty-skeptic:** "Applying variants of previous contributions to 3DGS is thus quite incremental." — `P23` (5zzk); "the contribution here is to merely apply these to the NoPoSplat framework." — `P26` (s4ch)
+- **Benchmark-table:** "The benchmark models referenced are somewhat outdated." — `P29` (FFqs)
+- **Checklist:** "I have a series of things to point out about the paper, which are the reason for the current score assigned to the paper." — `P09` (1Ux1, 21 bullets)
+- **Champion:** "The paper is a strong contribution and is ready for acceptance." — `P10` (7JKP); "Regarding the concerns about novelty raised by other reviewers, I believe that leveraging existing methodologies does not diminish the significance of the contribution" — `P46` (fyfz)
+- **Theory-checker:** "A theoretical argument (despite any assumptions made) would help the reader to appreciate the idea proposed more than an empirical hack." — `P41` (rzsv)
+- **LLM-generic:** "SOTA Validation: Validated at scale on SOTA training recipes, proving practical utility." — `P43` (EBbD ⚑)
+- **Hostile:** "I doubt the contribution of this paper beyond a published one [1] in NeurIPS 2023. The paper fails to cite it and may intend to mislead the readers." — `P39` (uxN6)
 
 **LLM-sounding reviews.**
 - Flagged in 25/184 reviews (13.6%), most heavily in ICLR 2026: 12/40, against 5/43 in ICLR 2024, 1/41 in ICLR 2025, 2/31 in NeurIPS 2024 and 5/29 in NeurIPS 2025.
@@ -482,8 +469,8 @@ Novelty-skeptic reviews are reject-side 18 of 23 times, against 51 of 161 for al
 - Compared with human-written reviews in this sample, AI-generated ones raised more weakness codes (5.9 vs 4.1) and gave slightly higher ratings (4.5 vs 3.9) **[small n=8 vs 15; estimate]**.
 - Observable signs:
   - Bold "Title: sentence" bullets mirrored between weaknesses and questions.
-  - A LaTeX `\paragraph{Summary}` left in the text (92d74WdgtG s653).
-  - Internal contradictions: SZvhmFntRA hqg6 claims "~0.8–0.9 dB" in its strengths and "≈0.08–0.18 dB" in its weaknesses.
+  - A LaTeX `\paragraph{Summary}` left in the text (P09 s653).
+  - Internal contradictions: P31 hqg6 claims "~0.8–0.9 dB" in its strengths and "≈0.08–0.18 dB" in its weaknesses.
   - Factual slips about the venue: "<10% acceptance" for ICLR.
 
 ---
@@ -494,38 +481,38 @@ Novelty-skeptic reviews are reject-side 18 of 23 times, against 51 of 161 for al
 
 | Paper | Before → after | What moved the reviewer |
 |---|---|---|
-| **P4o9akekdf** (NoPoSplat, ICLR25 oral) | tg6H opened at "reject"; raised to 8 | Rewrote contributions and related work to differentiate PF-LRM/LEAP; added an object-level comparison vs LEAP (PSNR 20.559→28.378 on Objaverse); weight-initialization ablation; showed training data matched pixelSplat/MVSplat. The reviewer's own condition was: "I can raise the score to 5 if the author can differentiate their work from the missing related works and rephrase their contribution." |
-| **6AeIDnrTN2** (LightGaussian, NeurIPS24 spotlight) | TPCr and yR9d 4→6 | Re-ran the *exact baselines the reviewers named* (Compact/Compressed 3D-GS) on the same GPU with FPS and training time; applied the method to Scaffold-GS with HAC numbers. |
-| **NU3tE3lIqf** (WildGaussians, NeurIPS24) | BAXf and bi9Y raised; AC: initially "BA, WA, BA and R" | Showed the evaluation already used the NeRF-W half-image protocol and that GS-W's code did not, so the "unfair comparison" charge was turned around; added SWAG/GS-W under the common protocol. |
-| **jrVoZLF20h** (NeurIPS24) | XqfY raised to 6; 45rR "no longer against acceptance" | Extended the partition-factor ablation the reviewer specified, added pseudocode, and pointed to an existing Section 4.6 the reviewer had missed (confirmed misread). |
-| **1jG5ngXVs3** (FlowTurbo, NeurIPS24) | yH4R to 5, RYd7 to 6 | New results on SD3/FLUX (scalability) and distillation baselines *with training costs*; block-order ablation. |
-| **wWguwYhpAY** (Neural Experts, NeurIPS24) | VtKc 5→6 | InstantNGP comparison, requested by the reviewer *and the AC*. AC: "AC appreciates the authors' efforts and quick response to the request for additional evidence demonstrating the broad impact of their work by providing InstantNGP results". |
-| **13xP0J2d6E** (BlurDM, NeurIPS25) | a5f6 raised; accepted with 2/4/5/4/4 | Stage-wise ablation plus a derivation justifying the latent-space assumption. The AC cited "confidence interval analyses, and perceptual metrics during the rebuttal". |
-| **OZljvntsto** (NeurIPS25) | y2xa raised to accept (5); accepted at 3/4/5/3 | New CT task (AAPM), results for the named baseline, offer to narrow the overclaiming title. One champion was enough for the AC. |
-| **M5t0WvjfCg** (AdaIR, ICLR25) | FFqs 3→5 | Recent all-in-one baselines with parameter counts, plus an attention-type ablation. The reviewer still disclaimed support, but the paper was accepted. |
-| **25Zlvl7JxW** (HQGS, ICLR25) | cE6C and rTVv raised | Robustness table vs NeRF/3DGS/SRGS across noise and downsampling levels; ablation averaged over all scenes instead of one. |
+| **P18** (NoPoSplat, ICLR25 oral) | tg6H opened at "reject"; raised to 8 | Rewrote contributions and related work to differentiate PF-LRM/LEAP; added an object-level comparison vs LEAP (PSNR 20.559→28.378 on Objaverse); weight-initialization ablation; showed training data matched pixelSplat/MVSplat. The reviewer's own condition was: "I can raise the score to 5 if the author can differentiate their work from the missing related works and rephrase their contribution." |
+| **P24** (LightGaussian, NeurIPS24 spotlight) | TPCr and yR9d 4→6 | Re-ran the *exact baselines the reviewers named* (Compact/Compressed 3D-GS) on the same GPU with FPS and training time; applied the method to Scaffold-GS with HAC numbers. |
+| **P23** (WildGaussians, NeurIPS24) | BAXf and bi9Y raised; AC: initially "BA, WA, BA and R" | Showed the evaluation already used the NeRF-W half-image protocol and that GS-W's code did not, so the "unfair comparison" charge was turned around; added SWAG/GS-W under the common protocol. |
+| **P12** (NeurIPS24) | XqfY raised to 6; 45rR "no longer against acceptance" | Extended the ablation the reviewer specified, added pseudocode, and pointed to an existing Section 4.6 the reviewer had missed (confirmed misread). |
+| **P44** (FlowTurbo, NeurIPS24) | yH4R to 5, RYd7 to 6 | New results on SD3/FLUX (scalability) and distillation baselines *with training costs*; block-order ablation. |
+| **P13** (NeurIPS24) | VtKc 5→6 | Comparison to the baseline requested by the reviewer *and the AC*. AC: "AC appreciates the authors' efforts and quick response to the request for additional evidence demonstrating the broad impact of their work by providing InstantNGP results". |
+| **P35** (BlurDM, NeurIPS25) | a5f6 raised; accepted with 2/4/5/4/4 | Stage-wise ablation plus a derivation justifying the latent-space assumption. The AC cited "confidence interval analyses, and perceptual metrics during the rebuttal". |
+| **P14** (NeurIPS25) | y2xa raised to accept (5); accepted at 3/4/5/3 | New CT task (AAPM), results for the named baseline, offer to narrow the overclaiming title. One champion was enough for the AC. |
+| **P29** (AdaIR, ICLR25) | FFqs 3→5 | Recent all-in-one baselines with parameter counts, plus an attention-type ablation. The reviewer still disclaimed support, but the paper was accepted. |
+| **P19** (HQGS, ICLR25) | cE6C and rTVv raised | Robustness table vs NeRF/3DGS/SRGS across noise and downsampling levels; ablation averaged over all scenes instead of one. |
 
 ### Raises that did not convert (ICLR 2025: borderline-6 papers still rejected)
 
-- **R9lgWYE508**: three reviewers raised to 6 (final 6/6/6/5) after extensive new experiments. Rejected.
-- **46mbA3vu25**: three raised (final 6/5/6/6). Rejected.
-- **muN3B40keb**: three raised (final 6/5/6/6/6). Rejected.
-- **HxHrRUHMOD** (ICLR24): a champion at 8 plus a raise to 6. The AC said "I am leaning towards rejection since there seems to be no consensus but I wouldn't mind if the paper would get accepted". Rejected.
-- **DS5qRs0tQz** (Grounding DINO, ICLR24): 5/8/5. The rebuttal addressed sRML's points, but the two 5s never replied. Rejected on "agglomeration of design".
-- **ZfNeovqQkn**, **RKOgWtrWPe** (NeurIPS25): novelty and marginal-gain objections. In each, one reviewer moved one step (to borderline reject and borderline accept respectively) and the rest kept. Both rejected.
-- **LDkyhsiCZQ** (NeurIPS25 resubmission of an ICLR25 paper): no score moved. The AC called the framing "over-interpretating and over-claiming".
+- **P20**: three reviewers raised to 6 (final 6/6/6/5) after extensive new experiments. Rejected.
+- **P30**: three raised (final 6/5/6/6). Rejected.
+- **P08**: three raised (final 6/5/6/6/6). Rejected.
+- **P04** (ICLR24): a champion at 8 plus a raise to 6. The AC said "I am leaning towards rejection since there seems to be no consensus but I wouldn't mind if the paper would get accepted". Rejected.
+- **P38** (Grounding DINO, ICLR24): 5/8/5. The rebuttal addressed sRML's points, but the two 5s never replied. Rejected on "agglomeration of design".
+- **P26**, **P36** (NeurIPS25): novelty and marginal-gain objections. In each, one reviewer moved one step (to borderline reject and borderline accept respectively) and the rest kept. Both rejected.
+- **P15** (NeurIPS25 resubmission of an ICLR25 paper): no score moved. The AC called the framing "over-interpretating and over-claiming".
 
 ### Patterns (counts are from the 36 threaded papers)
 
-1. **Add the comparison the reviewer named, ideally re-run under the same protocol or hardware** (6AeIDnrTN2, NU3tE3lIqf). This is the most common driver of a raise **[coder-extracted from the rebuttal drivers]**:
+1. **Add the comparison the reviewer named, ideally re-run under the same protocol or hardware** (P24, P23). This is the most common driver of a raise **[coder-extracted from the rebuttal drivers]**:
    - It appears in 15 of the 18 accepted papers that had a raise.
    - It also appears in 9 of the 10 *rejected* papers that had a raise.
    - It buys points, not acceptance.
 2. **Turn a fairness or misreading complaint around with a pointer.** Authors claim misreadings in 40% of reviews, but reviewers concede only 6%. When they do concede, an explicit raise followed in 5 of 9 cases.
-3. **Differentiate from the one prior work the skeptic names, and rewrite the contribution list.** This is the only observed way a novelty-based reject flipped (P4o9akekdf). Most novelty-skeptics move one step and stop.
-4. **Narrow the claim.** Examples: retitling (OZljvntsto, HxHrRUHMOD); conceding a scope error (2dnO3LLiJ1, where the "all models" claim was corrected for OpenCLIP). Overclaiming is one of the 3 codes that predict rejection.
+3. **Differentiate from the one prior work the skeptic names, and rewrite the contribution list.** This is the only observed way a novelty-based reject flipped (P18). Most novelty-skeptics move one step and stop.
+4. **Narrow the claim.** Examples: retitling (P14, P04); conceding a scope error (P37, where the "all models" claim was corrected for OpenCLIP). Overclaiming is one of the 3 codes that predict rejection.
 5. **A champion matters more than the mean.** 19/25 accepted papers had a clear-accept score, against 8/21 rejected papers. Raises to the borderline level without a champion often end in rejection, as in the ICLR 2025 cases above.
-6. **Silence after the rebuttal is common and costly.** 34/144 reviewers never replied: ICLR 2024 23/43, other venues 2–5 each. In Grounding DINO and 8Hy3KMZTL5 the non-replying borderline reviewers' scores stood. The 8Hy3KMZTL5 AC wrote: "none of them willing to argue for accepting the paper".
+6. **Silence after the rebuttal is common and costly.** 34/144 reviewers never replied: ICLR 2024 23/43, other venues 2–5 each. In Grounding DINO and P45 the non-replying borderline reviewers' scores stood. The P45 AC wrote: "none of them willing to argue for accepting the paper".
 
 ---
 

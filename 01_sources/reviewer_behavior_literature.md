@@ -1,6 +1,6 @@
 # Reviewer behaviour and LLM review simulation: literature notes
 
-Compiled 2026-10-13 for the CVPR review harness (track C of `00_plan/task_plan.md`).
+Compiled 2026-10-13 for the harness.
 Purpose: ground the simulated reviewer personas, the AC/discussion phase, and the writer-vs-reviewer loop in published evidence.
 
 **Labels**
