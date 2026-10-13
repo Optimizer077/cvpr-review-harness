@@ -2,7 +2,8 @@
 and render page images and figure crops with measurements (`figure_render`).
 
 Reviewers read what a real CVPR reviewer reads: the review-copy PDF. Text files carry the
-CVPR margin line numbers as `L###` anchors so reviews can cite locations the way real reviews do.
+margin line numbers of review copies as `L###` anchors so reviews can cite locations the way real
+reviews do. Text extraction and section detection live in `paper_text` and are re-exported here.
 """
 from __future__ import annotations
 
@@ -10,137 +11,40 @@ import logging
 import re
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from .common import SECTION_KEYS, save_json, sha256_file
+from .paper_text import detect_sections, extract_lines, extract_pages, is_heading_row, render_pages
+
+__all__ = ["detect_sections", "extract_captions", "extract_lines", "extract_pages", "injection_phrases",
+           "render_pages", "scan_hidden_and_injection", "snapshot_paper"]
 
 logger = logging.getLogger(__name__)
 
-_HEADER_PATTERNS = (
-    re.compile(r"^CVPR$"),
-    re.compile(r"^ICCV$"),
-    re.compile(r"^ECCV$"),
-    re.compile(r"^#\*+$"),
-    re.compile(r"Submission #.*CONFIDENTIAL REVIEW COPY", re.IGNORECASE),
-)
-_LINE_NO = re.compile(r"^\d{3,4}$")
-_TOP_HEADING = re.compile(r"^(\d{1,2})\.\s+([A-Z].{1,90})$")
-_APPENDIX_HEADING = re.compile(r"^([A-Z])\.\s+([A-Z].{1,90})$")
 _CAPTION = re.compile(r"^(Figure|Fig\.|Table)\s*S?\d+[.:]")
-_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("introduction", ("introduction",)),
-    ("related_work", ("related", "background", "prior work", "preliminar")),
-    ("limitations", ("limitation",)),
-    ("conclusion", ("conclusion", "concluding")),
-    ("theory", ("theory", "theoretical")),
-    ("ablations_analysis", ("ablation", "analysis", "discussion", "understanding")),
-    ("experiments", ("experiment", "evaluation", "results")),
-    ("method", ("method", "approach", "proposed", "framework")),
-)
 _CAPTION_MAX_LINES = 10
+_DARK_FILL = 0.75  # mean RGB (0-1) below which a filled shape is a dark background for white text
+# Instructions aimed at the (LLM) reviewer, not sentences about LLMs: overriding instructions,
+# addressing an AI, telling reviewers/LLMs to rate this paper, ordering a positive review.
 _INJECTION = re.compile(
-    r"(ignore (all |any )?(previous|prior|above) instructions|as an? (ai|language model)|"
-    r"\b(llm|language model|chatgpt|gpt-?\d)s?\b.{0,40}\b(review|rate|score)|"
-    r"(give|assign|recommend) (this paper )?(a )?(high|positive|strong) (score|rating)|"
-    r"\breviewers? (should|must|will|may)\b|to address (possible|potential) (reviewer )?concerns)",
+    r"\b(?:ignore|disregard|forget)\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|preceding|earlier)"
+    r"\s+(?:instructions|prompts?|directions)"
+    r"|\bif\s+you\s+are\s+an?\s+(?:ai|llm|(?:large\s+)?language\s+model|(?:ai|automated)\s+reviewer)\b"
+    r"|\bas\s+an?\s+(?:ai|llm|automated|language[\s-]model)\s+reviewer\b"
+    r"|\b(?:note|message|instructions?)\s+(?:to|for)\s+(?:the\s+|any\s+|all\s+)?"
+    r"(?:llm|ai|language[\s-]model|automated)\s+reviewers?\b"
+    r"|\bdeserves?\s+(?:a|an)\s+(?:strong\s+|clear\s+)?(?:accept|acceptance|high\s+(?:score|rating))\b"
+    r"|(?:^|[.!?]\s+|\bplease\s+)(?:rate|score|accept)\s+(?:this|the)\s+(?:paper|work|submission|manuscript)\b"
+    r"|\b(?:llms?|ai|(?:large\s+)?language\s+models?|chatgpt|gpt-?\d\w*|assistants?|reviewers?)\b[^.!?]{0,40}?"
+    r"\b(?:should|must|shall|(?:is|are)\s+instructed\s+to)\s+(?:\w+\s+){0,3}?"
+    r"(?:rate|score|recommend|accept|praise|give|assign)\b[^.!?]{0,40}?"
+    r"\b(?:this|the|our)\s+(?:paper|work|submission|manuscript)\b"
+    r"|(?:^|[.!?]\s+|\b(?:please|now|just|only)\s+)(?:give|assign|award|write|provide)\s+(?:only\s+)?"
+    r"(?:this\s+(?:paper|work|submission)\s+)?an?\s+(?:very\s+)?"
+    r"(?:high|positive|strong|favou?rable|perfect|top|glowing)\s+(?:score|rating|review|evaluation|assessment)"
+    r"|\bdo\s+not\s+(?:highlight|mention|point\s+out|list|discuss)\s+(?:any\s+)?"
+    r"(?:negatives|weaknesses|flaws|limitations)",
     re.IGNORECASE)
-
-
-def _is_header(line: str) -> bool:
-    return any(p.search(line) for p in _HEADER_PATTERNS)
-
-
-def extract_lines(pdf: Path) -> list[list[tuple[str, str]]]:
-    """Return per page a list of (anchor, text); anchor is 'L###' or ''."""
-    import fitz  # PyMuPDF; imported lazily so the CLI loads without it
-
-    pages: list[list[tuple[str, str]]] = []
-    with fitz.open(pdf) as doc:
-        for page in doc:
-            rows: list[list[str]] = []
-            for raw in page.get_text().splitlines():
-                line = raw.strip()
-                if not line or _is_header(line):
-                    continue
-                if _LINE_NO.match(line):
-                    if rows and not rows[-1][0]:
-                        rows[-1][0] = f"L{line}"
-                    continue
-                rows.append(["", line])
-            pages.append([(a, t) for a, t in rows])
-    return pages
-
-
-def render_pages(pages: list[list[tuple[str, str]]], label: str) -> str:
-    """Render pages as text with page markers and line anchors."""
-    out: list[str] = []
-    for i, rows in enumerate(pages, start=1):
-        out.append(f"===== [{label} p.{i}] =====")
-        out.extend(f"{a:<6}{t}" for a, t in rows)
-    return "\n".join(out) + "\n"
-
-
-def _canonical(name: str, seen_experiments: bool) -> str:
-    """Map a heading to a section key; unnamed sections are method before experiments, analysis after."""
-    low = name.lower()
-    for key, words in _KEYWORDS:
-        if any(w in low for w in words):
-            return key
-    return "ablations_analysis" if seen_experiments else "method"
-
-
-def detect_sections(pages: list[list[tuple[str, str]]]) -> list[dict]:
-    """Find title, abstract, numbered top-level sections and references in the main paper."""
-    flat: list[tuple[int, str, str]] = [
-        (p, a, t) for p, rows in enumerate(pages, start=1) for a, t in rows
-    ]
-    marks: list[dict] = []
-    expected = 1
-    seen_exp = False
-    for idx, (page, _anchor, text) in enumerate(flat):
-        if text == "Abstract" and not marks:
-            marks.append({"key": "abstract", "heading": "Abstract", "page": page, "idx": idx})
-            continue
-        if text == "References":
-            marks.append({"key": "references", "heading": "References", "page": page, "idx": idx})
-            break
-        match = _TOP_HEADING.match(text)
-        if not match or int(match.group(1)) != expected:
-            continue
-        heading = match.group(2)
-        if heading.endswith("-") and idx + 1 < len(flat):
-            heading = heading[:-1] + flat[idx + 1][2]
-        key = _canonical(heading, seen_exp)
-        seen_exp |= key == "experiments"
-        marks.append({"key": key, "heading": f"{expected}. {heading}", "page": page, "idx": idx})
-        expected += 1
-    title_lines = [t for p, _, t in flat[: marks[0]["idx"] if marks else 0]
-                   if p == 1 and not t.startswith(("Anonymous", "Paper ID"))]
-    spans: list[dict] = [{"key": "title", "heading": "Title", "text": " ".join(title_lines),
-                          "page_start": 1, "page_end": 1}]
-    for k, mark in enumerate(marks):
-        end = marks[k + 1]["idx"] if k + 1 < len(marks) else len(flat)
-        chunk = flat[mark["idx"]:end]
-        spans.append({
-            "key": mark["key"], "heading": mark["heading"],
-            "page_start": mark["page"], "page_end": chunk[-1][0] if chunk else mark["page"],
-            "text": "\n".join(f"{a:<6}{t}" for _, a, t in chunk),
-        })
-    return _merge_duplicate_keys(spans)
-
-
-def _merge_duplicate_keys(spans: list[dict]) -> list[dict]:
-    """Two numbered sections may map to one key (e.g. two method sections); concatenate them."""
-    merged: dict[str, dict] = {}
-    for span in spans:
-        if span["key"] in merged:
-            prev = merged[span["key"]]
-            prev["heading"] += " + " + span["heading"]
-            prev["text"] += "\n" + span["text"]
-            prev["page_end"] = span["page_end"]
-        else:
-            merged[span["key"]] = dict(span)
-    return list(merged.values())
 
 
 def extract_captions(pages: list[list[tuple[str, str]]], label: str) -> list[dict]:
@@ -152,7 +56,7 @@ def extract_captions(pages: list[list[tuple[str, str]]], label: str) -> list[dic
                 continue
             body = [text]
             for _, nxt in rows[i + 1:i + _CAPTION_MAX_LINES]:
-                if _CAPTION.match(nxt) or _TOP_HEADING.match(nxt):
+                if _CAPTION.match(nxt) or is_heading_row(nxt):
                     break
                 body.append(nxt)
                 if nxt.endswith(".") and len(" ".join(body)) > 300:
@@ -173,23 +77,67 @@ def _limitations_span(spans: list[dict]) -> Optional[dict]:
     return None
 
 
+def injection_phrases(text: str) -> list[str]:
+    """Instructions aimed at the reviewer or an LLM reviewer in `text` (line breaks are ignored).
+
+    Sentences about LLMs ('GPT-4 achieves a win rate ...') are not instructions and are not flagged.
+    """
+    return [m.group(0) for m in _INJECTION.finditer(" ".join(text.split()))]
+
+
+def _near_white(color: object) -> bool:
+    """Whether an sRGB integer colour (0xRRGGBB) is white or nearly so."""
+    return isinstance(color, int) and all(((color >> shift) & 0xFF) >= 0xF0 for shift in (16, 8, 0))
+
+
+def _dark_backgrounds(page: Any) -> list[Any]:
+    """Rectangles of images and dark filled drawings: white text on them is a visible figure label."""
+    import fitz
+
+    rects = [fitz.Rect(info["bbox"]) for info in page.get_image_info()]
+    for drawing in page.get_drawings():
+        fill, opacity = drawing.get("fill"), drawing.get("fill_opacity")
+        if fill and sum(fill) / len(fill) < _DARK_FILL and (opacity is None or opacity > 0.3):
+            rects.append(fitz.Rect(drawing["rect"]))
+    return rects
+
+
+def _hidden_spans(page: Any) -> list[str]:
+    """Texts of spans a reader cannot see: tiny (< 2.5 pt), or near-white on the page background.
+
+    Near-white text that lies mostly over an image or a dark filled shape (labels drawn on error maps,
+    photos or coloured boxes) is visible and not reported.
+    """
+    import fitz
+
+    spans = [span for block in page.get_text("dict")["blocks"] for line in block.get("lines", [])
+             for span in line.get("spans", []) if len(span.get("text", "").strip()) >= 4]
+    backgrounds: Optional[list[Any]] = None
+    hidden: list[str] = []
+    for span in spans:
+        if span.get("size", 10) >= 2.5 and not _near_white(span.get("color")):
+            continue
+        if span.get("size", 10) >= 2.5:
+            backgrounds = _dark_backgrounds(page) if backgrounds is None else backgrounds
+            box = fitz.Rect(span["bbox"])
+            area = box.get_area() or 1.0
+            if any((fitz.Rect(box) & bg).get_area() >= 0.5 * area for bg in backgrounds
+                   if box.intersects(bg)):
+                continue
+        hidden.append(span["text"].strip())
+    return hidden
+
+
 def scan_hidden_and_injection(pdf: Path, label: str) -> list[str]:
-    """Flag white or near-invisible text spans and reviewer/LLM-directed sentences."""
+    """Flag hidden-looking text spans (`_hidden_spans`) and reviewer/LLM-directed sentences."""
     import fitz
 
     flags: list[str] = []
     with fitz.open(pdf) as doc:
         for pno, page in enumerate(doc, start=1):
-            for block in page.get_text("dict")["blocks"]:
-                for line in block.get("lines", []):
-                    for span in line.get("spans", []):
-                        text = span.get("text", "").strip()
-                        if len(text) < 4:
-                            continue
-                        if span.get("color") == 0xFFFFFF or span.get("size", 10) < 2.5:
-                            flags.append(f"{label} p.{pno}: hidden-looking text {text[:60]!r}")
-            for match in _INJECTION.finditer(page.get_text()):
-                flags.append(f"{label} p.{pno}: reviewer/LLM-directed phrase {match.group(0)[:60]!r}")
+            flags += [f"{label} p.{pno}: hidden-looking text {text[:60]!r}" for text in _hidden_spans(page)]
+            for phrase in injection_phrases(page.get_text()):
+                flags.append(f"{label} p.{pno}: reviewer/LLM-directed phrase {phrase[:60]!r}")
     return flags
 
 
@@ -200,7 +148,7 @@ def snapshot_paper(pdf: Path, dest: Path, supp: Optional[Path] = None,
     meta: dict = {"main_pdf_source": str(pdf.resolve())}
     shutil.copy2(pdf, dest / "main.pdf")
     meta["main_pdf_sha256"] = sha256_file(dest / "main.pdf")
-    main_pages = extract_lines(dest / "main.pdf")
+    main_pages, main_styles = extract_pages(dest / "main.pdf")
     meta["main_pages"] = len(main_pages)
     main_txt = render_pages(main_pages, "main")
     (dest / "paper_main.txt").write_text(main_txt, encoding="utf-8")
@@ -218,7 +166,7 @@ def snapshot_paper(pdf: Path, dest: Path, supp: Optional[Path] = None,
         (dest / "paper_supp.txt").write_text(supp_txt, encoding="utf-8")
         meta["injection_flags"] += scan_hidden_and_injection(dest / "supplement.pdf", "supp")
 
-    spans = detect_sections(main_pages)
+    spans = detect_sections(main_pages, main_styles)
     body = [s for s in spans if s["key"] not in ("references", "title")]
     meta["main_words"] = sum(len(re.sub(r"(?m)^L\d{3,4}\s+", "", s["text"]).split()) for s in body)
     if not any(s["key"] == "limitations" for s in spans):

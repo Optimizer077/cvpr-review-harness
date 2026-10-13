@@ -6,8 +6,11 @@ import json
 import re
 from pathlib import Path
 
-from .common import sha256_file
+from .common import read_text, sha256_file
 from .dialogue import DECISIONS, parse_response
+
+_LINE_ANCHOR = re.compile(r'(?m)^L\d{3,4}[ \t]*')  # rendered rows: 'L012  text'
+_CAPTION_ANCHOR = re.compile(r'(\[(?:main|supp) p\.\d+) L\d{3,4}\]')  # captions: '[main p.2 L045]'
 
 
 def response_fingerprint(path: Path, open_ids: set[str]) -> str | None:
@@ -30,10 +33,21 @@ def same_paper(pdf: Path, supp: Path | None, previous: dict) -> bool:
             and (sha256_file(supp) if supp else None) == previous['paper'].get('supp_pdf_sha256'))
 
 
+def _normalized(text: str) -> str:
+    """Section text without margin line anchors and layout whitespace.
+
+    An inserted sentence shifts every later `L###` anchor; comparing raw text would mark every
+    later section as changed.
+    """
+    text = _CAPTION_ANCHOR.sub(r'\1]', _LINE_ANCHOR.sub('', text))
+    return ' '.join(text.split())
+
+
 def changed_sections(previous: Path, current: Path) -> dict:
-    """Exact extracted-text changes are navigation hints, not proof of visual equivalence."""
-    old = {p.stem: p.read_text(encoding='utf-8') for p in (previous / 'sections').glob('*.txt')}
-    new = {p.stem: p.read_text(encoding='utf-8') for p in (current / 'sections').glob('*.txt')}
+    """Extracted-text changes (anchors and whitespace ignored) are navigation hints, not proof of
+    visual equivalence."""
+    old = {p.stem: _normalized(read_text(p)) for p in (previous / 'sections').glob('*.txt')}
+    new = {p.stem: _normalized(read_text(p)) for p in (current / 'sections').glob('*.txt')}
     return {
         'changed': sorted(k for k in old.keys() | new.keys() if old.get(k) != new.get(k)),
         'added': sorted(new.keys() - old.keys()), 'removed': sorted(old.keys() - new.keys()),

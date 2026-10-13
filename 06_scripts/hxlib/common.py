@@ -36,9 +36,18 @@ SECTION_KEYS: tuple[str, ...] = (
 
 
 def load_json(path: Path) -> Any:
-    """Read a JSON file."""
-    with path.open("r", encoding="utf-8") as fh:
+    """Read a UTF-8 JSON file; a leading byte-order mark (Windows editors, PowerShell) is accepted.
+
+    Raises UnicodeDecodeError for other encodings (e.g. UTF-16) and json.JSONDecodeError for bad JSON;
+    both are ValueError subclasses.
+    """
+    with path.open("r", encoding="utf-8-sig") as fh:
         return json.load(fh)
+
+
+def read_text(path: Path) -> str:
+    """Read a UTF-8 text file, dropping a leading byte-order mark. Raises UnicodeDecodeError otherwise."""
+    return path.read_text(encoding="utf-8-sig")
 
 
 def save_json(path: Path, obj: Any) -> None:
