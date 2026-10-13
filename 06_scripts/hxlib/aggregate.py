@@ -16,6 +16,7 @@ from typing import Optional
 
 from .common import SECTION_KEYS, list_rounds, load_json, load_scales, review_dir, round_dir, save_json
 from .dialogue import round_items
+from .figure_job import figure_stats, figure_summary, figure_table
 from .venues import scales_for
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,7 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
                                  "fixable_by": w["fixable_by"], "text": w["text"][:300]}
                                 for w in weak if w.get("decisive")],
         "open_points": len(weak), "satisfaction": dict(satisfaction),
+        "figures": figure_summary(rnd, round_path),  # FIG job: id -> score, role, main issue
     }
     fix = round_path / "fixcheck" / "fixcheck.json"
     if fix.exists():
@@ -172,6 +174,9 @@ def write_round_report(agg: dict, round_path: Path) -> None:
                 verdicts = dict(Counter(c["verdict"] for c in audit["claim_checks"]))
                 lines += [f"- {jid} evidence audit: {verdicts}; sections not checked: {', '.join(unchecked) or 'none reported'}. See this review's JSON for evidence locations."]
         lines.append("")
+    if agg.get("figures"):
+        lines += ["## Figure scores (FIG job)", "", "Lowest first; one entry per figure and table.", "",
+                  *figure_table(agg["figures"]), ""]
     wc = agg["weakness_counts"]
     lines += [f"Feedback weaknesses by severity: {wc['by_severity']}; decisive: {wc['decisive']}.",
               f"By category: {wc['by_category']}.", f"Fixable by: {wc['by_fixable']}.", ""]
@@ -221,6 +226,16 @@ def _verdict(delta: float, sd: Optional[float], n: int) -> str:
     return f" ({'above' if abs(delta) > threshold else 'within'} noise, threshold {threshold:.2f})"
 
 
+def _figure_progress(agg: dict, prev: Optional[dict]) -> list[str]:
+    """PROGRESS.md line for the FIG job's figure-score mean (descriptive; figure sets may differ)."""
+    stats = figure_stats(agg.get("figures") or {})
+    if not stats:
+        return []
+    old = figure_stats(prev.get("figures") or {}) if prev else None
+    delta = f", delta {round(stats['mean'] - old['mean'], 2):+}" if old else ""
+    return [f"- **figures (FIG job)**: mean {stats['mean']} (min {stats['min']}, n={stats['n']}){delta}"]
+
+
 def write_progress(session: Path) -> str:
     """PROGRESS.md: per-round group means and deltas vs the previous non-retest round."""
     noise = noise_floor(session)
@@ -248,6 +263,7 @@ def write_progress(session: Path) -> str:
                     d = round(st["mean"] - old["mean"], 2)
                     delta = f", delta {d:+}" + _verdict(d, noise.get(sec, {}).get("sd"), st["n"])
                 lines.append(f"  - {sec}: mean {st['mean']} (min {st['min']}){delta}")
+        lines += _figure_progress(agg, prev)
         if not agg.get("retest_of"):
             prev = agg
         lines.append("")

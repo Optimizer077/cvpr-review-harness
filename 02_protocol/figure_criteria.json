@@ -1,0 +1,42 @@
+{
+  "_readme": "Machine-readable keys for the opt-in figure review job (FIG, persona F01; hx.py new --figures). figure_rubric.md defines the criterion anchors, the role expectations and the defect definitions; figure_review_rules.md says how the figure reader works. validate.py requires: figure_scores[id].role in roles; figure_scores[id].criteria with exactly these criteria, each an integer 1-5 (null only for the nullable ones, i.e. when the figure shows no comparison); every FIG weakness has figure_id (an id from snapshot/figures/figures.json or \"global\") and defect from defects. Frozen per session in review_config.figure_criteria.",
+  "roles": [
+    "teaser",
+    "method_diagram",
+    "quantitative_plot",
+    "qualitative_comparison",
+    "table",
+    "other"
+  ],
+  "criteria": [
+    "message_clarity",
+    "legibility",
+    "encoding_fit",
+    "accessibility",
+    "caption_alignment",
+    "comparison_fairness"
+  ],
+  "nullable": [
+    "comparison_fairness"
+  ],
+  "defects": [
+    "illegible_text",
+    "low_resolution",
+    "clutter",
+    "unclear_message",
+    "misleading_encoding",
+    "inappropriate_chart",
+    "missing_labels_or_units",
+    "colour_inaccessible",
+    "caption_not_self_contained",
+    "caption_text_mismatch",
+    "figure_text_inconsistency",
+    "diagram_equation_mismatch",
+    "unfair_comparison",
+    "missing_failure_cases",
+    "inconsistent_style",
+    "redundant_with_table",
+    "not_referenced",
+    "other"
+  ]
+}

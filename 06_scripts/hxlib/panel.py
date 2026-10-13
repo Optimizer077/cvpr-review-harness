@@ -6,8 +6,10 @@ import random
 from typing import Optional
 
 from .common import PANEL_DIR, PERSONA_DIR, SECTION_KEYS, load_json
+from .figure_job import FIGURE_SECTION, figure_job
 
 logger = logging.getLogger(__name__)
+REVIEWER_ROLE = "reviewer"
 
 # Sections a reviewer can score from each reading view (what that reviewer actually reads).
 VIEW_SECTIONS: dict[str, tuple[str, ...]] = {
@@ -34,6 +36,11 @@ def load_section_map(venue: str = "cvpr") -> dict[str, list[str]]:
     return load_json(PANEL_DIR / ("section_panel.json" if venue == "cvpr" else f"{venue}.json"))["sections"]
 
 
+def is_reviewer(persona: dict) -> bool:
+    """Whether a persona is a sampled reviewer type (role 'reviewer'), not a harness instrument."""
+    return persona.get("role", REVIEWER_ROLE) == REVIEWER_ROLE
+
+
 def _weighted_pick(rng: random.Random, candidates: list[dict]) -> dict:
     total = sum(max(c.get("draw_weight", 0.0), 0.0) for c in candidates)
     if total <= 0:
@@ -48,10 +55,14 @@ def _weighted_pick(rng: random.Random, candidates: list[dict]) -> dict:
 
 
 def draw_panel(panel_name: str, seed: int, personas: Optional[dict[str, dict]] = None, venue: str = "cvpr") -> list[str]:
-    """Return reviewer ids for a named panel. Draw panels are seeded and sample without replacement."""
+    """Return reviewer ids for a named panel. Draw panels are seeded and sample without replacement.
+
+    Draws and kind 'all' consider only role 'reviewer' personas, so harness instruments such as
+    the figure reader (F01) never enter a panel.
+    """
     personas = personas or load_personas(venue)
     personas = {k: p for k, p in personas.items() if p.get("venue", "cvpr") == venue}
-    reviewers = list(personas.values())
+    reviewers = [p for p in personas.values() if is_reviewer(p)]
     spec = load_panels(venue)[panel_name]
     kind = spec["kind"]
     if kind == "all":
@@ -81,7 +92,7 @@ def draw_panel(panel_name: str, seed: int, personas: Optional[dict[str, dict]] =
 def build_jobs(mode: str, panel_ids: list[str], sections_present: list[str],
                personas: dict[str, dict], only_sections: Optional[list[str]] = None,
                heldout_ids: Optional[list[str]] = None, section_map: Optional[dict] = None,
-               reading: str = "persona") -> list[dict]:
+               reading: str = "persona", figures: bool = False) -> list[dict]:
     """Turn a panel into review jobs.
 
     mode 'full': each panel reviewer writes the whole-paper review and scores the sections they read.
@@ -90,6 +101,9 @@ def build_jobs(mode: str, panel_ids: list[str], sections_present: list[str],
     other assigned sections go to a separate '<id>-sec' job so a skimming reviewer's overall
     rating is not changed by a deep section read.
     heldout_ids: extra full-review jobs ('H<id>', group 'heldout') whose reviews the writer never sees.
+    figures: add the opt-in figure job 'FIG' (persona F01, section figures_tables, main view). It
+    keeps its main view in careful sessions and is added even when only_sections omits figures_tables,
+    because --figures is an explicit request.
     """
     wanted = [s for s in (only_sections or sections_present) if s in sections_present]
     jobs: dict[str, dict] = {}
@@ -125,4 +139,9 @@ def build_jobs(mode: str, panel_ids: list[str], sections_present: list[str],
             job["view"] = "full"
             job["careful"] = True
         job["sections"].sort(key=lambda s: order[s])
+    if figures and FIGURE_SECTION in sections_present:
+        fig = figure_job()
+        if reading == "careful":
+            fig["careful"] = True
+        jobs[fig["job_id"]] = fig
     return list(jobs.values())
