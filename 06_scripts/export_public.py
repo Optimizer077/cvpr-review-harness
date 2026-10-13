@@ -3,7 +3,7 @@
 
     python3 06_scripts/export_public.py [--out release]
 
-Copies only the reusable parts (protocol, personas, panels, templates, scripts, domain packs,
+Copies only the reusable parts (protocol, personas, panels, templates, scripts,
 research summaries, docs). Leaves out sessions (papers and reviews), build notes (00_plan), raw
 review downloads, backups and caches. Then scans every exported text file for identifying strings
 and fails if one is found. Output: <out>/paper-review-harness/ and <out>/paper-review-harness.zip.
@@ -23,13 +23,13 @@ logger = logging.getLogger("export")
 ROOT = Path(__file__).resolve().parents[1]
 NAME = "paper-review-harness"
 INCLUDE = ("README.md", "REVIEW_PAPER.md", "AGENTS.md", "CLAUDE.md", "01_sources", "02_protocol",
-           "03_personas", "04_panels", "05_templates", "06_scripts", "07_domain_packs", "assets")
+           "03_personas", "04_panels", "05_templates", "06_scripts", "assets")
 SKIP_PARTS = {"raw_reviews", "__pycache__", "sessions", "00_plan", "release"}
 SKIP_NAME = re.compile(r"\.bak_|\.pyc$|^\.DS_Store$")
 TEXT_SUFFIXES = {".md", ".py", ".json", ".txt", ".csv", ".yaml", ".yml", ".svg", ""}
 # Generic identifying strings (case-insensitive). Project-specific ones (names, paper titles,
 # folder names) live in a private, never-exported file: 00_plan/deid_patterns.txt, one regex per line.
-GENERIC_FORBIDDEN = (r"/home/[a-z0-9_.-]+", r"/Users/[A-Za-z0-9_.-]+", r"/NAS\d", r"[\w.+-]+@[\w-]+\.(com|org|edu|net)\b",
+GENERIC_FORBIDDEN = (r"/home/[a-z0-9_.-]+", r"/Users/[A-Za-z0-9_.-]+", r"\b[A-Za-z]:[\\/]Users[\\/][^\\/\s]+", r"/NAS\d", r"[\w.+-]+@[\w-]+\.(com|org|edu|net)\b",
                      r"claude-\d{4}", r"scratch[p]ad")
 PRIVATE_PATTERNS = ROOT / "00_plan" / "deid_patterns.txt"
 

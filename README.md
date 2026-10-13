@@ -93,7 +93,7 @@ The figure shows the default `dialogue` loop. With `--loop fresh`, later rounds 
 You need **Python 3.9+**, **PyMuPDF**, a paper PDF with extractable text, and an agent environment. A supplement is optional. Supply the paper's source directory if you want a writer agent to revise it.
 
 ```sh
-git clone https://github.com/Optimizer077/paper-review-harness.git
+git clone <repository-url> paper-review-harness
 cd paper-review-harness
 python -m pip install pymupdf
 python 06_scripts/hx.py personas
@@ -149,10 +149,7 @@ For dedicated section-review jobs as well, add `--mode both`. This increases the
 |---|---|
 | Supplementary PDF | `--supp "path/to/supplement.pdf"` |
 | Paper source directory | `--tex "path/to/latex"` |
-| Neural-fields domain knowledge | `--domain inr_neural_fields` |
 | Separate evaluation reviewers | `--heldout R02,R11` |
-
-For other subfields, omit `--domain` or add an appropriate [domain pack](07_domain_packs/README.md).
 
 ### 3. Run independent reviewers
 
@@ -327,11 +324,10 @@ The headline uses held-out reviewers when present; otherwise it uses feedback re
 ```text
 01_sources/       Research behind the review design
 02_protocol/      Review forms, scoring rubrics, and writer rules
-03_personas/      Sixteen persona cards and their registry
+03_personas/      Reviewer persona cards and their registry
 04_panels/        Whole-paper and section panel definitions
 05_templates/     Output schemas and author constraints
 06_scripts/       Python CLI, harness library, and smoke test
-07_domain_packs/  Additional subfield knowledge
 assets/           README logo, banner, and workflow figures
 sessions/         Local paper snapshots and review campaigns
 ```

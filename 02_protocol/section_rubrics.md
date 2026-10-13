@@ -43,7 +43,7 @@ What reviewers check: pages 1-2 and Fig. 1 set the rating prior for most reviewe
 - `contributions_verifiable` - each listed contribution maps to a section and evidence; no padding.
 - `teaser_figure` - Fig. 1 (if present) conveys the idea or the result at a glance.
 - `claim_calibration` - claims stay inside what the experiments test.
-Typical failures: "A+B" impression because the delta to the closest work is not stated early; contribution bullets that restate the method; motivation that is generic ("INRs are important").
+Typical failures: "A+B" impression because the delta to the closest work is not stated early; contribution bullets that restate the method; motivation that is generic ("this task is important").
 
 ## related_work
 What reviewers check: whether the closest work is cited and the difference stated, not merely listed.

@@ -1,7 +1,7 @@
 """Build self-contained reviewer prompts for the initial (independent) review stage.
 
 A prompt inlines the persona card, the common reviewer rules, the CVPR form (whole-paper jobs),
-the rubric of the assigned sections and the domain pack, then lists the only files the reviewer
+and the rubric of the assigned sections, then lists the only files the reviewer
 may read and the exact files it must write.
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from .common import (DOMAIN_DIR, PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, load_json, load_scales,
+from .common import (PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, load_json, load_scales,
                      review_dir, scale_wording)
 
 from .venues import instrument, scales_for, careful, reviewer_card, common_rules, venue_block
@@ -57,14 +57,6 @@ def rubric_for(sections: list[str], session: Optional[dict] = None) -> str:
     return head.strip() + "\n\n" + "\n".join(picked)
 
 
-def domain_pack(domain: Optional[str], session: Optional[dict] = None) -> str:
-    """Inline domain pack text, or empty."""
-    if not domain:
-        return ""
-    path = DOMAIN_DIR / f"{domain}.md"
-    return instrument(session or {}, path)
-
-
 def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict],
                    round_path: Path) -> str:
     """Compose the initial-review prompt for one job."""
@@ -99,9 +91,6 @@ def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
         parts.append("## 4. Sections you score (harness addition to the official form)\n\n"
                      f"Score exactly these sections: {', '.join(job['sections'])}.\n\n"
                      + rubric_for(job["sections"], session))
-    pack = domain_pack(session.get("domain"), session) if persona.get("uses_domain_pack") else ""
-    if pack:
-        parts.append("## 5. What you know about this subfield\n\n" + pack)
     parts.append(_reading_block(snap, view_file, view_desc, supp_line, persona, job, session))
     parts.append(_output_block(out_dir, job, session, rnd))
     parts.append(venue_block(session, job))
@@ -127,7 +116,7 @@ def _reading_block(snap: Path, view_file: str, view_desc: str, supp_line: str, p
            "authors (double-blind)." if persona.get("web_search") or careful(session) else
            "You do not search the web; you rely on what you already know, as this reviewer would.")
     return "\n".join([
-        "## 6. What you read (and nothing else)",
+        "## 5. What you read (and nothing else)",
         f"- Your reading view: `{snap / view_file}` - {view_desc}",
         f"- Assigned section texts (same content, split by section): {sec_files or 'none'}",
         f"- The review-copy PDF: `{snap / 'main.pdf'}`. Look at figures by reading PDF pages "
@@ -151,7 +140,7 @@ def _output_block(out_dir: Path, job: dict, session: dict, rnd: dict) -> str:
     scales = scales_for(session)
     tax = {"categories": session["review_config"]["categories"]} if "review_config" in session else load_json(PROTOCOL_DIR / "taxonomy.json")
     return "\n".join([
-        "## 7. What you write (exactly three files)",
+        "## 6. What you write (exactly three files)",
         f"1. `{out_dir / 'review.md'}` - the in-character review as it would be submitted on the "
         "review site, following the form above, then a 'Section scores' table.",
         f"2. `{out_dir / 'review.json'}` - the same review, machine-readable, schema below. "

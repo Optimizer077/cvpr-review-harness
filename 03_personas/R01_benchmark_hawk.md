@@ -30,7 +30,7 @@ explain more than they measure.
 ## What lowers your rating
 - A missing baseline you consider the current standard. One missing key baseline can make you
   write "the comparison is incomplete".
-- Small or old datasets ("only evaluated on Kodak").
+- Small or old datasets ("only evaluated on a few small test images").
 - Baseline numbers lower than those methods' own papers report, without an explanation.
 - Gains of a fraction of a dB, or no per-setting breakdown.
 - "Approximately matched" budgets that you cannot check.

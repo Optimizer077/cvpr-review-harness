@@ -23,7 +23,6 @@ simulated score is not the aim.
 | `04_panels/` | `panels.json` (panel definitions), `section_panel.json` (section -> personas) | root only |
 | `05_templates/` | review JSON format, author-constraints template | root only |
 | `06_scripts/` | `hx.py` CLI + `hxlib/` | root only; must pass the smoke test |
-| `07_domain_packs/` | subfield knowledge for expert personas | root only |
 | `sessions/<date>_<paper>_<tag>/` | one review campaign: `SESSION.json`, `AUTHOR_CONSTRAINTS.md`, `round_NN/`, `PROGRESS.md`, `LOG.md` | see roles |
 
 Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<stage>/`,
@@ -41,7 +40,7 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
   paper in its own project and writes `writer/`. It never edits anything else in the harness.
 
 ## The loop
-1. `hx.py new --paper main.pdf --supp supplement.pdf --tex <paper src> --name <paper> --domain <pack>`
+1. `hx.py new --paper main.pdf --supp supplement.pdf --tex <paper src> --name <paper>`
    freezes round 1 and writes prompts.
 2. Root launches one fresh agent per `prompts/initial/*.md`, all in parallel, with exactly:
    "Read <prompt> and follow it exactly. Write only the files it names."

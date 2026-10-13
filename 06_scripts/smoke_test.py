@@ -163,7 +163,7 @@ def main() -> int:
             panel = draw_panel("realistic4", seed, personas)
             assert sum(1 for r in panel if personas[r].get("killer")) <= 1, (seed, panel)
         assert hx.main(["new", "--paper", str(pdf1), "--name", "toy", "--panel", "realistic",
-                        "--mode", "both", "--domain", "inr_neural_fields", "--heldout", "R03,R11",
+                        "--mode", "both", "--heldout", "R03,R11",
                         "--loop", "fresh"]) == 0
         session = next(common.SESSIONS_DIR.iterdir())
         r1 = round_dir(session, 1)

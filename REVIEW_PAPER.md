@@ -5,7 +5,7 @@ This is the single entry point. Give it to an agent with the paper:
 > Follow <harness root>/REVIEW_PAPER.md for
 > PAPER=<path/main.pdf> NAME=<short name> [SUPP=<path/supplement.pdf>]
 
-Optional settings: `VENUE` [cvpr; iclr, icml, neurips], `READING` [venue default; careful for all new ML profiles], `CONTRIBUTION_TYPE` [general; NeurIPS also supports theory, use_inspired, concept_feasibility, negative_results], `PANEL` [venue default], `REVIEWERS` [venue-specific IDs], `DOMAIN` [none], `MODE` [full; sections or both], `SEED` [0], `SCALE` [venue default]. The original CVPR panel names do not apply to other venues.
+Optional settings: `VENUE` [cvpr; iclr, icml, neurips], `READING` [venue default; careful for all new ML profiles], `CONTRIBUTION_TYPE` [general; NeurIPS also supports theory, use_inspired, concept_feasibility, negative_results], `PANEL` [venue default], `REVIEWERS` [venue-specific IDs], `MODE` [full; sections or both], `SEED` [0], `SCALE` [venue default]. The original CVPR panel names do not apply to other venues.
 
 Example: `Follow REVIEW_PAPER.md for PAPER=main.pdf NAME=mypaper VENUE=neurips CONTRIBUTION_TYPE=theory`.
 
@@ -17,7 +17,7 @@ python3 06_scripts/hx.py new --paper "$PAPER" --supp "$SUPP" --name "$NAME" \
     --venue "$VENUE" --mode full
 ```
 
-Default VENUE to cvpr when omitted. Pass the selected optional settings through to their matching CLI flags; do not hardcode a CVPR panel or scale. Omit `--supp` when there is no supplement. Add `--domain "$DOMAIN"` only when a domain is set.
+Default VENUE to cvpr when omitted. Pass the selected optional settings through to their matching CLI flags; do not hardcode a CVPR panel or scale. Omit `--supp` when there is no supplement.
 
 1. The command prints the session folder and one launch line per reviewer.
 2. Launch one NEW agent per launch line, all in one message (parallel). Each agent gets exactly:

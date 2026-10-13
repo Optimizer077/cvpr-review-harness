@@ -17,7 +17,7 @@ def profile_for(name: str) -> dict:
 
 def freeze(session: dict, personas: dict, section_map: dict) -> None:
     texts = {}
-    for folder in ("02_protocol", "03_personas", "05_templates", "07_domain_packs"):
+    for folder in ("02_protocol", "03_personas", "05_templates"):
         for path in (HARNESS_ROOT / folder).glob("*.md"):
             texts[path.relative_to(HARNESS_ROOT).as_posix()] = path.read_text(encoding="utf-8")
     session["instruments"] = {"texts": texts, "personas": personas, "section_map": section_map}

@@ -34,7 +34,7 @@ The existing `real_review_patterns.md` examines **184 reviews of computer-vision
 
 **A full view is permission to read, not proof of coverage.** Extraction may omit equations, merge columns or misidentify sections. Reviewers must check the PDF and mark inaccessible content. A numerical section score is an assessment with limitations, not a certificate of complete verification.
 
-**Sessions preserve the instruments.** Newly created sessions embed persona cards/metadata, protocol/template/domain text, section assignments, resolved scales, criteria, taxonomy and venue settings. Later rounds use those copies. Old sessions retain the legacy fallback; they are not retroactively frozen. The Python implementation itself is not embedded: record the repository commit for reproducibility and start a new session when changing the evaluation design.
+**Sessions preserve the instruments.** Newly created sessions embed persona cards/metadata, protocol/template text, section assignments, resolved scales, criteria, taxonomy and venue settings. Later rounds use those copies. Old sessions retain the legacy fallback; they are not retroactively frozen. The Python implementation itself is not embedded: record the repository commit for reproducibility and start a new session when changing the evaluation design.
 
 **Draft revision is author preparation.** The dialogue loop permits a new PDF and tracks whether concerns were resolved. It does not reproduce every venue's rebuttal rules; in particular, NeurIPS 2026 does not accept a revised submission PDF during rebuttal. These are simulated reviews for improving a draft, not official reviews or acceptance forecasts.
 

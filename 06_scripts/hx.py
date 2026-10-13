@@ -100,14 +100,12 @@ def cmd_new(args: argparse.Namespace) -> None:
     session = {"name": name, "created": now_iso(), "venue": profile["label"], "prior_work_cutoff": args.cutoff or profile["cutoff"],
                "venue_profile": profile, "reading_mode": reading, "contribution_type": contribution,
                "scale": scale,
-               "domain": args.domain, "panel_name": panel_name if not args.reviewers else "custom",
+               "panel_name": panel_name if not args.reviewers else "custom",
                "panel_ids": panel_ids, "seed": args.seed, "mode": args.mode,
                "heldout_ids": args.heldout.split(",") if args.heldout else [], "loop": args.loop,
                "only_sections": args.sections.split(",") if args.sections else None,
                "tex_dir": str(Path(args.tex).resolve()) if args.tex else None, "rounds": []}
     freeze(session, personas, load_section_map(venue))
-    if args.domain and f"07_domain_packs/{args.domain}.md" not in session["instruments"]["texts"]:
-        raise ValueError(f"Unknown domain pack: {args.domain}")
     spath.mkdir(parents=True)
     constraints = (TEMPLATE_DIR / "AUTHOR_CONSTRAINTS.md").read_text(encoding="utf-8")
     constraints = constraints.replace("8 content pages + references; supplement unlimited.", profile["page_budget"])
@@ -259,7 +257,6 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--mode", choices=("full", "sections", "both"), default="full")
     p.add_argument("--sections", help="comma list of section keys to restrict scoring")
-    p.add_argument("--domain", default=None, help="domain pack name in 07_domain_packs (no .md)")
     p.add_argument("--venue", default="cvpr", help="cvpr, iclr, icml, neurips (versioned profiles)")
     p.add_argument("--reading", choices=("persona", "careful"))
     p.add_argument("--contribution-type", default="general", choices=("general", "theory", "use_inspired", "concept_feasibility", "negative_results"))

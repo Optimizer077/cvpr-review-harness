@@ -23,7 +23,7 @@ Every number below is a count over these 184 reviews unless it is labelled **[es
 
 ICLR 2026 is therefore used only for review text, scores and the AI-text analysis. It is not used for rebuttal dynamics.
 
-**Selection.** Papers were picked by title keyword per subarea, preferring forums with an author response and a mix of decisions and score spreads. This is purposive, not random, so frequencies describe this corpus. NeurIPS rejected papers are opt-in, which biases them toward authors willing to publish their reviews.
+**Selection.** Papers were picked by title keyword across four computer-vision subareas, preferring forums with an author response and a mix of decisions and score spreads. This is purposive, not random, so frequencies describe this corpus. NeurIPS rejected papers are opt-in, which biases them toward authors willing to publish their reviews.
 
 **Coding.** Seven parallel annotation agents (LLM subagents) coded every review with a fixed codebook: `01_sources/raw_reviews/coding/CODEBOOK.txt`, 20 weakness codes, tone, reviewer type, rebuttal fields. Outputs are `coding/batch_*.json`, aggregated with machine checks.
 
@@ -31,7 +31,7 @@ ICLR 2026 is therefore used only for review text, scores and the AI-text analysi
 |---|---|
 | Coverage | 184/184 reviews coded, 0 duplicates |
 | Quote verification | 524 coder quotes and 897 code-evidence snippets were matched as substrings of the raw notes (whitespace-normalised). 521 quotes match the review itself; 3 match the same reviewer's follow-up comment. 0 unverified. |
-| Manual spot-check | I coded 7 reviews independently (FM-SIREN ×4, HOSC ×3). The coders recovered 34/35 of my codes and added 6 more (Jaccard 0.83), so code frequencies may run about 10–15% high relative to a stricter coder **[estimate]**. |
+| Manual spot-check | I coded 7 reviews of two papers independently (4 + 3 reviews). The coders recovered 34/35 of my codes and added 6 more (Jaccard 0.83), so code frequencies may run about 10–15% high relative to a stricter coder **[estimate]**. |
 | External check of the "LLM-sounding" flag (ICLR 2026, n=40) | All 8 reviews Pangram labels *Fully AI-generated* were flagged. 0 of 15 *Fully human-written* were flagged. 4 more flags fell on *Heavily* (2) or *Lightly* (2) AI-edited reviews. |
 
 **Where the derived files are.**
@@ -40,12 +40,12 @@ ICLR 2026 is therefore used only for review text, scores and the AI-text analysi
 
 ---
 
-## 1. Corpus table
+## 1. Corpus
 
 Summary:
 - **46 papers / 184 reviews.**
 - By venue: ICLR 2024 11/43, ICLR 2025 10/41, ICLR 2026 10/40, NeurIPS 2024 8/31, NeurIPS 2025 7/29.
-- By subarea: (a) INR 15/60, (b) 3D 11/43, (c) low-level 10/41, (d) general CV 10/40.
+- Four computer-vision subareas with 40–60 reviews each.
 - Decisions: 25 accepted (3 oral, 2 spotlight, 20 poster) and 21 rejected.
 
 **Rating scales.**
@@ -56,54 +56,7 @@ Summary:
 
 *Final ratings: these are post-rebuttal for ICLR 2024/25 and NeurIPS 2024/25, and pre-rebuttal (reverted) for ICLR 2026.
 
-| # | Subarea | Venue | Paper | Forum | Decision | Ratings (final*) | Confidence | n |
-|---|---|---|---|---|---|---|---|---|
-| 1 | (a) INR | ICLR 2024 | Implicit Neural Representations and the Algebra of Complex Wavelets | [uZfjFyPAvn](https://openreview.net/forum?id=uZfjFyPAvn) | Accept (poster) | 8, 6, 6, 6, 8 | 4, 4, 3, 3, 3 | 5 |
-| 2 | (a) INR | ICLR 2024 | Coordinate-Aware Modulation for Neural Fields | [4UiLqimGm5](https://openreview.net/forum?id=4UiLqimGm5) | Accept (spotlight) | 8, 8, 6, 6 | 4, 1, 2, 3 | 4 |
-| 3 | (a) INR | ICLR 2024 | On the Optimality of Activations in Implicit Neural Representations | [0Lqyut1y7M](https://openreview.net/forum?id=0Lqyut1y7M) | Reject | 6, 6, 5, 6 | 3, 4, 4, 4 | 4 |
-| 4 | (a) INR | ICLR 2024 | Accurate Differential Operators for Neural Fields | [HxHrRUHMOD](https://openreview.net/forum?id=HxHrRUHMOD) | Reject | 3, 8, 6, 3 | 4, 4, 4, 4 | 4 |
-| 5 | (a) INR | ICLR 2024 | HOSC: Hyperbolic Oscillating Periodic Activations for Sharp Feature Preservation in INRs | [jWxrIeWgir](https://openreview.net/forum?id=jWxrIeWgir) | Reject | 3, 5, 3 | 3, 4, 4 | 3 |
-| 6 | (a) INR | ICLR 2025 | Fast Training of Sinusoidal Neural Fields via Scaling Initialization | [Sr5XaZzirA](https://openreview.net/forum?id=Sr5XaZzirA) | Accept (poster) | 6, 6, 6, 6 | 5, 2, 2, 4 | 4 |
-| 7 | (a) INR | ICLR 2025 | From MLP to NeoMLP: Leveraging Self-Attention for Neural Fields | [A8Vuf2e8y6](https://openreview.net/forum?id=A8Vuf2e8y6) | Reject | 5, 3, 6, 5 | 2, 4, 5, 3 | 4 |
-| 8 | (a) INR | ICLR 2025 | Common Causes for Sudden Shifts: Linking Phase Transitions in Sinusoidal Networks | [muN3B40keb](https://openreview.net/forum?id=muN3B40keb) | Reject | 6, 5, 6, 6, 6 | 4, 3, 4, 3, 1 | 5 |
-| 9 | (a) INR | ICLR 2026 | A New Initialization to Control Gradients in Sinusoidal Neural Networks | [92d74WdgtG](https://openreview.net/forum?id=92d74WdgtG) | Accept (poster) | 6, 4, 4, 4 | 4, 4, 2, 4 | 4 |
-| 10 | (a) INR | ICLR 2026 | COSMO-INR: Complex Sinusoidal Modulation for INRs | [yGJrvSU6wK](https://openreview.net/forum?id=yGJrvSU6wK) | Accept (poster) | 4, 4, 8, 4 | 2, 4, 4, 4 | 4 |
-| 11 | (a) INR | ICLR 2026 | FM-SIREN & FM-FINER: Nyquist-Informed Frequency Multiplier for INR with Periodic Activation | [ZXJ74KEVUu](https://openreview.net/forum?id=ZXJ74KEVUu) | Reject | 4, 4, 4, 4 | 4, 4, 5, 3 | 4 |
-| 12 | (a) INR | NeurIPS 2024 | Towards Croppable Implicit Neural Representations | [jrVoZLF20h](https://openreview.net/forum?id=jrVoZLF20h) | Accept (poster) | 6, 8, 5 | 4, 5, 3 | 3 |
-| 13 | (a) INR | NeurIPS 2024 | Neural Experts: Mixture of Experts for INRs | [wWguwYhpAY](https://openreview.net/forum?id=wWguwYhpAY) | Accept (poster) | 5, 5, 6, 6 | 5, 4, 4, 3 | 4 |
-| 14 | (a) INR | NeurIPS 2025 | Grids Often Outperform INR at Compressing Dense Signals | [OZljvntsto](https://openreview.net/forum?id=OZljvntsto) | Accept (poster) | 3, 4, 5, 3 | 4, 3, 4, 4 | 4 |
-| 15 | (a) INR | NeurIPS 2025 | From MLP to NeoMLP (resubmission of #7) | [LDkyhsiCZQ](https://openreview.net/forum?id=LDkyhsiCZQ) | Reject | 3, 5, 2, 3 | 3, 3, 5, 4 | 4 |
-| 16 | (b) 3D | ICLR 2024 | DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation | [UyNXMqnN3c](https://openreview.net/forum?id=UyNXMqnN3c) | Accept (oral) | 8, 8, 10, 8 | 4, 3, 5, 4 | 4 |
-| 17 | (b) 3D | ICLR 2024 | HyperFields: Towards Zero-Shot Generation of NeRFs from Text | [84Hk01tFKq](https://openreview.net/forum?id=84Hk01tFKq) | Reject | 5, 5, 8, 5 | 5, 4, 4, 4 | 4 |
-| 18 | (b) 3D | ICLR 2025 | No Pose, No Problem: 3D Gaussian Splats from Sparse Unposed Images | [P4o9akekdf](https://openreview.net/forum?id=P4o9akekdf) | Accept (oral) | 8, 8, 8 | 5, 4, 4 | 3 |
-| 19 | (b) 3D | ICLR 2025 | HQGS: High-Quality NVS with Gaussian Splatting in Degraded Scenes | [25Zlvl7JxW](https://openreview.net/forum?id=25Zlvl7JxW) | Accept (poster) | 6, 8, 6, 6 | 4, 4, 3, 4 | 4 |
-| 20 | (b) 3D | ICLR 2025 | Relaxing Accurate Initialization Constraint for 3D Gaussian Splatting | [R9lgWYE508](https://openreview.net/forum?id=R9lgWYE508) | Reject | 6, 6, 6, 5 | 4, 4, 5, 3 | 4 |
-| 21 | (b) 3D | ICLR 2026 | 3DGEER: 3D Gaussian Rendering Made Exact and Efficient for Generic Cameras | [4voMNlRWI7](https://openreview.net/forum?id=4voMNlRWI7) | Accept (poster) | 6, 6, 6, 10 | 4, 3, 4, 5 | 4 |
-| 22 | (b) 3D | ICLR 2026 | Decomposing Densification in Gaussian Splatting for Faster 3D Scene Reconstruction | [5PXMoN8e2W](https://openreview.net/forum?id=5PXMoN8e2W) | Reject | 4, 4, 6, 2 | 4, 3, 2, 4 | 4 |
-| 23 | (b) 3D | NeurIPS 2024 | WildGaussians: 3D Gaussian Splatting In the Wild | [NU3tE3lIqf](https://openreview.net/forum?id=NU3tE3lIqf) | Accept (poster) | 6, 7, 6, 5 | 5, 5, 3, 5 | 4 |
-| 24 | (b) 3D | NeurIPS 2024 | LightGaussian: Unbounded 3D Gaussian Compression with 15x Reduction and 200+ FPS | [6AeIDnrTN2](https://openreview.net/forum?id=6AeIDnrTN2) | Accept (spotlight) | 6, 6, 8, 7 | 5, 5, 5, 4 | 4 |
-| 25 | (b) 3D | NeurIPS 2025 | Quantifying and Alleviating Co-Adaptation in Sparse-View 3DGS | [GrPo8NTtzK](https://openreview.net/forum?id=GrPo8NTtzK) | Accept (poster) | 3, 4, 5, 6 | 4, 4, 5, 4 | 4 |
-| 26 | (b) 3D | NeurIPS 2025 | Geometrically Consistent Generalizable Splatting | [ZfNeovqQkn](https://openreview.net/forum?id=ZfNeovqQkn) | Reject | 3, 2, 3, 3 | 4, 4, 3, 4 | 4 |
-| 27 | (c) low-level | ICLR 2024 | Frequency-Aware Transformer for Learned Image Compression | [HKGQDDTuvZ](https://openreview.net/forum?id=HKGQDDTuvZ) | Accept (poster) | 6, 6, 6, 6 | 5, 4, 4, 3 | 4 |
-| 28 | (c) low-level | ICLR 2024 | Prompt-Guided Dynamic Network for Image Super Resolution | [OKOjkFrhSs](https://openreview.net/forum?id=OKOjkFrhSs) | Reject | 3, 3, 3, 3 | 5, 2, 5, 3 | 4 |
-| 29 | (c) low-level | ICLR 2025 | AdaIR: Adaptive All-in-One Image Restoration via Frequency Mining and Modulation | [M5t0WvjfCg](https://openreview.net/forum?id=M5t0WvjfCg) | Accept (poster) | 5, 5, 8, 6 | 5, 4, 5, 4 | 4 |
-| 30 | (c) low-level | ICLR 2025 | Does Diffusion Beat GAN in Image Super Resolution? | [46mbA3vu25](https://openreview.net/forum?id=46mbA3vu25) | Reject | 6, 5, 6, 6 | 3, 4, 4, 4 | 4 |
-| 31 | (c) low-level | ICLR 2026 | Pixel to Gaussian: Ultra-Fast Continuous Super-Resolution with 2D Gaussian Modeling | [SZvhmFntRA](https://openreview.net/forum?id=SZvhmFntRA) | Accept (poster) | 4, 8, 6, 6 | 4, 4, 4, 5 | 4 |
-| 32 | (c) low-level | ICLR 2026 | In-Token Learning for High-Fidelity Image Restoration via Diffusion Transformers | [9D5ryI7now](https://openreview.net/forum?id=9D5ryI7now) | Reject | 2, 8, 2, 2 | 3, 4, 4, 5 | 4 |
-| 33 | (c) low-level | NeurIPS 2024 | Cross-Scale Self-Supervised Blind Image Deblurring via INR | [CFez7MFUFd](https://openreview.net/forum?id=CFez7MFUFd) | Accept (poster) | 5, 5, 6, 6 | 4, 4, 4, 4 | 4 |
-| 34 | (c) low-level | NeurIPS 2024 | One-Step Effective Diffusion Network for Real-World Image SR (OSEDiff) | [TPtXnpRvur](https://openreview.net/forum?id=TPtXnpRvur) | Accept (poster) | 5, 5, 7, 6 | 4, 5, 5, 4 | 4 |
-| 35 | (c) low-level | NeurIPS 2025 | BlurDM: A Blur Diffusion Model for Image Deblurring | [13xP0J2d6E](https://openreview.net/forum?id=13xP0J2d6E) | Accept (poster) | 2, 4, 5, 4, 4 | 3, 3, 4, 3, 3 | 5 |
-| 36 | (c) low-level | NeurIPS 2025 | Feature Alignment with Equivariant Convolutions for Burst Image SR | [RKOgWtrWPe](https://openreview.net/forum?id=RKOgWtrWPe) | Reject | 3, 3, 4, 3 | 4, 3, 4, 5 | 4 |
-| 37 | (d) general | ICLR 2024 | Vision Transformers Need Registers | [2dnO3LLiJ1](https://openreview.net/forum?id=2dnO3LLiJ1) | Accept (oral) | 8, 8, 8, 8 | 4, 4, 4, 3 | 4 |
-| 38 | (d) general | ICLR 2024 | Grounding DINO: Marrying DINO with Grounded Pre-Training for Open-Set Object Detection | [DS5qRs0tQz](https://openreview.net/forum?id=DS5qRs0tQz) | Reject | 5, 8, 5 | 4, 4, 3 | 3 |
-| 39 | (d) general | ICLR 2025 | Visually Consistent Hierarchical Image Classification | [7HEMpBTb3R](https://openreview.net/forum?id=7HEMpBTb3R) | Accept (poster) | 3, 5, 8, 5, 6 | 5, 5, 4, 5, 4 | 5 |
-| 40 | (d) general | ICLR 2025 | Unconstrained Salient and Camouflaged Object Detection | [AQqOC3FKPO](https://openreview.net/forum?id=AQqOC3FKPO) | Reject | 8, 5, 3, 3 | 5, 3, 5, 4 | 4 |
-| 41 | (d) general | ICLR 2026 | Soft-Di[M]O: Improving One-Step Discrete Image Generation with Soft Embeddings | [83pHDDmkXt](https://openreview.net/forum?id=83pHDDmkXt) | Accept (poster) | 4, 6, 4, 6 | 4, 4, 4, 4 | 4 |
-| 42 | (d) general | ICLR 2026 | SegRet: An Efficient Design for Semantic Segmentation with Retentive Network | [2XP4HD0NBy](https://openreview.net/forum?id=2XP4HD0NBy) | Reject | 6, 2, 2, 2 | 3, 5, 4, 4 | 4 |
-| 43 | (d) general | ICLR 2026 | Octic Vision Transformers: Quicker ViTs Through Equivariance | [9zVPsVWUY1](https://openreview.net/forum?id=9zVPsVWUY1) | Reject | 2, 6, 4, 4 | 3, 3, 4, 4 | 4 |
-| 44 | (d) general | NeurIPS 2024 | FlowTurbo: Towards Real-time Flow-Based Image Generation with Velocity Refiner | [1jG5ngXVs3](https://openreview.net/forum?id=1jG5ngXVs3) | Accept (poster) | 7, 6, 7, 5 | 4, 4, 5, 4 | 4 |
-| 45 | (d) general | NeurIPS 2024 | Parameter-efficient Fine-tuning in Hyperspherical Space for Open-vocabulary Semantic Segmentation | [8Hy3KMZTL5](https://openreview.net/forum?id=8Hy3KMZTL5) | Reject | 5, 5, 5, 7 | 4, 3, 4, 3 | 4 |
-| 46 | (d) general | NeurIPS 2025 | How far can we go with ImageNet for Text-to-Image generation? | [9q4L2odBPh](https://openreview.net/forum?id=9q4L2odBPh) | Reject | 2, 4, 4, 5 | 5, 4, 4, 4 | 4 |
+The per-paper list (titles, forum ids, subareas, decisions and ratings) is withheld from this public copy. Quotes in §3 and cases in §6 keep their OpenReview forum ids.
 
 **Rating distribution (counts):**
 
@@ -121,9 +74,9 @@ Summary:
 - Within-paper rating spread, as max − min in raw points: 0 (6 papers), 1 (8), 2 (13), 3 (9), 4 (6), 5 (3), 6 (1).
 - 19/25 accepted papers had at least one "clear accept" score (ICLR ≥8, NeurIPS 2024 ≥7, NeurIPS 2025 ≥5). Only 8/21 rejected papers had one.
 - Examples of decisions against the mean:
-  - #39 was accepted with 3/5/8/5/6.
-  - #14 was accepted with 3/4/5/3. The AC wrote: "one reviewer was willing to champion the paper, reviews are overall leaning positive, and the AC further believes that this study may aid in de-mystifying neural field representations".
-  - #20 (6/6/6/5), #30 (6/5/6/6) and #8 (6/5/6/6/6) were all rejected at ICLR 2025.
+  - One paper was accepted with 3/5/8/5/6.
+  - Another was accepted with 3/4/5/3. The AC wrote that "one reviewer was willing to champion the paper, reviews are overall leaning positive".
+  - Three papers with 6/6/6/5, 6/5/6/6 and 6/5/6/6/6 were all rejected at ICLR 2025.
 
 ---
 
@@ -135,28 +88,28 @@ Summary:
 - "Reject-side" means the reviewer's *final* rating is ICLR ≤5 (ICLR 2026 ≤4), NeurIPS 2024 ≤4 or NeurIPS 2025 ≤3. That gives n=69 reject-side and n=115 accept-side reviews.
 - p is a Fisher exact test of reject-side vs accept-side frequency.
 
-| Rank | Code | Weakness type | Reviews | % (95% CI) | Reject-side % | Accept-side % | p | INR / 3D / LOW / GEN % |
-|---|---|---|---|---|---|---|---|---|
-| 1 | CLAR | Unclear writing, notation or missing method/implementation details | 94 | **51.1** (44–58) | 43 | 56 | 0.13 | 48 / 51 / 61 / 45 |
-| 2 | GEN | Limited generalization or scope: one task/domain, synthetic data only, unclear real-world use | 87 | **47.3** (40–54) | 52 | 44 | 0.36 | 65 / 30 / 44 / 42 |
-| 3 | BASE | Missing baselines or comparisons to named methods | 77 | **41.8** (35–49) | 43 | 41 | 0.76 | 43 / 47 / 34 / 42 |
-| 4 | NOV | Limited novelty, "combination of existing techniques", incremental | 72 | **39.1** (32–46) | **64** | **24** | <0.0001 | 27 / 49 / 39 / 48 |
-| 5 | ABL | Missing or insufficient ablations; component contribution unclear | 62 | 33.7 (27–41) | 32 | 35 | 0.75 | 27 / 35 / 44 / 32 |
-| 6 | THEO | Theory gaps: unjustified claims, loose derivations, "why does it work" | 57 | 31.0 (25–38) | 33 | 30 | 0.62 | 32 / 23 / 32 / 38 |
-| 7 | EFF | No or insufficient efficiency analysis (wall-clock, FLOPs, memory, FPS) | 52 | 28.3 (22–35) | 28 | 29 | 1.0 | 23 / 30 / 41 / 20 |
-| 8 | OVER | Overclaiming: claims, title or abstract stronger than the evidence | 51 | 27.7 (22–35) | **42** | **19** | 0.001 | 30 / 23 / 22 / 35 |
-| 9 | BENCH | Small, old, few or synthetic benchmarks; asks for harder data | 45 | 24.5 (19–31) | 32 | 20 | 0.08 | 40 / 12 / 15 / 25 |
-| 10 | RW | Missing related or concurrent work | 44 | 23.9 (18–31) | 22 | 25 | 0.72 | 30 / 21 / 24 / 18 |
-| 11 | FAIR | Unfair comparison: budgets, tuning, training data, GPUs, iterations | 40 | 21.7 (16–28) | 25 | 20 | 0.47 | 22 / 21 / 27 / 18 |
-| 12 | VIS | Insufficient or unconvincing visual results; artifacts; hallucinated detail | 37 | 20.1 (15–26) | 19 | 21 | 0.85 | 5 / 35 / 27 / 20 |
-| 13 | METRIC | Questionable metrics or protocol (PSNR-only, no LPIPS/user study, overfitting-only eval, convergence) | 31 | 16.8 (12–23) | 17 | 17 | 1.0 | 18 / 14 / 17 / 18 |
-| 14 | MOT | Unclear motivation or practical need | 31 | 16.8 (12–23) | 23 | 13 | 0.10 | 22 / 14 / 12 / 18 |
-| 15 | HYP | Hyperparameter sensitivity or robustness not analysed | 30 | 16.3 (12–22) | 14 | 17 | 0.68 | 23 / 12 / 12 / 15 |
-| 16 | FIG | Figure/table presentation quality | 24 | 13.0 (9–19) | 12 | 14 | 0.82 | 7 / 16 / 15 / 18 |
-| 17 | LIM | Limitations or failure cases not discussed | 23 | 12.5 (8–18) | 12 | 13 | 0.82 | 10 / 19 / 7 / 15 |
-| 18 | MARG | Improvement margins too small | 22 | 12.0 (8–17) | **23** | **5** | 0.0006 | 5 / 19 / 12 / 15 |
-| 19 | REPRO | Reproducibility or code availability | 14 | 7.6 (5–12) | 12 | 5 | 0.15 | 7 / 0 / 17 / 8 |
-| 20 | VAR | No variance, seeds or significance tests | 4 | **2.2** (1–5) | 3 | 2 | 0.63 | 0 / 2 / 2 / 5 |
+| Rank | Code | Weakness type | Reviews | % (95% CI) | Reject-side % | Accept-side % | p |
+|---|---|---|---|---|---|---|---|
+| 1 | CLAR | Unclear writing, notation or missing method/implementation details | 94 | **51.1** (44–58) | 43 | 56 | 0.13 |
+| 2 | GEN | Limited generalization or scope: one task/domain, synthetic data only, unclear real-world use | 87 | **47.3** (40–54) | 52 | 44 | 0.36 |
+| 3 | BASE | Missing baselines or comparisons to named methods | 77 | **41.8** (35–49) | 43 | 41 | 0.76 |
+| 4 | NOV | Limited novelty, "combination of existing techniques", incremental | 72 | **39.1** (32–46) | **64** | **24** | <0.0001 |
+| 5 | ABL | Missing or insufficient ablations; component contribution unclear | 62 | 33.7 (27–41) | 32 | 35 | 0.75 |
+| 6 | THEO | Theory gaps: unjustified claims, loose derivations, "why does it work" | 57 | 31.0 (25–38) | 33 | 30 | 0.62 |
+| 7 | EFF | No or insufficient efficiency analysis (wall-clock, FLOPs, memory, FPS) | 52 | 28.3 (22–35) | 28 | 29 | 1.0 |
+| 8 | OVER | Overclaiming: claims, title or abstract stronger than the evidence | 51 | 27.7 (22–35) | **42** | **19** | 0.001 |
+| 9 | BENCH | Small, old, few or synthetic benchmarks; asks for harder data | 45 | 24.5 (19–31) | 32 | 20 | 0.08 |
+| 10 | RW | Missing related or concurrent work | 44 | 23.9 (18–31) | 22 | 25 | 0.72 |
+| 11 | FAIR | Unfair comparison: budgets, tuning, training data, GPUs, iterations | 40 | 21.7 (16–28) | 25 | 20 | 0.47 |
+| 12 | VIS | Insufficient or unconvincing visual results; artifacts; hallucinated detail | 37 | 20.1 (15–26) | 19 | 21 | 0.85 |
+| 13 | METRIC | Questionable metrics or protocol (PSNR-only, no LPIPS/user study, overfitting-only eval, convergence) | 31 | 16.8 (12–23) | 17 | 17 | 1.0 |
+| 14 | MOT | Unclear motivation or practical need | 31 | 16.8 (12–23) | 23 | 13 | 0.10 |
+| 15 | HYP | Hyperparameter sensitivity or robustness not analysed | 30 | 16.3 (12–22) | 14 | 17 | 0.68 |
+| 16 | FIG | Figure/table presentation quality | 24 | 13.0 (9–19) | 12 | 14 | 0.82 |
+| 17 | LIM | Limitations or failure cases not discussed | 23 | 12.5 (8–18) | 12 | 13 | 0.82 |
+| 18 | MARG | Improvement margins too small | 22 | 12.0 (8–17) | **23** | **5** | 0.0006 |
+| 19 | REPRO | Reproducibility or code availability | 14 | 7.6 (5–12) | 12 | 5 | 0.15 |
+| 20 | VAR | No variance, seeds or significance tests | 4 | **2.2** (1–5) | 3 | 2 | 0.63 |
 
 **What the table says**
 
@@ -167,25 +120,13 @@ Summary:
 
    Clarity, baselines, ablations, efficiency and scope are raised at about the same rate by reviewers who end up accepting. A simulated reviewer should list these weaknesses *and still score 6/8*. A low score should be driven by novelty, overclaiming or small gains.
 2. **Clarity is the most common complaint, and it is more common on the accept side (56% vs 43%).** Positive reviewers fill their weakness list with presentation points.
-3. **Seeds and variance are almost never requested (4/184 = 2.2%).** Two of the four requests came on one paper, #39. CV reviewers ask for more datasets, baselines and visual comparisons, not error bars. When it is raised, it is phrased as "statistical significance" or "confidence intervals", not as "seeds".
+3. **Seeds and variance are almost never requested (4/184 = 2.2%).** Two of the four requests came on one paper. CV reviewers ask for more datasets, baselines and visual comparisons, not error bars. When it is raised, it is phrased as "statistical significance" or "confidence intervals", not as "seeds".
 4. **Efficiency is requested in 28% of reviews.** The request is usually for *wall-clock or inference time in addition to FLOPs/params* (see EFF quotes in §3).
-5. **The subareas have distinct profiles.** Small subarea n (40–60), so treat differences under about 15 points as noise.
-   - INR: highest GEN (65%: "only fitting", "no NeRF/inverse problems", "one type of neural field") and BENCH (40%); lowest VIS (5%) and NOV (27%).
-   - 3D: highest VIS (35%) and NOV (49%); lowest BENCH (12%).
-   - Low-level: highest EFF (41%), CLAR (61%) and ABL (44%).
-   - General CV: NOV 48% and OVER 35%.
-6. **Codes per review:** mean 4.9, median 5, IQR 3–6, max 15. Length predicts code count (Spearman ρ=0.54 between word count and code count).
+5. **Codes per review:** mean 4.9, median 5, IQR 3–6, max 15. Length predicts code count (Spearman ρ=0.54 between word count and code count).
 
 ### Which baselines reviewers name (70/184 reviews name at least one)
 
-Names are almost never repeated across papers: the most frequent single name, FINER, appears in 4 reviews. Reviewers ask for **the most recent same-family method, or the method the submission is built on**.
-
-| Subarea | Named requests (verbatim names, deduplicated) |
-|---|---|
-| INR | FINER / FINER++, WIRE, SPDER, FreSh, TUNER, BACON, VI^3NR, MFN, Fourier Features / positional encoding, Instant-NGP, DVGO, ACORN, NGLOD, Spatial Functa / functa, Miner, NeRV, VideoINR, STRAINSER, Locality-aware GINR, MipNeRF-360 (as a harder benchmark) |
-| 3D (NeRF/3DGS) | Scaffold-GS, HAC, GS-W, SWAG, mip-splatting, Gaussian Opacity Fields, Absgs, DashGaussian, GrendelGS, Zip-NeRF, Instant-NGP, compact/compressed 3D-GS, Splatt3R, FLARE, DepthSplat, PF-LRM, LEAP, ATT3D, DreamFusion, Fantasia3d, TexFusion, Text2Tex, Co3D/Objaverse (data) |
-| Low-level | Restormer, Uformer, QMambaBSR, Selective Frequency Network, LoFormer, frequency-domain deblurring transformers, all-in-one restoration methods (U-WADN, InstructIR, etc.), DMD (one-step diffusion), Minnen, CHARM, iWave, Ballé (End-to-end optimized image compression), COZ (real-world SR data) |
-| General CV | FLUX, SD3, PixArt-Σ, SANA, DetCLIP-V2, VPT / Adapter / LoRA / OFT / LST / SSF (PEFT family), SAM-adapter, CamoDiffusion, TransHP, Mask2Former, SegFormer, distillation baselines (consistency/DMD), ImageNet-21K/JFT/LAION/DataComp (data) |
+Names are almost never repeated across papers: the most frequent single name appears in 4 reviews. Reviewers ask for **the most recent same-family method, or the method the submission is built on**.
 
 ### By venue (% of that venue's reviews)
 
@@ -220,7 +161,6 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 - [C] "The proposed AdaIR appears to be a straightforward combination of existing techniques, such as Restormer [3] and CBAM [4]." — `M5t0WvjfCg` (ICLR25, FFqs)
 - [D] "making this work seem more like a combination of existing methods (A+B stitching) rather than presenting original contributions or theoretical derivations." — `NU3tE3lIqf` (NeurIPS24, nPTW)
 - [D] "The paper is a direct combination of these previous works (pose-free feed-forward NVS from sparse-views + feed-forward 3DGS prediction)." — `P4o9akekdf` (ICLR25, tg6H; this reviewer later raised to 8)
-- [C] "Cropping INRs is a natural property of partition-based INRs, which makes the contribution minor." — `jrVoZLF20h` (NeurIPS24, XqfY)
 - [D] "The novelty of this work is very limited. I cannot see the technique novelty." — `AQqOC3FKPO` (ICLR25, 224k)
 - [D] "The tree-path KL loss is trivial." — `7HEMpBTb3R` (ICLR25, khL4)
 - [D] "Direct extension of Bökman et al. (2025) from D2 to D8" — `9zVPsVWUY1` (ICLR26, PPBJ ⚑)
@@ -234,7 +174,6 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 **Missing baselines (BASE)**
 - [C] "I find the use of FFN (Tancik, 2020) as the only baseline in the image task disappointing." — `4UiLqimGm5` (ICLR24, DCsj)
 - [C] "In particular, DVGO was explicitly designed to address this same issue of capturing sharp boundaries in 3D, so this method should also be compared against." — `jWxrIeWgir` (ICLR24, VTh6)
-- [C] "More recent baselines should be included. For example, VI^3NR [r1], FINER++ [r2]" — `ZXJ74KEVUu` (ICLR26, JJrD)
 - [D] "All the competing baselines in Section 4.2 are not SOTA methods any more, as they were published at least 3 years ago." — `OKOjkFrhSs` (ICLR24, WtP4)
 - [D] "As a submission to ICLR, it's not reasonable to only include 3DGS and Mip-Splatting for comparison." — `R9lgWYE508` (ICLR25, gqEX)
 - [C] "The architecture is mainly based on Restormer. However, Tab. 1 does not include Restormer's performance." — `M5t0WvjfCg` (ICLR25, K6x2)
@@ -244,8 +183,6 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 
 **Small / old benchmarks (BENCH)**
 - [C] "It is hard to gain generalizable insights from five toy images on a single task." — `muN3B40keb` (ICLR25, r32t)
-- [C] "The experimental evaluation is not also very robust, as only small datasets are used (Kodak, only 3 audio recordings, only 4 shapes)" — `wWguwYhpAY` (NeurIPS24, ij4R)
-- [D] "The experiments are inadequate given the rapid progress in implicit neural representations since SIREN." — `jWxrIeWgir` (ICLR24, VTh6)
 - [C] "I am very surprised there are no NeRF results as this a big experiment that requires hours to train" — `Sr5XaZzirA` (ICLR25, jBfM)
 - [D] "Finally, the experimental section of the work is severely lacking." — `uZfjFyPAvn` (ICLR24, 3UQT)
 
@@ -258,9 +195,7 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 **Unfair comparison / tuning (FAIR)**
 - [C] "Otherwise, we cannot tell whether the performance gain comes from better model design or using larger and high-quality data" — `P4o9akekdf` (ICLR25, tg6H)
 - [C] "The choice of number of training iterations to report performance is arbitrary and could reflect unfairly on the baselines." — `Sr5XaZzirA` (ICLR25, 3nXe)
-- [C] "A justification is needed on why omega is set 90 instead of 30 for SIREN." — `OZljvntsto` (NeurIPS25, xxwx)
 - [C] "In table 4, the runtime for some baselines are evaluated with different GPU models." — `4voMNlRWI7` (ICLR26, uR7S)
-- [C] "I have also used SIREN very successfully on 3D shapes (have specifically used the dragon shape!) and have found it performs as well as WIRE" — `OZljvntsto` (NeurIPS25, y2xa)
 - [H] "The numbers of the baseline models seem to be from the authors' own implementation, which makes it less appealing" — `4UiLqimGm5` (ICLR24, kCkz)
 - [D] "Clearly, there is an unfair comparison in your experiments." — `NU3tE3lIqf` (NeurIPS24, BAXf)
 
@@ -301,15 +236,12 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 - [C] "A closer look into Table 4 would also reveal that the performance on ODinW is actually on par with GLIPv2 if given the same pertaining data." — `DS5qRs0tQz` (ICLR24, sRML)
 
 **Generalization / scope (GEN)**
-- [C] "INR research is expected to test inverse problems, not only forward fitting." — `yGJrvSU6wK` (ICLR26, BG8D ⚑)
-- [C] "My main issue with the paper and what I feel is its main weakness is the fact that it is entirely focused on one type of neural field" — `Sr5XaZzirA` (ICLR25, jBfM)
 - [C] "there are no experiments on real out-of-distribution images." — `M5t0WvjfCg` (ICLR25, Jdae)
 - [H] "Blind deconvolution, when limited to the uniform case, may not be particularly useful for real-world problems." — `CFez7MFUFd` (NeurIPS24, QZrB)
 
 **Metrics / protocol (METRIC)**
 - [C] "A fairer evaluation would follow the protocol of [1], where models are assessed on held-out subsets of pixel coordinates." — `ZXJ74KEVUu` (ICLR26, 6yc9)
 - [C] "The comparisons using only PSNR/SSIM seem insufficient to measure the quality of the resulting images." — `M5t0WvjfCg` (ICLR25, K6x2)
-- [C] "The epoch count seems too low for typical INR experiments, raising concerns that the network may not have fully converged." — `ZXJ74KEVUu` (ICLR26, zW1b)
 - [C] "A simple way to game the metric (i.e. achieving low training CA) is to simply duplicate each Gaussian N times with opacities scaled" — `GrPo8NTtzK` (NeurIPS25, jvpz)
 - [D] "The current way of stopping and evaluating seems incredibly arbitrary and subjective." — `46mbA3vu25` (ICLR25, euHF)
 
@@ -358,7 +290,6 @@ All quotes are copied exactly from the raw OpenReview text. They were machine-ch
 - [E] "I checked all proofs in detail and believe they are correct; they follow elegantly from reasonably elementary results from functional analysis." — `0Lqyut1y7M` (ICLR24, REJk)
 - [E] "The biggest strength of CAM is its simplicity and its plug-and-play nature." — `4UiLqimGm5` (ICLR24, 7EJV)
 - [E] "Overall maturity of the submitted package, which makes it very reasonably within camera ready territory." — `UyNXMqnN3c` (ICLR24, E7Ru)
-- [E] "I really like the direction the paper is heading towards, INRs are being used in areas that grids would suffice" — `OZljvntsto` (NeurIPS25, y2xa)
 
 **Constructive conditional offers (a very common closing move)**
 - [C] "I will give a reject first but I can raise the score to 5 if the author can differentiate their work from the missing related works and rephrase their contribution." — `P4o9akekdf` (ICLR25, tg6H)
@@ -566,11 +497,11 @@ Novelty-skeptic reviews are reject-side 18 of 23 times, against 51 of 161 for al
 | **P4o9akekdf** (NoPoSplat, ICLR25 oral) | tg6H opened at "reject"; raised to 8 | Rewrote contributions and related work to differentiate PF-LRM/LEAP; added an object-level comparison vs LEAP (PSNR 20.559→28.378 on Objaverse); weight-initialization ablation; showed training data matched pixelSplat/MVSplat. The reviewer's own condition was: "I can raise the score to 5 if the author can differentiate their work from the missing related works and rephrase their contribution." |
 | **6AeIDnrTN2** (LightGaussian, NeurIPS24 spotlight) | TPCr and yR9d 4→6 | Re-ran the *exact baselines the reviewers named* (Compact/Compressed 3D-GS) on the same GPU with FPS and training time; applied the method to Scaffold-GS with HAC numbers. |
 | **NU3tE3lIqf** (WildGaussians, NeurIPS24) | BAXf and bi9Y raised; AC: initially "BA, WA, BA and R" | Showed the evaluation already used the NeRF-W half-image protocol and that GS-W's code did not, so the "unfair comparison" charge was turned around; added SWAG/GS-W under the common protocol. |
-| **jrVoZLF20h** (Croppable INR, NeurIPS24) | XqfY raised to 6; 45rR "no longer against acceptance" | Extended the partition-factor ablation the reviewer specified, added pseudocode, and pointed to an existing Section 4.6 the reviewer had missed (confirmed misread). |
+| **jrVoZLF20h** (NeurIPS24) | XqfY raised to 6; 45rR "no longer against acceptance" | Extended the partition-factor ablation the reviewer specified, added pseudocode, and pointed to an existing Section 4.6 the reviewer had missed (confirmed misread). |
 | **1jG5ngXVs3** (FlowTurbo, NeurIPS24) | yH4R to 5, RYd7 to 6 | New results on SD3/FLUX (scalability) and distillation baselines *with training costs*; block-order ablation. |
 | **wWguwYhpAY** (Neural Experts, NeurIPS24) | VtKc 5→6 | InstantNGP comparison, requested by the reviewer *and the AC*. AC: "AC appreciates the authors' efforts and quick response to the request for additional evidence demonstrating the broad impact of their work by providing InstantNGP results". |
 | **13xP0J2d6E** (BlurDM, NeurIPS25) | a5f6 raised; accepted with 2/4/5/4/4 | Stage-wise ablation plus a derivation justifying the latent-space assumption. The AC cited "confidence interval analyses, and perceptual metrics during the rebuttal". |
-| **OZljvntsto** (Grids vs INR, NeurIPS25) | y2xa raised to accept (5); accepted at 3/4/5/3 | New CT task (AAPM), FINER results, offer to narrow the overclaiming title. One champion was enough for the AC. |
+| **OZljvntsto** (NeurIPS25) | y2xa raised to accept (5); accepted at 3/4/5/3 | New CT task (AAPM), results for the named baseline, offer to narrow the overclaiming title. One champion was enough for the AC. |
 | **M5t0WvjfCg** (AdaIR, ICLR25) | FFqs 3→5 | Recent all-in-one baselines with parameter counts, plus an attention-type ablation. The reviewer still disclaimed support, but the paper was accepted. |
 | **25Zlvl7JxW** (HQGS, ICLR25) | cE6C and rTVv raised | Robustness table vs NeRF/3DGS/SRGS across noise and downsampling levels; ablation averaged over all scenes instead of one. |
 
@@ -582,7 +513,7 @@ Novelty-skeptic reviews are reject-side 18 of 23 times, against 51 of 161 for al
 - **HxHrRUHMOD** (ICLR24): a champion at 8 plus a raise to 6. The AC said "I am leaning towards rejection since there seems to be no consensus but I wouldn't mind if the paper would get accepted". Rejected.
 - **DS5qRs0tQz** (Grounding DINO, ICLR24): 5/8/5. The rebuttal addressed sRML's points, but the two 5s never replied. Rejected on "agglomeration of design".
 - **ZfNeovqQkn**, **RKOgWtrWPe** (NeurIPS25): novelty and marginal-gain objections. In each, one reviewer moved one step (to borderline reject and borderline accept respectively) and the rest kept. Both rejected.
-- **LDkyhsiCZQ** (NeurIPS25 resubmission of ICLR25 #7): no score moved. The AC called the framing "over-interpretating and over-claiming".
+- **LDkyhsiCZQ** (NeurIPS25 resubmission of an ICLR25 paper): no score moved. The AC called the framing "over-interpretating and over-claiming".
 
 ### Patterns (counts are from the 36 threaded papers)
 

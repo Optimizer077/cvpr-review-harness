@@ -15,7 +15,6 @@ PROTOCOL_DIR: Path = HARNESS_ROOT / "02_protocol"
 PERSONA_DIR: Path = HARNESS_ROOT / "03_personas"
 PANEL_DIR: Path = HARNESS_ROOT / "04_panels"
 TEMPLATE_DIR: Path = HARNESS_ROOT / "05_templates"
-DOMAIN_DIR: Path = HARNESS_ROOT / "07_domain_packs"
 SESSIONS_DIR: Path = HARNESS_ROOT / "sessions"
 
 # Canonical section keys, in paper order. Section rubrics, panels and scores use these keys.
