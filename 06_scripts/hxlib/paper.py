@@ -13,8 +13,10 @@ import shutil
 from pathlib import Path
 from typing import Any, Optional
 
+from .anonymity import scan_document
 from .common import SECTION_KEYS, save_json, sha256_file
-from .paper_text import detect_sections, extract_lines, extract_pages, is_heading_row, render_pages
+from .paper_text import (detect_sections, extract_lines, extract_pages, is_heading_row, line_numbered,
+                         render_pages)
 
 __all__ = ["detect_sections", "extract_captions", "extract_lines", "extract_pages", "injection_phrases",
            "render_pages", "scan_hidden_and_injection", "snapshot_paper"]
@@ -75,6 +77,26 @@ def _limitations_span(spans: list[dict]) -> Optional[dict]:
                         "page_start": span["page_start"], "page_end": span["page_end"],
                         "text": "\n".join(lines[i:i + 25])}
     return None
+
+
+def _add_limitations_paragraph(spans: list[dict]) -> None:
+    """Without a 'Limitations' section, use the 'Limitations' paragraph of another section.
+
+    A limitations span made only of impact or ethics statements (`paper_text._canonical`) gets that
+    paragraph put in front of it, so the paper's own limitations stay in the scored text.
+    """
+    current = next((s for s in spans if s["key"] == "limitations"), None)
+    if current is not None and "limitation" in current["heading"].lower():
+        return
+    para = _limitations_span([s for s in spans if s is not current])
+    if para is None:
+        return
+    if current is None:
+        spans.append(para)
+        return
+    current.update(heading=f"{para['heading']} + {current['heading']}", text=para["text"] + "\n" + current["text"],
+                   page_start=min(para["page_start"], current["page_start"]),
+                   page_end=max(para["page_end"], current["page_end"]))
 
 
 def injection_phrases(text: str) -> list[str]:
@@ -143,16 +165,22 @@ def scan_hidden_and_injection(pdf: Path, label: str) -> list[str]:
 
 def snapshot_paper(pdf: Path, dest: Path, supp: Optional[Path] = None,
                    tex_dir: Optional[Path] = None) -> dict:
-    """Copy inputs into `dest`, extract text, write sections and reading views. Returns metadata."""
+    """Copy inputs into `dest`, extract text, write sections and reading views. Returns metadata.
+
+    The metadata includes `line_numbers` (the main PDF prints margin line numbers, see
+    `paper_text.line_numbered`), `injection_flags` and `anonymity_flags` (main and supplement).
+    """
     dest.mkdir(parents=True, exist_ok=True)
     meta: dict = {"main_pdf_source": str(pdf.resolve())}
     shutil.copy2(pdf, dest / "main.pdf")
     meta["main_pdf_sha256"] = sha256_file(dest / "main.pdf")
     main_pages, main_styles = extract_pages(dest / "main.pdf")
     meta["main_pages"] = len(main_pages)
+    meta["line_numbers"] = line_numbered([sum(1 for anchor, _ in rows if anchor) for rows in main_pages])
     main_txt = render_pages(main_pages, "main")
     (dest / "paper_main.txt").write_text(main_txt, encoding="utf-8")
     meta["injection_flags"] = scan_hidden_and_injection(dest / "main.pdf", "main")
+    meta["anonymity_flags"] = scan_document(main_pages, dest / "main.pdf", "main")
 
     supp_txt = ""
     supp_pages: list[list[tuple[str, str]]] = []
@@ -165,14 +193,12 @@ def snapshot_paper(pdf: Path, dest: Path, supp: Optional[Path] = None,
         supp_txt = render_pages(supp_pages, "supp")
         (dest / "paper_supp.txt").write_text(supp_txt, encoding="utf-8")
         meta["injection_flags"] += scan_hidden_and_injection(dest / "supplement.pdf", "supp")
+        meta["anonymity_flags"] += scan_document(supp_pages, dest / "supplement.pdf", "supp")
 
     spans = detect_sections(main_pages, main_styles)
     body = [s for s in spans if s["key"] not in ("references", "title")]
     meta["main_words"] = sum(len(re.sub(r"(?m)^L\d{3,4}\s+", "", s["text"]).split()) for s in body)
-    if not any(s["key"] == "limitations" for s in spans):
-        lim = _limitations_span(spans)
-        if lim:
-            spans.append(lim)
+    _add_limitations_paragraph(spans)
     if supp_txt:
         spans.append({"key": "supplementary", "heading": "Supplementary material",
                       "page_start": 1, "page_end": len(supp_pages), "text": supp_txt})

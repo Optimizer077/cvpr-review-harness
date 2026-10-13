@@ -12,7 +12,9 @@ import re
 from pathlib import Path
 from typing import Optional
 
+from .anonymity import identified_line
 from .common import PROTOCOL_DIR, TEMPLATE_DIR, load_json, review_dir, scale_wording
+from .paper_text import line_numbered
 
 from .venues import instrument, scales_for, careful, reviewer_card, common_rules, venue_block
 
@@ -59,7 +61,6 @@ _LINE_NUMBERS = ("Cite the line numbers printed in the PDF margin as `L###` (the
 
 _PAGE_MARK = re.compile(r"(?m)^===== \[main p\.\d+\] =====$")
 _ANCHOR = re.compile(r"(?m)^L\d{3,4}\b")
-_MIN_PAGE_ANCHORS = 10
 _NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
                  "eight": 8, "nine": 9, "ten": 10}
 _CARD_WORDS = re.compile(r"(\d{2,4})\s*-\s*(\d{2,4})\s+words")
@@ -90,9 +91,9 @@ def rubric_for(sections: list[str], session: Optional[dict] = None) -> str:
 def has_line_numbers(rnd: dict, snap: Path) -> bool:
     """Whether the review-copy PDF prints line numbers.
 
-    The snapshot meta (`paper.line_numbers`) decides when present. Older snapshots are checked here:
-    a page counts as numbered with at least 10 `L###` anchors in `paper_main.txt`, and the PDF as
-    numbered when at least half of its pages are.
+    The snapshot meta (`paper.line_numbers`) decides when present. Older snapshots are checked here
+    with the rule the snapshot uses (`paper_text.line_numbered`) on the `L###` anchors of each page
+    of `paper_main.txt`: numbered when at least half of the pages carry at least 10 anchors.
     """
     flag = rnd.get("paper", {}).get("line_numbers")
     if isinstance(flag, bool):
@@ -100,9 +101,7 @@ def has_line_numbers(rnd: dict, snap: Path) -> bool:
     path = snap / "paper_main.txt"
     if not path.exists():
         return False
-    pages = _PAGE_MARK.split(read_text(path))[1:]
-    numbered = sum(1 for page in pages if len(_ANCHOR.findall(page)) >= _MIN_PAGE_ANCHORS)
-    return bool(pages) and 2 * numbered >= len(pages)
+    return line_numbered([len(_ANCHOR.findall(page)) for page in _PAGE_MARK.split(read_text(path))[1:]])
 
 
 def persona_targets(session: dict, persona: dict) -> tuple[Optional[list[int]], Optional[int]]:
@@ -155,11 +154,11 @@ def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
         "stage: initial independent review\n\n"
         f"You are about to act as one simulated reviewer for {venue}. Read this whole prompt first. "
         "Stay in character for the review; step out of character only in `debrief.md`.",
-        _targets_block(session, persona, job, has_line_numbers(rnd, snap)),
+        targets_block(session, persona, job, has_line_numbers(rnd, snap)),
         "## 1. Who you are\n\n" + _ANSWER_SECTION.sub("", reviewer_card(session, persona)).rstrip()
         + ("" if careful(session) else _leniency_line(persona)),
         "## 2. Rules for every reviewer\n\n" + common_rules(session),
-        _reading_block(snap, supp_line, persona, job, session, with_form),
+        _reading_block(snap, supp_line, persona, job, session, with_form, identified_line(rnd["paper"])),
     ]
     if with_form:
         parts.append("## 4. Review form\n\n" + review_form(session))
@@ -178,22 +177,30 @@ def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     return "\n\n".join(p for p in parts if p) + "\n"
 
 
-def _targets_block(session: dict, persona: dict, job: dict, line_numbers: bool) -> str:
+def targets_block(session: dict, persona: dict, job: dict, line_numbers: bool, stage: str = "initial") -> str:
     """Hard limits right after the title: length, points, decisive points, location format, debrief.
 
-    A section-only job covers part of the paper, so it gets only the upper word limit.
+    A section-only job covers part of the paper, so it gets only the upper word limit. The answer
+    check (`stage` 'satisfy', dialogue.satisfy_prompt) writes reply.md and new issues instead of
+    review.md, weaknesses and debrief.md; its box keeps the same numbers.
     """
     words, most = persona_targets(session, persona)
+    satisfy = stage == "satisfy"
     lines = ["## 0. Targets", "",
              "Upper limits for this careful review, not quotas." if careful(session) else
+             "Hard limits from your persona card; they override the rules below." if satisfy else
              "Hard limits from your persona card; they override the review form and rule 12."]
-    if words:
+    if words and satisfy:
+        lines.append(f"- `reply.md`: at most {words[1]} words.")
+    elif words:
         span = f"{words[0]}-{words[1]} words" if job["overall"] else f"at most {words[1]} words"
         lines.append(f"- `review.md`: {span}, not counting the Section scores table.")
     points = f"at most {most} points; " if most else ""
-    lines.append(f"- Weaknesses: {points}at most {MAX_DECISIVE} of them decisive (zero is normal).")
+    lines.append(f"- {'New issues' if satisfy else 'Weaknesses'}: {points}at most {MAX_DECISIVE} of them "
+                 "decisive (zero is normal).")
     lines.append("- Locations: " + (_LINE_NUMBERS if line_numbers else _NO_LINE_NUMBERS))
-    lines.append(f"- `debrief.md`: at most {DEBRIEF_WORDS} words.")
+    if not satisfy:
+        lines.append(f"- `debrief.md`: at most {DEBRIEF_WORDS} words.")
     return "\n".join(lines)
 
 
@@ -221,7 +228,8 @@ def _period_line(session: dict, with_form: bool) -> Optional[str]:
 
 
 def _reading_block(snap: Path, supp_line: str, persona: dict, job: dict, session: dict,
-                   with_form: bool) -> str:
+                   with_form: bool, identified: str = "") -> str:
+    """Section 3: the files this reviewer may read; `identified` is the identified-copy line or ''."""
     from .figure_render import figure_reading_line
 
     view_file, view_desc = _VIEW_TEXT[job["view"]]
@@ -241,6 +249,7 @@ def _reading_block(snap: Path, supp_line: str, persona: dict, job: dict, session
         f"- Your reading view: `{view_file}` - {view_desc}",
         f"- Assigned section texts (same content, split by section): {sections}.",
         "- The review-copy PDF: `main.pdf`. Look at figures by reading PDF pages (Read tool with `pages`).",
+        *([f"- {identified}"] if identified else []),
         f"- {_LOSSY_TEXT}",
         *([f"- {figures}"] if figures else []),
         f"- {supp_line}",

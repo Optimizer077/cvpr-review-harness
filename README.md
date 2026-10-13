@@ -108,6 +108,8 @@ Each bracketed line is one **job** for one fresh agent. The default panel gives 
 | Dedicated section reviews as well | `--mode both` |
 | Figure review job (FIG) | `--figures` ([Review the figures](#review-the-figures)) |
 
+**Anonymity check.** `new` and `round` refuse a PDF that shows who wrote it or where it appeared: an author block or e-mail, a CVF or arXiv stamp, acknowledgements, grant numbers, or a link to the authors' own code. The refusal lists each flag with its page. Use the anonymous review copy, or add `--allow-identified` to review this copy anyway: `SESSION.json` records the choice, every reviewer prompt tells reviewers to ignore the information, and `SCORES.md` lists the flags. For a camera-ready or preprint copy, also pass `--cutoff <the paper's original submission deadline>`.
+
 ### 3. Check the extraction
 
 Before launching reviewers, open two files in `round_01/snapshot/` inside the session folder:
@@ -134,11 +136,14 @@ python 06_scripts/hx.py validate "<session>"
 python 06_scripts/hx.py aggregate "<session>"
 ```
 
+`validate` also prints **warnings**, which do not fail a job: a `review.md` more than 20% outside the persona's word band, more weaknesses than the persona allows, a different number of points in `review.md` and `review.json`, and grounding problems (quotes not found in the paper; line, page, figure or table references the paper does not have). Read them as reliability notes; do not rerun a valid job only because of a warning.
+
 **Run `aggregate` only after every job validates.** Then open these files inside the session folder:
 
 1. **`round_01/FEEDBACK.md`** — what to fix first, why, and what would resolve it.
-2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses.
+2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses. The `Grounding:` line under the headline counts verified quotes and bad references.
 3. **`round_01/reviews/<job>/debrief.md`** — what triggered a reviewer's reaction and the smallest useful change.
+4. **`round_01/GROUNDING.md`** — each quote and reference that did not match the paper, per feedback reviewer (held-out details are in `heldout/GROUNDING.md`).
 
 If a job fails validation, rerun that job with a fresh agent. Use `python 06_scripts/hx.py status "<session>"` to recover launch instructions for pending jobs only.
 
@@ -396,8 +401,8 @@ sessions/         Local paper snapshots and review campaigns
 | `personas` | List the available reviewer personas. |
 | `new` | Create a session and prepare the first review prompts. |
 | `status <session>` | Inspect jobs, output files, and launch instructions. |
-| `validate <session>` | Check review outputs against the expected schema. |
-| `aggregate <session> [--round N | --all]` | Generate scores, feedback, and progress reports. |
+| `validate <session>` | Check review outputs against the expected schema; print advisory warnings. |
+| `aggregate <session> [--round N | --all]` | Generate scores, feedback, grounding, and progress reports. |
 | `stage <session> writer` | Prepare the writer brief and response scaffold. |
 | `round <session> --paper <pdf>` | Create the next round from a revised draft. |
 | `retest <session>` | Prepare fresh reviews of an unchanged snapshot. |
@@ -417,6 +422,7 @@ Use `python 06_scripts/hx.py <command> --help` for command-specific options. Sel
 | Session already exists | Add `--tag second-pass` to create a separate session, or use `round` to revise the existing one. |
 | Prompts exist but no reviews | Run the printed reviewer jobs in your agent environment; `new` only prepares them. |
 | Validation reports `FAIL` | Inspect the reported errors and rerun the affected job with a fresh agent. |
+| `new refused` or `round refused` after an anonymity check | Use the anonymous review copy, or add `--allow-identified` (and `--cutoff` for a camera-ready or preprint copy); see [step 2](#2-create-a-review-session). |
 | Poor or missing extracted text | Inspect `snapshot/sections.json` and `paper_main.txt`; use a PDF with a usable text layer before starting the review. |
 | `FIGURES.md` flags a figure `not_located` | Use its page image (`snapshot/pages/<doc>_pNN.png`); reviewer prompts already point to it. |
 | A review makes a colour claim | Open the figure's `_deuteranopia` and `_gray` previews in `snapshot/figures/`; the claim holds only if two colours that carry meaning become indistinguishable there. |
@@ -433,8 +439,13 @@ python 06_scripts/test_venues.py
 python 06_scripts/test_efficiency.py
 python 06_scripts/test_figures.py
 python 06_scripts/test_figure_job.py
+python 06_scripts/test_figure_locate.py
 python 06_scripts/test_loop_regressions.py
 python 06_scripts/test_validation_regressions.py
+python 06_scripts/test_grounding.py
+python 06_scripts/test_anonymity.py
+python 06_scripts/test_prompts.py
+python 06_scripts/test_integration.py
 ```
 
 The tests use synthetic PDFs and simulated review records; they make no model calls.

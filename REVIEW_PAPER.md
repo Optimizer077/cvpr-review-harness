@@ -23,6 +23,9 @@ Default VENUE to cvpr when omitted. Pass the selected optional settings through 
    more with `--mode both` or `--heldout`, and one more (`FIG`) with `--figures`. Before launching,
    open `round_01/snapshot/sections.json` and `round_01/snapshot/FIGURES.md`. If sections are
    missing or merged, or the text is garbled, report it to the user before launching reviewers.
+   If `new` refuses the PDF after the anonymity check, report the flags; rerun with
+   `--allow-identified` (and `--cutoff <original submission deadline>` for a camera-ready or
+   preprint copy) only if the user wants that copy reviewed.
 2. Launch one NEW sub-agent per launch line, all at once (parallel). Each agent gets exactly:
    `Read <prompt path> and follow it exactly. Write only the files it names.`
    Do not add anything about the paper, the authors' goals or other reviewers. If you cannot
@@ -34,7 +37,8 @@ Default VENUE to cvpr when omitted. Pass the selected optional settings through 
 4. For careful-mode reviews, inspect `evidence_audit`: do observations cite actual locations and support their conclusions? Report `not_checked` coverage to the user; relaunch a valid job only on the user's request. Structural validation cannot certify scientific correctness. Never invent a finding or convert not_checked into a defect.
 5. `python3 06_scripts/hx.py aggregate <session>` validates and computes the latest round's scores. Use `--all` only to rebuild historical rounds.
 6. Report to the user: the headline line and the table from `round_01/SCORES.md`, the decisive
-   weaknesses, any "Injection / hidden-text flags" line, the lowest rows of the "Figure scores
+   weaknesses, the `Grounding:` line, any "Injection / hidden-text flags" or "Anonymity flags"
+   line, the warnings `validate` printed, the lowest rows of the "Figure scores
    (FIG job)" table when FIG ran, and the path to the debriefs. Do not summarize the reviews more
    kindly than they are.
    **For a review-only task, finish here.** Do not automatically revise, add panels or run retests.

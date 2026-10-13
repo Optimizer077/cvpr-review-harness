@@ -16,7 +16,9 @@ from __future__ import annotations
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
+
+from .common import UNSCORED_SECTION
 
 _HEADER_PATTERNS = (
     re.compile(r"^CVPR$"),
@@ -47,6 +49,14 @@ _KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("experiments", ("experiment", "evaluation", "results")),
     ("method", ("method", "approach", "proposed", "framework")),
 )
+# Statements checked after _KEYWORDS (so 'Conclusion and Broader Impact' stays a conclusion):
+# impact and ethics statements are read as limitations; acknowledgements, funding and the
+# reproducibility statement are not scored.
+_STATEMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("limitations", ("broader impact", "societal impact", "ethics statement", "impact statement")),
+    (UNSCORED_SECTION, ("acknowledg", "funding", "reproducibility statement")),
+)
+MIN_PAGE_ANCHORS = 10  # a page with at least this many `L###` anchors prints line numbers
 
 Row = tuple[str, tuple, float, float]  # text, bbox (x0, y0, x1, y1), largest font size, bold share
 Candidate = tuple[int, str, int, bool]  # section number, title, rows used, doubtful
@@ -188,10 +198,21 @@ def _squash(text: str) -> str:
     return re.sub(r"\s+", "", text).lower()
 
 
+def line_numbered(anchor_counts: Sequence[int]) -> bool:
+    """Whether a PDF prints margin line numbers, from the number of `L###` anchors on each page:
+    at least half of the pages carry MIN_PAGE_ANCHORS or more (a few stray numbers do not count)."""
+    numbered = sum(1 for n in anchor_counts if n >= MIN_PAGE_ANCHORS)
+    return bool(anchor_counts) and 2 * numbered >= len(anchor_counts)
+
+
 def _canonical(name: str, seen_experiments: bool) -> str:
-    """Map a heading to a section key; unnamed sections are method before experiments, analysis after."""
+    """Map a heading to a section key; unnamed sections are method before experiments, analysis after.
+
+    Impact and ethics statements map to limitations; acknowledgements, funding and reproducibility
+    statements to UNSCORED_SECTION, which no job scores.
+    """
     low, squashed = name.lower(), _squash(name)
-    for key, words in _KEYWORDS:
+    for key, words in _KEYWORDS + _STATEMENTS:
         if any(w in low or w.replace(" ", "") in squashed for w in words):
             return key
     return "ablations_analysis" if seen_experiments else "method"
