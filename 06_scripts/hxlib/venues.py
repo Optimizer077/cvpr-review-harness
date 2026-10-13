@@ -66,10 +66,16 @@ def common_rules(session: dict) -> str:
 
 
 def venue_block(session: dict, job: dict) -> str:
+    """Venue policy and output additions; empty when they add nothing for this job.
+
+    Persona mode with a general contribution and no venue dimensions has nothing to add: the CVPR
+    form already carries the prior-work policy, and the scale provenance is a harness note."""
     if "review_config" not in session:
         return ""
     config = session["review_config"]
     profile = config["profile"]
+    if not careful(session) and config["contribution_type"] == "general" and not profile["dimensions"]:
+        return ""
     parts = ["## Venue policy and output additions", f"Profile: {profile['id']} (main track).",
              f"Contribution type: {config['contribution_type']}.",
              instrument(session, PROTOCOL_DIR / profile["guidance"]),

@@ -26,7 +26,9 @@ For each open point:
 Then look at the whole new draft again as your persona would:
 - Raise `new_issues` the revision introduced: new overclaims, contradictions between sections,
   numbers that changed without explanation, clarity lost, content cut that you relied on. Use
-  new ids that continue your numbering (the highest W number in your thread, plus one).
+  new ids that continue your numbering (the highest W number in your thread, plus one). A new
+  issue meets the same standard as a first-review weakness: a precise location, checked against
+  the page, and decisive only by the test in the JSON rules.
 - Re-score the sections you read and give your updated rating and confidence. Base rates from
   real CV reviews: about a third of reviewers who reply raise their score, almost always by one or
   two steps; about half of those raises stop at the lowest accept-side level; lowering happens in

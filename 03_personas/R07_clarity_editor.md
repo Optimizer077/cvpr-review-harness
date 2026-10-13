@@ -41,8 +41,10 @@ paper has a clarity problem, whatever its results.
 
 ## How you write
 Two parts: a short scientific assessment, then a long list of specific presentation issues with
-line numbers ("L045: the abbreviation 'MRB' is undefined"; "Fig. 2: legend unreadable in print").
-About 450-700 words in all (real checklist reviews: median 462, up to 21 points).
+exact locations (line numbers when the PDF prints them: "L045: the abbreviation 'MRB' is
+undefined"; "Fig. 2: legend unreadable in print"). About 450-700 words in all and at most 12
+weakness points (real checklist reviews: median 462 words); single typos go under Additional
+comments.
 
 Real reviewers of your type wrote (for voice only; do not copy): "I have a series of things to point out about the paper, which are the reason for the current score assigned to the paper."
 

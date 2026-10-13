@@ -1,7 +1,8 @@
 # Section rubrics
 
-Section scores are a harness addition, not a native venue rating. They let a
-writer agent see where a draft loses reviewers. Score only what you actually read.
+Section scores are a harness addition, not a native venue rating. Score only what you actually
+read. Set a criterion you could not observe from your reading view to null (a skimming reader who
+did not open the qualitative figures sets `visual_comparisons` to null).
 
 **Section score (1-10), anchored on what a reviewer would do:**
 
@@ -9,19 +10,18 @@ writer agent see where a draft loses reviewers. Score only what you actually rea
 |---|---|
 | 9-10 | You would name this section as a strength; you have nothing to add. |
 | 7-8 | Solid. At most a minor comment ("clarify", "typo", "could cite"). |
-| 5-6 | Acceptable, but it earns a moderate weakness bullet. It does not decide your rating alone. |
-| 3-4 | It earns a major weakness bullet and pulls your rating down by itself. |
+| 5-6 | Acceptable, but it earns a moderate weakness point. It does not decide your rating alone. |
+| 3-4 | It earns a major weakness point and pulls your rating down by itself. |
 | 1-2 | A decisive reason to reject, or the section is missing or broken. |
 
 **Criterion score (1-5):** 1 absent or wrong; 2 weak; 3 adequate; 4 good; 5 exemplary.
-A section score of 9+ needs every criterion at 4+; any criterion at 1 caps the section at 4.
+A section score of 9+ needs every scored criterion at 4+; any criterion at 1 caps the section at 4.
 
 For each scored section give `main_issue` (the single thing that costs the most), its `location`
-(`L###`, page, Fig./Tab./Eq.), and `one_point_fix` (the change that would raise the score by at
-least one point; "none possible by writing" is allowed).
+(page and paragraph, Fig., Tab. or Eq.), and `one_point_fix` (the change that would raise the
+score by at least one point; "none possible by writing" is allowed).
 
 ## title
-What reviewers check: does the title say what the method is and what it does, without a claim the paper does not support?
 - `specific` - names the idea or mechanism, not only the task.
 - `accurate` - no word the results do not back ("universal", "any", "optimal").
 - `findable` - uses the field's terms, so the right reviewers are matched to it at bidding.
@@ -46,7 +46,6 @@ What reviewers check: pages 1-2 and Fig. 1 set the rating prior for most reviewe
 Typical failures: "A+B" impression because the delta to the closest work is not stated early; contribution bullets that restate the method; motivation that is generic ("this task is important").
 
 ## related_work
-What reviewers check: whether the closest work is cited and the difference stated, not merely listed.
 - `coverage_recent` - includes the strong recent (last 1-2 years) and directly competing work.
 - `positioning_delta` - for the closest works, says how this paper differs and why that matters.
 - `fairness_to_prior` - describes prior work accurately and without belittling it.
@@ -54,7 +53,6 @@ What reviewers check: whether the closest work is cited and the difference state
 Typical failures: missing the one paper the expert reviewer thinks of first; "unlike X, we ..." without saying what X actually does; concurrent work ignored.
 
 ## method
-What reviewers check: can I reimplement it, is each design choice motivated, is it correct?
 - `clarity_reproducible` - enough detail to reimplement from the main paper plus supplement.
 - `notation_consistency` - symbols defined once, used consistently, dimensions clear.
 - `design_rationale` - each component has a reason (and a pointer to the ablation that tests it).
@@ -63,7 +61,6 @@ What reviewers check: can I reimplement it, is each design choice motivated, is 
 Typical failures: a figure that does not match the equations; unexplained hyperparameters; "we found it works better" as the only rationale.
 
 ## theory
-What reviewers check: is the theory correct, needed, and connected to the empirical claim?
 - `correctness` - statements and proofs are right.
 - `assumptions_explicit` - assumptions stated and plausible for the setting tested.
 - `link_to_claims` - the theory predicts or explains something the experiments then show.
@@ -81,7 +78,6 @@ What reviewers check: the main results table first, then the setup.
 Typical failures: missing the one baseline the reviewer expects; numbers for baselines lower than in their own papers; only small or old datasets; no wall-clock comparison.
 
 ## ablations_analysis
-What reviewers check: does each component earn its place, and is the claimed mechanism shown?
 - `component_isolation` - each component removed or replaced under the same budget.
 - `mechanism_evidence` - analysis supports the paper's explanation, not only the final number.
 - `failure_cases` - shows where the method does not help.
@@ -89,7 +85,6 @@ What reviewers check: does each component earn its place, and is the claimed mec
 Typical failures: ablations only on one example or one setting; "analysis" that is a restatement of results; mechanism claims with only correlational evidence.
 
 ## figures_tables
-What reviewers check: legibility on paper, captions that stand alone, consistency with the text.
 - `readability` - fonts, colours and crops legible in print and for colour-blind readers.
 - `captions_self_contained` - a caption says what is shown and what to conclude.
 - `text_consistency` - numbers and names in figures/tables match the text.
@@ -97,7 +92,6 @@ What reviewers check: legibility on paper, captions that stand alone, consistenc
 Typical failures: tiny fonts; unexplained abbreviations in tables; best-number bolding errors; qualitative crops chosen only where the method wins.
 
 ## limitations
-What reviewers check: whether the authors know where their method fails.
 - `honesty` - real limitations, not disguised strengths.
 - `specificity` - concrete failure modes, costs or scopes.
 - `scope_alignment` - claims elsewhere stay inside these limits.
@@ -109,7 +103,6 @@ Typical failures: none listed; "future work could extend to video" as the only l
 - `takeaway` - leaves the reader with the one lesson to remember.
 
 ## supplementary
-What reviewers check (when they open it): details the main paper defers, and whether they hold.
 - `completeness_details` - hyperparameters, protocols, extra results that the main paper points to.
 - `supports_main_claims` - the deferred evidence actually supports the main-paper statements.
 - `navigability` - a reviewer can find the referenced item quickly.

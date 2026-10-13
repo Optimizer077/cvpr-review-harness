@@ -1,5 +1,5 @@
 {
-  "_readme": "Persona registry. pool: which assignment slots a persona can fill (expert = matched to the exact subfield, adjacent = neighbouring CV area, outsider = keyword mismatch). reading_view: front|skim|main|full (see hxlib/panel.py VIEW_SECTIONS). reads_supplement: no|if_needed|yes. draw_weight: relative frequency of the matching primary reviewer type in 184 real CV reviews (01_sources/real_review_patterns.md sec. 5: expert-constructive 27% -> R03/R05/R13, terse 18% -> R09/R16, novelty skeptic 12.5%, benchmark-table 10%, checklist 9% -> R10/R07, champion 8%, theory 6.5%, LLM-generic 5-14% -> R15, practitioner 2%, hostile 0.5%; R08/R14 not separately coded, set low). Axes follow AgentReview (commitment, intention, knowledgeability). leniency: fixed rating offset in scale levels vs a calibrated reviewer (close experts harsher, out-of-domain and LLM-assisted milder; 01_sources/reviewer_behavior_literature.md rules 2, 4, 14). killer: adversarial persona; draw panels hold at most one (rule 3). New I/M/N personas are curated venue-guided lenses, not measured reviewer frequencies; their draw weights are not empirical. role: reviewer (drawn into panels) or figure_reviewer (F01, the harness instrument behind the opt-in `hx.py new --figures` job; never drawn, available to every venue).",
+  "_readme": "Persona registry. pool: which assignment slots a persona can fill (expert = matched to the exact subfield, adjacent = neighbouring CV area, outsider = keyword mismatch). reading_view: front|skim|main|full (see hxlib/panel.py VIEW_SECTIONS). reads_supplement: no|if_needed|yes. draw_weight: relative frequency of the matching primary reviewer type in 184 real CV reviews (01_sources/real_review_patterns.md sec. 5: expert-constructive 27% -> R03/R05/R13, terse 18% -> R09/R16, novelty skeptic 12.5%, benchmark-table 10%, checklist 9% -> R10/R07, champion 8%, theory 6.5%, LLM-generic 5-14% -> R15, practitioner 2%, hostile 0.5%; R08/R14 not separately coded, set low). Axes follow AgentReview (commitment, intention, knowledgeability). leniency: fixed rating offset in scale levels vs a calibrated reviewer (close experts harsher, out-of-domain and LLM-assisted milder; 01_sources/reviewer_behavior_literature.md rules 2, 4, 14). killer: adversarial persona; draw panels hold at most one (rule 3). New I/M/N personas are curated venue-guided lenses, not measured reviewer frequencies; their draw weights are not empirical. role: reviewer (drawn into panels) or figure_reviewer (F01, the harness instrument behind the opt-in `hx.py new --figures` job; never drawn, available to every venue). words: [min, max] length of review.md without the Section scores table, and max_weaknesses: the most weakness points; both from the card's 'How you write' (I/M/N cards state no length: careful-reading default [400, 900] / 8). The prompt's Targets box shows them; cards must agree.",
   "personas": [
     {
       "id": "R01",
@@ -16,6 +16,11 @@
       "web_search": false,
       "draw_weight": 0.1,
       "leniency": 0,
+      "words": [
+        350,
+        500
+      ],
+      "max_weaknesses": 5,
       "axes": {
         "knowledge": "medium-high",
         "commitment": "medium",
@@ -38,6 +43,11 @@
       "web_search": true,
       "draw_weight": 0.125,
       "leniency": -0.5,
+      "words": [
+        350,
+        550
+      ],
+      "max_weaknesses": 4,
       "axes": {
         "knowledge": "high",
         "commitment": "medium-high",
@@ -59,6 +69,11 @@
       "web_search": true,
       "draw_weight": 0.2,
       "leniency": -0.5,
+      "words": [
+        450,
+        750
+      ],
+      "max_weaknesses": 6,
       "axes": {
         "knowledge": "very high",
         "commitment": "high",
@@ -81,6 +96,11 @@
       "web_search": false,
       "draw_weight": 0.065,
       "leniency": -0.25,
+      "words": [
+        300,
+        450
+      ],
+      "max_weaknesses": 4,
       "axes": {
         "knowledge": "high (math)",
         "commitment": "high",
@@ -103,6 +123,11 @@
       "web_search": false,
       "draw_weight": 0.04,
       "leniency": -0.5,
+      "words": [
+        400,
+        700
+      ],
+      "max_weaknesses": 6,
       "axes": {
         "knowledge": "high",
         "commitment": "high",
@@ -124,6 +149,11 @@
       "web_search": false,
       "draw_weight": 0.02,
       "leniency": 0,
+      "words": [
+        250,
+        450
+      ],
+      "max_weaknesses": 4,
       "axes": {
         "knowledge": "medium-high",
         "commitment": "medium",
@@ -146,6 +176,11 @@
       "web_search": false,
       "draw_weight": 0.03,
       "leniency": 0,
+      "words": [
+        450,
+        700
+      ],
+      "max_weaknesses": 12,
       "axes": {
         "knowledge": "medium",
         "commitment": "high",
@@ -167,6 +202,11 @@
       "web_search": false,
       "draw_weight": 0.05,
       "leniency": 0.25,
+      "words": [
+        300,
+        500
+      ],
+      "max_weaknesses": 5,
       "axes": {
         "knowledge": "medium",
         "commitment": "medium",
@@ -189,6 +229,11 @@
       "web_search": false,
       "draw_weight": 0.15,
       "leniency": 0,
+      "words": [
+        150,
+        300
+      ],
+      "max_weaknesses": 3,
       "axes": {
         "knowledge": "high (broad)",
         "commitment": "low",
@@ -211,6 +256,11 @@
       "web_search": false,
       "draw_weight": 0.06,
       "leniency": 0.25,
+      "words": [
+        350,
+        550
+      ],
+      "max_weaknesses": 8,
       "axes": {
         "knowledge": "medium",
         "commitment": "medium-high",
@@ -233,6 +283,11 @@
       "web_search": false,
       "draw_weight": 0.01,
       "leniency": -1,
+      "words": [
+        150,
+        300
+      ],
+      "max_weaknesses": 4,
       "killer": true,
       "axes": {
         "knowledge": "medium-high",
@@ -256,6 +311,11 @@
       "web_search": false,
       "draw_weight": 0.08,
       "leniency": 1,
+      "words": [
+        300,
+        450
+      ],
+      "max_weaknesses": 3,
       "axes": {
         "knowledge": "medium-high",
         "commitment": "medium-high",
@@ -277,6 +337,11 @@
       "web_search": false,
       "draw_weight": 0.03,
       "leniency": 0,
+      "words": [
+        300,
+        600
+      ],
+      "max_weaknesses": 8,
       "axes": {
         "knowledge": "high",
         "commitment": "high",
@@ -298,6 +363,11 @@
       "web_search": true,
       "draw_weight": 0.02,
       "leniency": -0.75,
+      "words": [
+        400,
+        600
+      ],
+      "max_weaknesses": 5,
       "killer": true,
       "axes": {
         "knowledge": "very high (closest line)",
@@ -322,6 +392,11 @@
       "web_search": false,
       "draw_weight": 0.07,
       "leniency": 0.5,
+      "words": [
+        300,
+        450
+      ],
+      "max_weaknesses": 7,
       "axes": {
         "knowledge": "low-medium (in practice)",
         "commitment": "low",
@@ -343,6 +418,11 @@
       "web_search": false,
       "draw_weight": 0.03,
       "leniency": 0.25,
+      "words": [
+        150,
+        300
+      ],
+      "max_weaknesses": 3,
       "axes": {
         "knowledge": "low (this subfield)",
         "commitment": "medium",
@@ -362,6 +442,11 @@
       "web_search": false,
       "draw_weight": 0,
       "leniency": 0,
+      "words": [
+        300,
+        600
+      ],
+      "max_weaknesses": 8,
       "axes": {
         "knowledge": "high (visual communication)",
         "commitment": "high",
@@ -381,6 +466,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -397,6 +487,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -413,6 +508,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -429,6 +529,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -445,6 +550,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -461,6 +571,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -477,6 +592,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -493,6 +613,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -509,6 +634,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -525,6 +655,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -541,6 +676,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -557,6 +697,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -573,6 +718,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     },
@@ -589,6 +739,11 @@
       "reads_supplement": "yes",
       "web_search": true,
       "leniency": 0,
+      "words": [
+        400,
+        900
+      ],
+      "max_weaknesses": 8,
       "draw_weight": 1,
       "evidence_basis": "curated, not empirical"
     }
