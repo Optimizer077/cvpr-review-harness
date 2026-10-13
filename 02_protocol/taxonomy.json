@@ -1,0 +1,31 @@
+{
+  "_readme": "Weakness categories (id: meaning). Calibrated against 184 real CV reviews (01_sources/real_review_patterns.md sec. 2). Only novelty, overclaiming and marginal_gains separate rejecting from accepting reviews; the rest appear just as often in positive reviews.",
+  "categories": {
+    "novelty": "limited novelty; combination of known parts; renamed known concept",
+    "positioning": "difference to the closest work unclear or wrong",
+    "related_work": "missing or mis-described prior or concurrent work",
+    "motivation": "why the problem or the design matters is unclear",
+    "significance": "impact on the field or on CVPR readers is unclear or small",
+    "baselines": "missing, stale, weak or misconfigured baselines",
+    "benchmarks": "datasets too small, old, few or non-standard",
+    "fairness": "unequal tuning, budget, compute or protocol across methods",
+    "statistics": "no variance, seeds or significance; selection on test data",
+    "ablation": "components not isolated; missing or confounded ablations",
+    "mechanism": "claimed explanation not supported by evidence",
+    "efficiency": "time, memory, FLOPs or scaling missing or unfavorable",
+    "theory": "theory trivial, disconnected or with unstated assumptions",
+    "correctness": "technical or mathematical error; inconsistent numbers",
+    "clarity": "hard to follow; dense or ambiguous writing; undefined terms",
+    "notation": "symbols undefined or inconsistent; figure does not match equations",
+    "figures": "figures or tables illegible, misleading or not self-contained",
+    "reproducibility": "missing settings or details; no code statement",
+    "scope_generalization": "only one task or domain; unclear whether it generalizes",
+    "overclaiming": "claims stronger than the evidence",
+    "limitations": "limitations or failure cases missing",
+    "presentation_other": "other presentation issue (typos, layout, references)",
+    "marginal_gains": "improvement too small to matter (one of three complaints that separate rejecting from accepting reviews)",
+    "visual_results": "insufficient or unconvincing visual results; artifacts; cherry-picked crops",
+    "metrics": "questionable metrics or protocol (PSNR only, no perceptual metric, overfitting-only evaluation)",
+    "sensitivity": "hyperparameter sensitivity or robustness not analysed"
+  }
+}

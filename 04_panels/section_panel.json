@@ -1,0 +1,18 @@
+{
+  "_readme": "Section mode: which personas score which section. Chosen so each section is read by the reviewer types who weigh it most in real reviews, plus one who reads it critically from outside. In section mode a reviewer reads the main paper for context but scores only its assigned sections.",
+  "sections": {
+    "title": ["R09", "R08", "R02"],
+    "abstract": ["R09", "R08", "R02", "R11"],
+    "introduction": ["R02", "R08", "R12", "R09"],
+    "related_work": ["R03", "R14", "R02"],
+    "method": ["R04", "R03", "R07", "R13"],
+    "theory": ["R04", "R02"],
+    "experiments": ["R01", "R05", "R03", "R06"],
+    "ablations_analysis": ["R05", "R03", "R02", "R12"],
+    "figures_tables": ["R07", "R09", "R01"],
+    "limitations": ["R05", "R11", "R12"],
+    "conclusion": ["R09", "R07"],
+    "supplementary": ["R13", "R03"],
+    "references": ["R03", "R14"]
+  }
+}

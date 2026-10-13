@@ -1,0 +1,18 @@
+{
+  "_readme": "Machine-readable criteria per section (each scored 1-5). section_rubrics.md defines the anchors. validate.py requires exactly these keys.",
+  "criteria": {
+    "title": ["specific", "accurate", "findable"],
+    "abstract": ["problem_gap", "method_concrete", "evidence_specific", "claim_calibration", "readability"],
+    "introduction": ["motivation_stakes", "gap_precision", "insight_why", "contributions_verifiable", "teaser_figure", "claim_calibration"],
+    "related_work": ["coverage_recent", "positioning_delta", "fairness_to_prior", "organization"],
+    "method": ["clarity_reproducible", "notation_consistency", "design_rationale", "correctness", "cost_stated"],
+    "theory": ["correctness", "assumptions_explicit", "link_to_claims", "nontriviality"],
+    "experiments": ["baselines_current_strong", "benchmarks_scale", "fairness_compute_tuning", "metrics_appropriate", "statistical_reliability", "result_strength"],
+    "ablations_analysis": ["component_isolation", "mechanism_evidence", "failure_cases", "sensitivity"],
+    "figures_tables": ["readability", "captions_self_contained", "text_consistency", "visual_comparisons"],
+    "limitations": ["honesty", "specificity", "scope_alignment"],
+    "conclusion": ["matches_evidence", "no_new_claims", "takeaway"],
+    "supplementary": ["completeness_details", "supports_main_claims", "navigability"],
+    "references": ["accuracy", "completeness", "recency"]
+  }
+}

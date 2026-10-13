@@ -1,0 +1,8 @@
+# review sessions hold paper snapshots and reviews: keep them local
+sessions/*
+!sessions/README.md
+release/
+__pycache__/
+*.pyc
+*.bak_*
+01_sources/raw_reviews/

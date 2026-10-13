@@ -1,0 +1,39 @@
+{
+  "_readme": "Panel definitions. kind=draw: seeded weighted sampling without replacement, one persona per slot from the listed pools (draw_weight in personas.json). kind=fixed: listed members. kind=all: every reviewer persona. Use 'realistic' to estimate what a real draw would do; use the fixed panels to stress specific failure modes. Keep the panel fixed across the rounds of one session.",
+  "panels": {
+    "realistic": {
+      "kind": "draw",
+      "description": "A typical CVPR assignment: one subfield-matched reviewer, one matched or adjacent, one from anywhere.",
+      "slots": [{"pool": ["expert"]}, {"pool": ["expert", "adjacent"]}, {"pool": ["any"]}]
+    },
+    "realistic4": {
+      "kind": "draw",
+      "description": "Four-reviewer assignment (common for borderline or emergency-reviewed papers).",
+      "slots": [{"pool": ["expert"]}, {"pool": ["expert", "adjacent"]}, {"pool": ["any"]}, {"pool": ["any"]}]
+    },
+    "quick": {
+      "kind": "fixed",
+      "description": "Cheap first look: skimming senior, subfield expert, adjacent generalist.",
+      "members": ["R09", "R03", "R08"]
+    },
+    "stress": {
+      "kind": "fixed",
+      "description": "Hardest realistic panel: novelty skeptic, subfield expert, methodologist, hostile reviewer.",
+      "members": ["R02", "R03", "R05", "R11"]
+    },
+    "writing": {
+      "kind": "fixed",
+      "description": "Prose and story: clarity editor, adjacent generalist, busy senior, champion.",
+      "members": ["R07", "R08", "R09", "R12"]
+    },
+    "core": {
+      "kind": "fixed",
+      "description": "Balanced seven covering results, novelty, expertise, rigor, clarity, skimming and hostility.",
+      "members": ["R01", "R02", "R03", "R05", "R07", "R09", "R11"]
+    },
+    "gauntlet": {
+      "kind": "all",
+      "description": "Every persona. Expensive; use before submission."
+    }
+  }
+}
