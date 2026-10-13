@@ -17,7 +17,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hx  # noqa: E402
 from hxlib import common  # noqa: E402
 from hxlib.common import (PROTOCOL_DIR, list_rounds, load_json, load_scales, review_dir,  # noqa: E402
-                          round_dir, save_json)
+                          round_dir, save_json, sha256_file)
+from hxlib.figure_render import figure_reading_line  # noqa: E402
 from hxlib.panel import draw_panel, load_personas  # noqa: E402
 
 logger = logging.getLogger("smoke")
@@ -26,8 +27,25 @@ _SECTIONS = ["1. Introduction", "2. Related Work", "3. Method", "4. Experiments"
              "6. Conclusion"]
 
 
+def draw_figure(page, top: float, variant: int) -> None:
+    """A captioned vector bar chart: axes, three coloured bars, a 4-pt axis label, caption below.
+
+    Variant 2 draws different bar heights, so the figure crop changes between drafts.
+    """
+    import fitz
+
+    x0, base = 60, top + 120
+    page.draw_line((x0, top), (x0, base))
+    page.draw_line((x0, base), (x0 + 220, base))
+    for k, h in enumerate((40, 70, 100) if variant == 1 else (100, 55, 30)):
+        page.draw_rect(fitz.Rect(x0 + 20 + 65 * k, base - h, x0 + 60 + 65 * k, base), color=(0, 0, 0),
+                       fill=(0.85, 0.35, 0.1) if k == 2 else (0.2, 0.45, 0.8))
+    page.insert_text((x0 + 80, base + 8), "toy metric (dB)", fontsize=4)
+    page.insert_text((x0, base + 26), "Figure 1. Toy results of three methods. Ours is the last bar.", fontsize=9)
+
+
 def make_pdf(path: Path, variant: int) -> None:
-    """Write a small two-page paper with CVPR-like headings and margin line numbers."""
+    """Write a small two-page paper with CVPR-like headings, margin line numbers and one figure."""
     import fitz
 
     doc = fitz.open()
@@ -36,6 +54,8 @@ def make_pdf(path: Path, variant: int) -> None:
     for heading in _SECTIONS:
         lines.append(heading)
         lines += [f"Body text of {heading} sentence {k} variant {variant}." for k in range(6)]
+        if heading.endswith("Experiments"):
+            lines.append("As shown in Fig. 1, the toy method wins.")
     lines += ["Limitations. The toy method only works on toys.", "Table 1. Toy results. Ours is best.",
               "References", "[1] A. Author. A paper. CVPR 2024."]
     page, y, n = doc.new_page(), 40, 1
@@ -48,6 +68,7 @@ def make_pdf(path: Path, variant: int) -> None:
         page.insert_text((60, y), text, fontsize=9)
         page.insert_text((20, y), f"{n:03d}", fontsize=6)
         y, n = y + 14, n + 1
+    draw_figure(doc.new_page(), 60, variant)
     doc.save(path)
 
 
@@ -110,6 +131,39 @@ def write_satisfaction(rpath: Path) -> None:
                                        encoding="utf-8")
 
 
+def check_figures(rpath: Path) -> None:
+    """The snapshot holds the figure inventory and every initial prompt points at it per reading view."""
+    snap = rpath / "snapshot"
+    items = {i["id"]: i for i in load_json(snap / "figures" / "figures.json")}
+    fig = items["fig_1"]
+    assert (snap / fig["crop"]).exists() and fig["crop_sha256"] == sha256_file(snap / fig["crop"]), fig
+    assert any(f.startswith("small_text") for f in fig["flags"]), fig["flags"]
+    assert fig["min_text_pt"] == 4.0 and fig["mentions"], fig
+    assert (snap / "FIGURES.md").exists() and "fig_1" in (snap / "FIGURES.md").read_text(encoding="utf-8")
+    summary = load_json(rpath / "ROUND.json")["paper"]["figures"]
+    assert summary["figures"] == 1 and "error" not in summary, summary
+    lines = {v: figure_reading_line(snap, v) for v in ("front", "skim", "main", "full")}
+    assert "fig_1.png" in lines["front"] and "main_p01.png" in lines["front"]
+    assert "FIGURES.md" not in lines["front"], "front view sees Fig. 1 only"
+    assert "skimming" in lines["skim"] and all("FIGURES.md" in lines[v] for v in ("skim", "main", "full"))
+    for job in load_json(rpath / "ROUND.json")["jobs"]:
+        prompt = (rpath / "prompts" / "initial" / f"{job['job_id']}.md").read_text(encoding="utf-8")
+        assert lines[job["view"]] in prompt, job["job_id"]
+        assert "Look at figures by reading PDF pages" in prompt, "the PDF-page line stays"
+    assert any("FIGURES.md" in p.read_text(encoding="utf-8") for p in (rpath / "prompts" / "initial").glob("*.md"))
+
+
+def check_figure_pairwise(r_new: Path, r_old: Path) -> None:
+    """A changed figure crop becomes a blind A/B pair keyed 'figure:<id>' and decodes in SCORES.json."""
+    key = load_json(r_new / "pairwise" / "_key" / "KEY.json")["figure:fig_1"]
+    crops = {age: r / "snapshot" / "figures" / "fig_1.png" for age, r in (("new", r_new), ("old", r_old))}
+    assert crops["new"].read_bytes() != crops["old"].read_bytes()
+    for side in ("A", "B"):
+        assert (r_new / "pairwise" / f"{side}_fig_fig_1.png").read_bytes() == crops[key[side]].read_bytes()
+    prompt = (r_new / "prompts" / "pairwise" / "PAIRWISE.md").read_text(encoding="utf-8")
+    assert "figure:fig_1" in prompt and "A_fig_<id>.png" in prompt
+
+
 def check_dialogue(tmpd: Path, pdf1: Path, pdf2: Path) -> None:
     """Fight-and-satisfy loop: review -> FEEDBACK + answer sheet -> answers -> reviewers judge them."""
     assert hx.main(["new", "--paper", str(pdf1), "--name", "fight", "--reviewers", "R02,R03,R09",
@@ -132,6 +186,9 @@ def check_dialogue(tmpd: Path, pdf1: Path, pdf2: Path) -> None:
     assert (r2 / "prompts" / "satisfy" / "R03.md").exists() and (r2 / "prompts" / "initial" / "HR11.md").exists()
     answer = (r2 / "satisfaction" / "R03" / "AUTHOR_RESPONSE.md").read_text(encoding="utf-8")
     assert "fix_text, see L012" in answer
+    for jid in ("R03", "R09"):  # full and skim readers see the new draft's figures in their view
+        line = figure_reading_line(r2 / "snapshot", jobs2[jid]["view"])
+        assert line and line in (r2 / "prompts" / "satisfy" / f"{jid}.md").read_text(encoding="utf-8"), jid
     assert hx.main(["validate", str(session)]) == 1, "missing verdicts must fail"
     write_satisfaction(r2)
     write_reviews(r2, 12)  # only the held-out (initial) jobs need review files; satisfy jobs ignore them
@@ -176,6 +233,7 @@ def main() -> int:
         jobs = load_json(r1 / "ROUND.json")["jobs"]
         assert jobs and all((r1 / "prompts" / "initial" / f"{j['job_id']}.md").exists() for j in jobs)
         assert {"HR03", "HR11"} <= {j["job_id"] for j in jobs if j["group"] == "heldout"}
+        check_figures(r1)
         writer_hint = "heldout"
         write_reviews(r1, 1, broken_job=jobs[0]["job_id"])
         assert hx.main(["validate", str(session)]) == 1, "broken review must fail validation"
@@ -193,6 +251,7 @@ def main() -> int:
             assert hx.main(["stage", str(session), stage]) == 0
         key = load_json(r3 / "pairwise" / "_key" / "KEY.json")
         assert key, "changed sections must produce pairwise pairs"
+        check_figure_pairwise(r3, round_dir(session, 2))
         save_json(r3 / "pairwise" / "pairwise.json",
                   [{"section": s, "preferred": "A", "margin": 1, "reason": "toy"} for s in key])
         assert hx.main(["validate", str(session)]) == 0
@@ -202,6 +261,8 @@ def main() -> int:
         assert "noise, threshold" in progress
         scores3 = load_json(r3 / "SCORES.json")
         assert scores3["pairwise"], "pairwise must decode"
+        fig_pair = next(p for p in scores3["pairwise"] if p["section"] == "figure:fig_1")
+        assert fig_pair["winner"] == key["figure:fig_1"]["A"], fig_pair
         assert scores3["injection_flags"], "white injected text must be flagged"
         assert scores3["groups"]["heldout"]["overall"]["n"] == 2
         assert scores3["main_words"] > 50

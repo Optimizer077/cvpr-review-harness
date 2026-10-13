@@ -183,11 +183,14 @@ def _thread(session_path: Path, job_id: str, upto: int) -> list[str]:
 def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict], rpath: Path,
                    session_path: Path) -> str:
     """Prompt for one reviewer to judge the authors' answers against the new draft."""
+    from .figure_render import figure_reading_line
+
     persona = personas[job["reviewer"]]
     snap, sdir = rpath / "snapshot", rpath / "satisfaction" / job["job_id"]
     scales = scales_for(session)
     view = {"front": "view_front.txt", "skim": "view_skim.txt", "main": "view_main.txt",
             "full": "view_full.txt"}[job["view"]]
+    figures = figure_reading_line(snap, job["view"])
     parts = [
         f"# Answer check {job['job_id']} - {session['venue']}, round {rnd['round']:02d}: the authors "
         "answered your review and revised the paper",
@@ -202,6 +205,7 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
         f"- The authors' answers to them: `{sdir / 'AUTHOR_RESPONSE.md'}`.\n"
         f"- The NEW draft: `{snap / view}` and `{snap / 'main.pdf'}`"
         + (f", supplement `{snap / 'supplement.pdf'}`" if (snap / "supplement.pdf").exists() else "") + ".\n"
+        + (f"- {figures}\n" if figures else "") +
         "- Nothing else: no other reviewers, no held-out folders, no LaTeX, no project folders.",
     ]
     if job["sections"]:

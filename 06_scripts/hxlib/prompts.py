@@ -109,12 +109,15 @@ def _leniency_line(persona: dict) -> str:
 
 def _reading_block(snap: Path, view_file: str, view_desc: str, supp_line: str, persona: dict,
                    job: dict, session: dict) -> str:
+    from .figure_render import figure_reading_line
+
     sec_files = ", ".join(f"`{snap / 'sections' / (s + '.txt')}`" for s in job["sections"])
     web = ("You MAY use WebSearch/WebFetch to look for the closest prior work, the way a real reviewer "
            "searches before writing 'this resembles X'. Cite only papers you actually found (title, "
            "venue or arXiv id, URL). Do not search for the submission itself or try to identify its "
            "authors (double-blind)." if persona.get("web_search") or careful(session) else
            "You do not search the web; you rely on what you already know, as this reviewer would.")
+    figures = figure_reading_line(snap, job["view"])
     return "\n".join([
         "## 5. What you read (and nothing else)",
         f"- Your reading view: `{snap / view_file}` - {view_desc}",
@@ -122,6 +125,7 @@ def _reading_block(snap: Path, view_file: str, view_desc: str, supp_line: str, p
         f"- The review-copy PDF: `{snap / 'main.pdf'}`. Look at figures by reading PDF pages "
         "(Read tool with `pages`). Cite locations as `L###` line anchors, page numbers, "
         "`Fig. N`, `Tab. N` or `Eq. N`.",
+        *([f"- {figures}"] if figures else []),
         f"- {supp_line}",
         f"- {web}",
         f"- Review period: {session['venue']}. Prior-work search boundary: {session.get('prior_work_cutoff') or 'none assumed'}. "
