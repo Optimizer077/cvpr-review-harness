@@ -30,23 +30,11 @@ Sixteen personas read with different priorities: the expert checks technical det
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A[Paper PDF] --> B[Frozen snapshot]
-    B --> C[Independent reviewer agents]
-    C --> D[Scores and prioritized feedback]
-    D --> E[Writer revises and answers]
-    E --> F[Fresh agents check the revision]
-    F --> D
-    classDef input fill:#ecfeff,stroke:#0891b2,color:#164e63
-    classDef review fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
-    classDef output fill:#ecfdf5,stroke:#059669,color:#064e3b
-    class A,B input
-    class C,F review
-    class D,E output
-```
+<p align="center">
+  <a href="assets/workflow.svg"><img src="assets/workflow.svg" alt="Clockwise workflow: freeze the draft, run independent reviewer agents, validate and aggregate feedback, then revise and start the next round. Cyan cards are CLI steps; violet cards are reviewer and writer work." width="100%"></a>
+</p>
 
-The **Python CLI** freezes drafts, prepares prompts, validates outputs, and builds reports. Your **agent environment** runs the reviewers and writer. It must support local file access and independent agent instances; the CLI itself does not launch agents or call a model API.
+The **Python CLI** handles the cyan steps: snapshots, prompts, validation, and reports. Your **agent environment** runs the reviewer jobs in separate contexts; a writer agent or the author revises the paper. The CLI does not launch agents or call a model API. Click the figure to view it at full size.
 
 ### From criticism to a concrete next step
 
@@ -90,7 +78,25 @@ These examples use `python`; use `python3` if that is your Python command.
 <details>
 <summary>Optional: install in a virtual environment</summary>
 
-After cloning, create an environment with `python -m venv .venv`. Activate it with `.venv\Scripts\Activate.ps1` in PowerShell or `source .venv/bin/activate` on macOS/Linux, then run `python -m pip install pymupdf`.
+Before installing PyMuPDF, create and activate an environment:
+
+**PowerShell**
+
+```powershell
+python -m venv ../cvpr-review-env
+../cvpr-review-env/Scripts/Activate.ps1
+python -m pip install pymupdf
+```
+
+**macOS / Linux**
+
+```sh
+python3 -m venv ../cvpr-review-env
+source ../cvpr-review-env/bin/activate
+python -m pip install pymupdf
+```
+
+The environment sits beside the repository so it is not included in commits or exports.
 
 </details>
 
@@ -198,7 +204,7 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
    python 06_scripts/hx.py stage "<session>" writer
    ```
 
-2. **Address every open point.** The writer fills in `writer/RESPONSE.md`, edits the paper sources, rebuilds the PDF, and records changes. Each answer should identify the evidence or exact change that resolves the concern.
+2. **Address every open point.** Run the printed writer prompt with a writer agent, or follow it yourself. Fill in `writer/RESPONSE.md`, edit the paper sources, rebuild the PDF, and record changes. Each answer should identify the evidence or exact change that resolves the concern. The `stage` command only prepares the brief and answer sheet.
 
 3. **Create the next round.** Supply the revised PDF and, if applicable, the revised supplement:
 
@@ -220,7 +226,7 @@ Use the session's `AUTHOR_CONSTRAINTS.md` to record project requirements, permit
 
 - **Held-out reviewers:** add `--heldout R02,R11` when creating a session. Their reviews stay separate from the writer's feedback. Use a different model from the writer for held-out reviews and blind judging.
 - **Repeatability:** `python 06_scripts/hx.py retest "<session>"` prepares fresh reviews of an unchanged draft. Run those prompts, validate, and aggregate to estimate score variability.
-- **Fresh reviews:** choose `--loop fresh` at session creation to use independent full reviews instead of feedback dialogue on later rounds.
+- **Fresh reviews:** choose `--loop fresh` at session creation to repeat the configured review jobs from scratch on later rounds. Unlike dialogue reviewers, these reviewers do not receive the earlier feedback thread or the writer's answers.
 - **Fix checks and blind comparison:** after a revised round, use the commands below and run their printed prompts to check resolved weaknesses and compare changed sections.
 
 ```sh
@@ -238,7 +244,7 @@ Read scores alongside the underlying evidence. Language-model reviewers can shar
 |---|---|
 | Overall recommendation | The default harness profile is 1–5: Reject, Weak Reject, Borderline, Weak Accept, Strong Accept. |
 | First impression | The recommendation recorded after the initial skim, before the detailed read. |
-| Section score | A 1–10 assessment tied to [section rubrics](02_protocol/section_rubrics.md), with 1–5 sub-criteria explaining it. |
+| Section score | A 1–10 assessment tied to [section rubrics](02_protocol/section_rubrics.md). Each sub-criterion is scored on a separate 1–5 scale. |
 | Decisive weakness | A concern the reviewer considers sufficient to block acceptance by itself. |
 | Satisfaction status | Whether the revised draft resolves a particular point; unresolved and new points remain in the feedback list. |
 | Progress across rounds | Changes in scores, including noise thresholds when repeat reviews are available. |
@@ -268,7 +274,7 @@ The headline uses held-out reviewers when present; otherwise it uses feedback re
 05_templates/     Output schemas and author constraints
 06_scripts/       Python CLI, harness library, and smoke test
 07_domain_packs/  Additional subfield knowledge
-assets/           README logo and banner
+assets/           README logo, banner, and workflow figure
 sessions/         Local paper snapshots and review campaigns
 ```
 

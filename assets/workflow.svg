@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="770" viewBox="0 0 1000 770" role="img" aria-labelledby="title desc">
+  <title id="title">From paper draft to checked revision</title>
+  <desc id="desc">A clockwise workflow: 1. The Python CLI freezes the paper and prepares prompts. 2. Independent agents review the draft, or check their own feedback threads in later dialogue rounds. 3. The CLI validates outputs and aggregates scores and feedback. 4. The writer answers open points, revises the sources, and rebuilds the PDF. The revised draft starts another round. Held-out reviews, retests, fix checks and blind comparisons help assess progress.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 9 5 1 9" fill="none" stroke="#93a8c6" stroke-width="1.6" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect x="1" y="1" width="998" height="768" rx="24" fill="#0d172b" stroke="#2c3f5c" stroke-width="2"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="42" y="43" font-size="14" font-weight="700" letter-spacing="2.5" fill="#62e5d0">THE REVIEW → REVISION LOOP</text>
+    <text x="42" y="83" font-size="32" font-weight="700" fill="#f5f8ff">From a draft to a checked revision</text>
+    <text x="42" y="111" font-size="18" fill="#aabbd3">One snapshot. Separate reviewers. Every open point tracked.</text>
+    <!-- Clockwise connectors: prepare, review, aggregate, revise. -->
+    <g fill="none" stroke="#93a8c6" stroke-width="2.5" marker-end="url(#arrow)">
+      <path d="M454 254H544"/>
+      <path d="M752 354V410"/>
+      <path d="M546 520H456"/>
+      <path d="M248 410V354" stroke-dasharray="5 5"/>
+    </g>
+    <rect x="181" y="369" width="134" height="27" rx="13.5" fill="#0d172b"/>
+    <text x="248" y="388" text-anchor="middle" font-size="15" fill="#aabbd3">Revised draft</text>
+    <!-- 01 CLI -->
+    <rect x="42" y="148" width="410" height="202" rx="16" fill="#102638" stroke="#2d786f"/>
+    <text x="64" y="178" font-size="13" font-weight="700" letter-spacing="2" fill="#62e5d0">01 / PYTHON CLI</text>
+    <text x="64" y="213" font-size="26" font-weight="700" fill="#f5f8ff">Freeze &amp; prepare</text>
+    <text x="64" y="246" font-size="19" fill="#d2deed">Save the PDF and supplement.</text>
+    <text x="64" y="274" font-size="19" fill="#d2deed">Extract sections. Create job prompts.</text>
+    <path d="M64 293H430" stroke="#2a4d5d"/>
+    <text x="64" y="325" font-size="16" font-family="Consolas, monospace" fill="#7ef0df">hx.py new / hx.py round</text>
+    <!-- 02 Agents -->
+    <rect x="548" y="148" width="410" height="202" rx="16" fill="#231f3c" stroke="#71639f"/>
+    <text x="570" y="178" font-size="13" font-weight="700" letter-spacing="2" fill="#c5b4fa">02 / REVIEWER AGENTS</text>
+    <text x="570" y="213" font-size="26" font-weight="700" fill="#f5f8ff">Review independently</text>
+    <text x="570" y="246" font-size="19" fill="#d2deed">One fresh agent per review job.</text>
+    <text x="570" y="274" font-size="19" fill="#d2deed">Later dialogue: check its own thread.</text>
+    <path d="M570 293H936" stroke="#4c426a"/>
+    <text x="570" y="325" font-size="16" fill="#d3c6ff">16 personas · selectable panels</text>
+    <!-- 03 CLI -->
+    <rect x="548" y="416" width="410" height="202" rx="16" fill="#102638" stroke="#2d786f"/>
+    <text x="570" y="446" font-size="13" font-weight="700" letter-spacing="2" fill="#62e5d0">03 / PYTHON CLI</text>
+    <text x="570" y="481" font-size="26" font-weight="700" fill="#f5f8ff">Validate &amp; prioritize</text>
+    <text x="570" y="514" font-size="19" fill="#d2deed">Check outputs. Aggregate scores.</text>
+    <text x="570" y="542" font-size="19" fill="#d2deed">List open points and suggested fixes.</text>
+    <path d="M570 561H936" stroke="#2a4d5d"/>
+    <text x="570" y="593" font-size="16" font-family="Consolas, monospace" fill="#7ef0df">SCORES.md + FEEDBACK.md</text>
+    <!-- 04 Author -->
+    <rect x="42" y="416" width="410" height="202" rx="16" fill="#231f3c" stroke="#71639f"/>
+    <text x="64" y="446" font-size="13" font-weight="700" letter-spacing="2" fill="#c5b4fa">04 / WRITER AGENT OR AUTHOR</text>
+    <text x="64" y="481" font-size="26" font-weight="700" fill="#f5f8ff">Answer &amp; revise</text>
+    <text x="64" y="514" font-size="19" fill="#d2deed">Address every open feedback point.</text>
+    <text x="64" y="542" font-size="19" fill="#d2deed">Edit the sources. Rebuild the PDF.</text>
+    <path d="M64 561H430" stroke="#4c426a"/>
+    <text x="64" y="593" font-size="16" font-family="Consolas, monospace" fill="#d3c6ff">RESPONSE.md + revised paper</text>
+    <!-- Assessment stays distinct from the writing loop. -->
+    <path d="M42 651H958" stroke="#30435f"/>
+    <text x="42" y="684" font-size="15" font-weight="700" letter-spacing="1.1" fill="#f5f8ff">CHECK THE IMPROVEMENT</text>
+    <text x="42" y="715" font-size="18" fill="#aabbd3">Held-out reviews · Retests · Fix checks · Blind comparisons</text>
+    <circle cx="45" cy="746" r="3" fill="#62e5d0"/>
+    <text x="58" y="752" font-size="15" fill="#aabbd3">No fixed round cap. Continue while there is actionable work within your scope.</text>
+  </g>
+</svg>
