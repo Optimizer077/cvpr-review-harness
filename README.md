@@ -14,6 +14,7 @@
   <a href="#choose-your-venue">Venues</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#choose-your-panel">Panels</a> ·
+  <a href="#review-the-figures">Figures</a> ·
   <a href="#the-revision-loop">Revision loop</a> ·
   <a href="#reading-the-results">Results</a> ·
   <a href="#troubleshooting">Troubleshooting</a>
@@ -21,11 +22,125 @@
 
 ## Give your paper a demanding first audience
 
-**Find the weak points in your paper. Revise them. Check whether the changes helped.** Paper Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Thirty personas cover CVPR, ICLR, ICML and NeurIPS. Choose a venue, examine the evidence through distinct scientific lenses, and track each open criticism through later drafts.
+**Find the weak points in your paper. Revise them. Check whether the changes helped.** Paper Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Thirty personas cover CVPR, ICLR, ICML and NeurIPS. Choose a venue, examine the evidence through distinct scientific lenses, and track each open criticism through later drafts. Reviewers look at rendered figure images with measured text sizes, and an optional figure job checks each figure and table.
 
 **Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
 > This is an independent research tool for simulated feedback. It is not affiliated with these conferences, and its scores are not acceptance predictions.
+
+## Quick start
+
+### 1. Set up the harness
+
+You need **Python 3.9+**, **PyMuPDF**, a paper PDF with extractable text, and an agent environment. A supplement is optional. Supply the paper's source directory if you want a writer agent to revise it.
+
+```sh
+git clone <repository-url> paper-review-harness
+cd paper-review-harness
+python -m pip install pymupdf
+python 06_scripts/hx.py personas
+```
+
+These examples use `python`; use `python3` if that is your Python command (common on macOS and Linux). [REVIEW_PAPER.md](REVIEW_PAPER.md) and [AGENTS.md](AGENTS.md) write `python3`.
+
+<details>
+<summary>Optional: install in a virtual environment</summary>
+
+Before installing PyMuPDF, create and activate an environment:
+
+**PowerShell**
+
+```powershell
+python -m venv ../paper-review-env
+../paper-review-env/Scripts/Activate.ps1
+python -m pip install pymupdf
+```
+
+**macOS / Linux**
+
+```sh
+python3 -m venv ../paper-review-env
+source ../paper-review-env/bin/activate
+python -m pip install pymupdf
+```
+
+The environment sits beside the repository so it is not included in commits or exports.
+
+</details>
+
+> [!TIP]
+> **Let an agent run steps 2–5.** If your agent can read local files and start sub-agents, give it one line:
+>
+> ```text
+> Follow REVIEW_PAPER.md for PAPER=path/to/main.pdf NAME=mypaper
+> ```
+>
+> It creates the session, starts one fresh sub-agent per reviewer, validates, aggregates, and reports the scores. An agent that cannot start sub-agents should hand you the launch lines instead of reviewing in its own context. The steps below do the same by hand.
+
+### 2. Create a review session
+
+```sh
+python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper
+```
+
+Replace `path/to/main.pdf` with your PDF path. This uses the defaults: the CVPR profile, **three reviewers** from the `realistic` panel, and `full` review mode. For ICLR, ICML or NeurIPS, add `--venue` ([Choose your venue](#choose-your-venue)). The output looks like this (paths shortened):
+
+```text
+session sessions/YYYY-MM-DD_mypaper
+panel ['R12', 'R09', 'R03']
+round 1 -> sessions/YYYY-MM-DD_mypaper/round_01
+
+Launch one fresh agent per pending prompt (initial); give each exactly this instruction:
+  [R03] Read sessions/YYYY-MM-DD_mypaper/round_01/prompts/initial/R03.md and follow it exactly. Write only the files it names.
+  [R09] Read .../prompts/initial/R09.md and follow it exactly. Write only the files it names.
+  [R12] Read .../prompts/initial/R12.md and follow it exactly. Write only the files it names.
+```
+
+The first line names your **session**. Wherever a command below says `<session>`, use that folder path or its full folder name (`YYYY-MM-DD_mypaper`, plus `_<tag>` if you passed `--tag`). The short `--name` alone is not the session identifier.
+
+Each bracketed line is one **job** for one fresh agent. The default panel gives 3 jobs. `--mode both` adds dedicated section jobs (about 13 jobs in total for CVPR, 4–6 for the ML venues, depending on the sections found). `--figures` adds 1, and each `--heldout` ID adds 1.
+
+| Optional input | Add to the command |
+|---|---|
+| Supplementary PDF | `--supp "path/to/supplement.pdf"` |
+| Paper source directory | `--tex "path/to/latex"` |
+| Separate evaluation reviewers | `--heldout R02,R11` |
+| Dedicated section reviews as well | `--mode both` |
+| Figure review job (FIG) | `--figures` ([Review the figures](#review-the-figures)) |
+
+### 3. Check the extraction
+
+Before launching reviewers, open two files in `round_01/snapshot/` inside the session folder:
+
+- **`sections.json`**: the sections found, with their pages. Missing or merged sections give reviewers the wrong section texts.
+- **`FIGURES.md`**: every figure and table found, with its crop image and measured facts. A figure flagged `not_located` is shown to reviewers on its page image.
+
+If text or sections are badly extracted, fix the PDF (it needs a usable text layer) and create a new session with `--tag`.
+
+### 4. Run independent reviewers
+
+Give **each printed prompt to a fresh agent**, using exactly:
+
+```text
+Read <prompt path> and follow it exactly. Write only the files it names.
+```
+
+Start them in parallel, each in its own context, and add nothing about the paper, your goals, or the other reviewers. Review files appear only after those agents finish. [REVIEW_PAPER.md](REVIEW_PAPER.md) gives the orchestrating agent the full procedure.
+
+### 5. Validate and read the results
+
+```sh
+python 06_scripts/hx.py validate "<session>"
+python 06_scripts/hx.py aggregate "<session>"
+```
+
+**Run `aggregate` only after every job validates.** Then open these files inside the session folder:
+
+1. **`round_01/FEEDBACK.md`** — what to fix first, why, and what would resolve it.
+2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses.
+3. **`round_01/reviews/<job>/debrief.md`** — what triggered a reviewer's reaction and the smallest useful change.
+
+If a job fails validation, rerun that job with a fresh agent. Use `python 06_scripts/hx.py status "<session>"` to recover launch instructions for pending jobs only.
 
 ## Finish the useful work, then stop
 
@@ -62,7 +177,7 @@ python 06_scripts/hx.py personas --venue neurips
 
 These are alternative examples; use a different `--name` or `--tag` if running several on the same day. Venue aliases are case-insensitive. Known full labels such as `ICML 2026` are accepted; unknown years are rejected rather than silently assigned old rules.
 
-**Careful reading is the default for ICLR, ICML and NeurIPS.** It checks central claims against specific evidence, inspects relevant appendices and figures, and records what was not checked. It removes forced score offsets, premature first-impression ratings and invented weaknesses. Add `--reading careful` to use it with CVPR too. The original CVPR behavior simulation remains available by default.
+**Careful reading is the default for ICLR, ICML and NeurIPS.** It checks central claims against specific evidence, inspects relevant appendices and figures, and records what was not checked. It removes forced score offsets, premature first-impression ratings and invented weaknesses. Add `--reading careful` to use it with CVPR too; each CVPR persona card is then reduced to its name, used as a lens, without its reading habits or rating offset. The original CVPR behavior simulation remains available by default.
 
 Every careful review includes an `evidence_audit` in its JSON. ICML and NeurIPS also include four separately justified venue dimensions. Validation checks the output structure and ranges; a human or orchestrator must still examine the scientific observations. Read unchecked coverage as an unresolved limitation, not evidence that the paper is wrong.
 
@@ -75,7 +190,7 @@ Every careful review includes an `evidence_audit` in its JSON. ICML and NeurIPS 
 | ICML | M01 theory/assumptions; M02 experimental design; M03 algorithms/originality; M04 practical significance | `balanced`, `empirical`, `gauntlet` |
 | NeurIPS | N01 broad contribution; N02 theory; N03 use-inspired; N04 concept/feasibility; N05 negative results; N06 reproducibility/responsible evaluation | `balanced`, `theory`, `use_inspired`, `concept_feasibility`, `negative_results`, `gauntlet` |
 
-NeurIPS accepts `--contribution-type general|theory|use_inspired|concept_feasibility|negative_results`. Choose the author's declared type. Unless you supply `--panel`, a non-general type selects its specialist panel. A panel changes reviewers; the contribution type changes evaluation criteria. All reviewers honor the declared type even with a custom panel.
+NeurIPS accepts `--contribution-type general|theory|use_inspired|concept_feasibility|negative_results`. Choose the author's declared type. Unless you supply `--panel`, a non-general type selects its specialist panel. A panel changes reviewers; the contribution type changes evaluation criteria. All reviewers honor the declared type even with a custom panel. The `theory` panel has the same members as `balanced` (N01, N02, N06). The NeurIPS section map (`--mode sections` or `both`) assigns specialists by section whatever the contribution type: N02 and N04 read the method, N03 and N05 the experiments.
 
 New panels are curated fixed sets, so `--seed` does not change them. They are not estimates of real reviewer frequencies. `gauntlet` includes only the selected venue's personas. Custom `--reviewers` and `--heldout` IDs must belong to that venue. `--mode sections` and `both` use that venue's dedicated section assignments.
 
@@ -98,98 +213,6 @@ The **Python CLI** (cyan) prepares snapshots and prompts, validates outputs, and
 
 The figure shows the default `dialogue` loop. With `--loop fresh`, later rounds repeat full reviews from scratch instead of rechecking earlier points.
 
-## Quick start
-
-### 1. Set up the harness
-
-You need **Python 3.9+**, **PyMuPDF**, a paper PDF with extractable text, and an agent environment. A supplement is optional. Supply the paper's source directory if you want a writer agent to revise it.
-
-```sh
-git clone <repository-url> paper-review-harness
-cd paper-review-harness
-python -m pip install pymupdf
-python 06_scripts/hx.py personas
-```
-
-These examples use `python`; use `python3` if that is your Python command.
-
-<details>
-<summary>Optional: install in a virtual environment</summary>
-
-Before installing PyMuPDF, create and activate an environment:
-
-**PowerShell**
-
-```powershell
-python -m venv ../cvpr-review-env
-../cvpr-review-env/Scripts/Activate.ps1
-python -m pip install pymupdf
-```
-
-**macOS / Linux**
-
-```sh
-python3 -m venv ../cvpr-review-env
-source ../cvpr-review-env/bin/activate
-python -m pip install pymupdf
-```
-
-The environment sits beside the repository so it is not included in commits or exports.
-
-</details>
-
-> [!TIP]
-> **Let an agent run steps 2–4.** If your agent can read local files and start sub-agents, give it one line:
->
-> ```text
-> Follow REVIEW_PAPER.md for PAPER=path/to/main.pdf NAME=mypaper
-> ```
->
-> It creates the session, starts one fresh sub-agent per reviewer, validates, aggregates, and reports the scores. The steps below do the same by hand.
-
-### 2. Create a review session
-
-```sh
-python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper
-```
-
-Replace `path/to/main.pdf` with your PDF path. This uses the defaults: **three reviewers**, the `realistic` panel, and `full` review mode. The command prints a session path such as `sessions/YYYY-MM-DD_mypaper` and one launch instruction per reviewer.
-
-For dedicated section-review jobs as well, add `--mode both`. This increases the number of jobs beyond the whole-paper panel.
-
-| Optional input | Add to the command |
-|---|---|
-| Supplementary PDF | `--supp "path/to/supplement.pdf"` |
-| Paper source directory | `--tex "path/to/latex"` |
-| Separate evaluation reviewers | `--heldout R02,R11` |
-
-### 3. Run independent reviewers
-
-Give **each printed prompt to a fresh agent**, using exactly:
-
-```text
-Read <prompt path> and follow it exactly. Write only the files it names.
-```
-
-Start them in parallel, each in its own context, and add nothing about the paper, your goals, or the other reviewers. Review files appear only after those agents finish. [REVIEW_PAPER.md](REVIEW_PAPER.md) gives the orchestrating agent the full procedure.
-
-### 4. Validate and read the results
-
-Replace `<session>` below with the **exact session path printed by `new`**, or its full folder name under `sessions/`. The short `--name` alone is not the session identifier.
-
-```sh
-python 06_scripts/hx.py validate "<session>"
-python 06_scripts/hx.py aggregate "<session>"
-```
-
-**Run `aggregate` only after every job validates.** Then open these files inside the printed session folder:
-
-1. **`round_01/FEEDBACK.md`** — what to fix first, why, and what would resolve it.
-2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses.
-3. **`round_01/reviews/<job>/debrief.md`** — what triggered a reviewer's reaction and the smallest useful change.
-
-If a job fails validation, rerun that job with a fresh agent. Use `python 06_scripts/hx.py status "<session>"` to recover launch instructions for pending jobs only.
-
 ## Choose your panel
 
 The presets below are for **CVPR**. For ICLR, ICML and NeurIPS, use the venue-specific panels above.
@@ -206,7 +229,7 @@ The presets below are for **CVPR**. For ICLR, ICML and NeurIPS, use the venue-sp
 
 **A practical starting point:** use `realistic` for a broad first review, `writing` to focus on presentation, or `stress` to probe difficult objections.
 
-Use `--seed 1` to change a drawn panel or `--reviewers R03,R11` to select specific reviewers. The panel stays fixed across revisions within a session.
+`--seed 1` draws a different `realistic` or `realistic4` panel; fixed panels ignore it. A new seed needs a new session (add `--tag`); to measure score noise, use `retest` instead. Use `--reviewers R03,R11` to select specific reviewers. The panel stays fixed across revisions within a session.
 
 | Mode | Behavior |
 |---|---|
@@ -242,6 +265,25 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
 
 </details>
 
+## Review the figures
+
+Every snapshot renders what a reader sees. `snapshot/pages/` holds page images; `snapshot/figures/` holds a crop of each figure and table with its caption, a `_gray` preview and, for colour figures, a `_deuteranopia` preview. `snapshot/FIGURES.md` (and `figures/figures.json`) lists them with measured facts: smallest vector text in pt, raster resolution in ppi, first mention in the text, and flags such as `small_text` (below 6 pt), `low_resolution` (below 150 ppi) and `not_referenced`. Every reviewer prompt points to these files, so reviewers judge figures from the images and the measurements, not from captions.
+
+For a dedicated figure pass, add `--figures` when creating the session:
+
+```sh
+python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper --figures
+```
+
+This adds one job, `FIG`, run by persona F01, "The Figure Reader", with any venue.
+
+- **Scope:** section-only (no overall rating); never drawn into a panel.
+- **Output:** a 1–10 score for every main-paper figure and table, with six criteria (message clarity, legibility, encoding fit, accessibility, caption alignment, comparison fairness), and located defects such as `illegible_text` in "Fig. 3, legend", each with a fix. `SCORES.md` and `FEEDBACK.md` gain a "Figure scores (FIG job)" table, lowest first.
+- **Later rounds:** FIG compares the old and new crop of each open point and re-scores every figure; `stage pairwise` also compares changed figure crops blind.
+- **Data lock:** the writer may change how a figure looks; changing the data it shows needs your approval.
+
+Rules and anchors: [figure_review_rules.md](02_protocol/figure_review_rules.md), [figure_rubric.md](02_protocol/figure_rubric.md).
+
 ## The revision loop
 
 **Review → prioritize → revise → check the answers → review again.**
@@ -252,6 +294,8 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
    python 06_scripts/hx.py stage "<session>" writer
    ```
 
+   It works on the latest non-retest round and refuses to run until that round validates. The brief points to `FEEDBACK.md` and the feedback reviewers' files, never to `SCORES.md` or `PROGRESS.md`, which can contain held-out results.
+
 2. **Address every open point.** Run the printed writer prompt with a writer agent, or follow it yourself. Fill in `writer/RESPONSE.md`, edit the paper sources, rebuild the PDF, and record changes. Each answer should identify the evidence or exact change that resolves the concern. The `stage` command only prepares the brief and answer sheet.
 
 3. **Create the next round.** Supply the revised PDF and, if applicable, the revised supplement:
@@ -260,9 +304,9 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
    python 06_scripts/hx.py round "<session>" --paper "path/to/revised-main.pdf" --supp "path/to/revised-supplement.pdf"
    ```
 
-   Omit `--supp` if there is no supplement. Pass it again when there is one; a revised round does not automatically reuse the previous supplement.
+   Omit `--supp` if there is no supplement. Pass it again when there is one; a revised round does not automatically reuse the previous supplement. `round` refuses to run until the previous round validates.
 
-4. **Run the printed prompts.** In the default `dialogue` loop, fresh instances of the same personas check their own feedback threads against the revised draft. A point can be `satisfied`, `partly`, or `not_satisfied`; new issues can be raised. Held-out reviewers assess the draft from scratch.
+4. **Run every printed prompt.** In the default `dialogue` loop, fresh instances of the same personas get `satisfy` prompts and check their own feedback threads against the revised draft. A point can be `satisfied`, `partly`, or `not_satisfied`; new issues can be raised. Held-out reviewers, and every reviewer under `--loop fresh`, get `initial` prompts and assess the draft from scratch.
 
 5. **Validate and aggregate again.** Read the updated `FEEDBACK.md` and session-wide `PROGRESS.md`, then report completed fixes and remaining blockers. Start another revision only when useful work remains within the requested scope.
 
@@ -275,7 +319,7 @@ Use the session's `AUTHOR_CONSTRAINTS.md` to record project requirements, permit
 - **Held-out reviewers:** add `--heldout R02,R11` when creating a session. Their reviews stay separate from the writer's feedback. Use a different model from the writer for held-out reviews and blind judging.
 - **Repeatability:** `python 06_scripts/hx.py retest "<session>"` prepares fresh reviews of an unchanged draft. Run those prompts, validate, and aggregate to estimate score variability.
 - **Fresh reviews:** choose `--loop fresh` at session creation to repeat the configured review jobs from scratch on later rounds. Unlike dialogue reviewers, these reviewers do not receive the earlier feedback thread or the writer's answers.
-- **Fix checks and blind comparison:** after a revised round, use the commands below and run their printed prompts to check resolved weaknesses and compare changed sections.
+- **Fix checks and blind comparison:** after a revised round, use the commands below and run their printed prompts to check resolved weaknesses and compare changed sections and figure crops.
 
 ```sh
 python 06_scripts/hx.py stage "<session>" fixcheck
@@ -309,9 +353,10 @@ The writer answers each point in `RESPONSE.md` with a change or an evidence-back
 
 | Signal | How to interpret it |
 |---|---|
-| Overall recommendation | The default harness profile is 1–5: Reject, Weak Reject, Borderline, Weak Accept, Strong Accept. |
-| First impression | The recommendation recorded after the initial skim, before the detailed read. |
+| Overall recommendation | CVPR (`cvpr26_5`) and ICLR (`iclr_harness_5`) use 1–5: Reject, Weak Reject, Borderline, Weak Accept, Strong Accept. ICML and NeurIPS use their own 1–6 labels ([Choose your venue](#choose-your-venue)). |
+| First impression | CVPR persona mode only: the recommendation recorded after the initial skim, before the detailed read. Null in careful mode. |
 | Section score | A 1–10 assessment tied to [section rubrics](02_protocol/section_rubrics.md). Each sub-criterion is scored on a separate 1–5 scale. |
+| Figure score | With `--figures`: a 1–10 score per figure and table from the FIG job, with six 1–5 criteria. |
 | Decisive weakness | A concern the reviewer considers sufficient to block acceptance by itself. |
 | Satisfaction status | Whether the revised draft resolves a particular point; unresolved and new points remain in the feedback list. |
 | Progress across rounds | Changes in scores, including noise thresholds when repeat reviews are available. |
@@ -325,9 +370,11 @@ The headline uses held-out reviewers when present; otherwise it uses feedback re
 | `round_NN/SCORES.md` · `SCORES.json` | Overall and section scores, reviewer comparisons, and decisive weaknesses. |
 | `round_NN/FEEDBACK.md` · `FEEDBACK.json` | Open issues, suggested fixes, and satisfaction criteria. |
 | `round_NN/reviews/<job>/` | Initial review, structured scores, and an explanatory debrief. |
+| `round_NN/heldout/<job>/` | Held-out reviews; kept out of `FEEDBACK.md` and the writer brief. |
 | `round_NN/satisfaction/<job>/` | Follow-up replies and point-by-point satisfaction judgments. |
 | `round_NN/writer/` | Answer sheet, change log, and experiment requests. |
 | `round_NN/snapshot/` | Frozen PDFs, extracted text, and section views for that round. |
+| `round_NN/snapshot/FIGURES.md` · `figures/` · `pages/` | Figure inventory with measured facts, figure crops with gray and deuteranopia previews, and page images. |
 | `PROGRESS.md` | Session-wide score history and repeatability information. |
 
 <details>
@@ -335,11 +382,11 @@ The headline uses held-out reviewers when present; otherwise it uses feedback re
 
 ```text
 01_sources/       Research behind the review design
-02_protocol/      Review forms, scoring rubrics, and writer rules
+02_protocol/      Review forms, scoring rubrics, figure rules, and writer rules
 03_personas/      Reviewer persona cards and their registry
 04_panels/        Whole-paper and section panel definitions
 05_templates/     Output schemas and author constraints
-06_scripts/       Python CLI, harness library, and smoke test
+06_scripts/       Python CLI, harness library, tests, and exporter
 assets/           README logo, banner, and workflow figures
 sessions/         Local paper snapshots and review campaigns
 ```
@@ -355,7 +402,7 @@ sessions/         Local paper snapshots and review campaigns
 | `round <session> --paper <pdf>` | Create the next round from a revised draft. |
 | `retest <session>` | Prepare fresh reviews of an unchanged snapshot. |
 | `stage <session> fixcheck` | Prepare a check of earlier weaknesses. |
-| `stage <session> pairwise` | Prepare a blind comparison of changed sections. |
+| `stage <session> pairwise` | Prepare a blind comparison of changed sections and figures. |
 
 Use `python 06_scripts/hx.py <command> --help` for command-specific options. Select a versioned profile with `--venue`. `--cutoff` is an optional search boundary, not a replacement for venue policy. New ML profiles enforce their documented scales; `--scale` remains available for legacy CVPR calibration.
 
@@ -370,19 +417,27 @@ Use `python 06_scripts/hx.py <command> --help` for command-specific options. Sel
 | Session already exists | Add `--tag second-pass` to create a separate session, or use `round` to revise the existing one. |
 | Prompts exist but no reviews | Run the printed reviewer jobs in your agent environment; `new` only prepares them. |
 | Validation reports `FAIL` | Inspect the reported errors and rerun the affected job with a fresh agent. |
-| Poor or missing extracted text | Inspect `snapshot/` and use a PDF with a usable text layer before starting the review. |
+| Poor or missing extracted text | Inspect `snapshot/sections.json` and `paper_main.txt`; use a PDF with a usable text layer before starting the review. |
+| `FIGURES.md` flags a figure `not_located` | Use its page image (`snapshot/pages/<doc>_pNN.png`); reviewer prompts already point to it. |
+| A review makes a colour claim | Open the figure's `_deuteranopia` and `_gray` previews in `snapshot/figures/`; the claim holds only if two colours that carry meaning become indistinguishable there. |
 | Small or inconsistent score gains | Inspect the underlying evidence; report score changes as descriptive. Use `retest` only when deliberately measuring variability. |
 
 ## Development and sharing
 
-Run the mechanics check after changes to scripts, personas, panels, or protocol:
+Run the mechanics checks after changes to scripts, personas, panels, or protocol:
 
 ```sh
 python 06_scripts/hx.py personas
 python 06_scripts/smoke_test.py
+python 06_scripts/test_venues.py
+python 06_scripts/test_efficiency.py
+python 06_scripts/test_figures.py
+python 06_scripts/test_figure_job.py
+python 06_scripts/test_loop_regressions.py
+python 06_scripts/test_validation_regressions.py
 ```
 
-The smoke test uses a synthetic PDF and simulated review records; it makes no model calls.
+The tests use synthetic PDFs and simulated review records; they make no model calls.
 
 Sessions contain paper snapshots and reviews and are excluded from Git by default. To package the reusable harness without sessions, caches, or build notes:
 
@@ -390,4 +445,4 @@ Sessions contain paper snapshots and reviews and are excluded from Git by defaul
 python 06_scripts/export_public.py
 ```
 
-The exporter writes a folder and ZIP under `release/` and scans exported text for identifying strings. Model execution and data handling depend on the agent environment you choose.
+The exporter writes a folder and ZIP under `release/`. It scans exported text for generic identifying patterns (home-directory paths, e-mail addresses) plus any private patterns listed in `00_plan/deid_patterns.txt`; it does not check Git history or topic wording. Model execution and data handling depend on the agent environment you choose.
