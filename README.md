@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="CVPR Review Harness — Review deeply. Revise deliberately." width="100%">
+  <img src="assets/banner.svg" alt="Paper Review Harness — Review deeply. Revise deliberately." width="100%">
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 ## Give your paper a demanding first audience
 
-**Find the weak points in your paper. Revise them. Check whether the changes helped.** CVPR Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Thirty personas cover CVPR, ICLR, ICML and NeurIPS. Choose a venue, examine the evidence through distinct scientific lenses, and track each open criticism through later drafts.
+**Find the weak points in your paper. Revise them. Check whether the changes helped.** Paper Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Thirty personas cover CVPR, ICLR, ICML and NeurIPS. Choose a venue, examine the evidence through distinct scientific lenses, and track each open criticism through later drafts.
 
 **Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
@@ -48,7 +48,7 @@ python 06_scripts/hx.py new --paper main.pdf --name mypaper --venue neurips --co
 python 06_scripts/hx.py personas --venue neurips
 ```
 
-These are alternative examples; use a different `--name` or `--tag` if running several on the same day. Venue aliases are case-insensitive. Known full labels such as `ICML 2026` are accepted; unknown years are rejected rather than silently assigned old rules. The repository keeps its original name for compatibility.
+These are alternative examples; use a different `--name` or `--tag` if running several on the same day. Venue aliases are case-insensitive. Known full labels such as `ICML 2026` are accepted; unknown years are rejected rather than silently assigned old rules.
 
 **Careful reading is the default for ICLR, ICML and NeurIPS.** It checks central claims against specific evidence, inspects relevant appendices and figures, and records what was not checked. It removes forced score offsets, premature first-impression ratings and invented weaknesses. Add `--reading careful` to use it with CVPR too. The original CVPR behavior simulation remains available by default.
 
@@ -93,8 +93,8 @@ The figure shows the default `dialogue` loop. With `--loop fresh`, later rounds 
 You need **Python 3.9+**, **PyMuPDF**, a paper PDF with extractable text, and an agent environment. A supplement is optional. Supply the paper's source directory if you want a writer agent to revise it.
 
 ```sh
-git clone https://github.com/Optimizer077/cvpr-review-harness.git
-cd cvpr-review-harness
+git clone https://github.com/Optimizer077/paper-review-harness.git
+cd paper-review-harness
 python -m pip install pymupdf
 python 06_scripts/hx.py personas
 ```

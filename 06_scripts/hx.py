@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CVPR review harness CLI.
+"""Paper review harness CLI.
 
     hx.py personas                                   list reviewer personas
     hx.py new --paper main.pdf [--supp s.pdf] [--tex DIR] --name mypaper [--panel realistic] ...

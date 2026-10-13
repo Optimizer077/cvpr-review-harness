@@ -6,7 +6,7 @@
 Copies only the reusable parts (protocol, personas, panels, templates, scripts, domain packs,
 research summaries, docs). Leaves out sessions (papers and reviews), build notes (00_plan), raw
 review downloads, backups and caches. Then scans every exported text file for identifying strings
-and fails if one is found. Output: <out>/cvpr-review-harness/ and <out>/cvpr-review-harness.zip.
+and fails if one is found. Output: <out>/paper-review-harness/ and <out>/paper-review-harness.zip.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from pathlib import Path
 logger = logging.getLogger("export")
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = "cvpr-review-harness"
+NAME = "paper-review-harness"
 INCLUDE = ("README.md", "REVIEW_PAPER.md", "AGENTS.md", "CLAUDE.md", "01_sources", "02_protocol",
            "03_personas", "04_panels", "05_templates", "06_scripts", "07_domain_packs", "assets")
 SKIP_PARTS = {"raw_reviews", "__pycache__", "sessions", "00_plan", "release"}

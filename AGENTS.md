@@ -1,4 +1,4 @@
-# Agent rules: CVPR review harness
+# Agent rules: Paper review harness
 
 These rules apply to every agent (Claude Code, Codex, others) and every person who runs this
 harness. `README.md` is the human guide. Rules here are about how reviews are run, kept separate

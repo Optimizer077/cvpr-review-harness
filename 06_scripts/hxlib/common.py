@@ -1,4 +1,4 @@
-"""Shared paths and small helpers for the CVPR review harness."""
+"""Shared paths and small helpers for the Paper review harness."""
 from __future__ import annotations
 
 import datetime as _dt

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
-  <title id="title">CVPR Review Harness logo</title>
+  <title id="title">Paper Review Harness logo</title>
   <desc id="desc">A paper with review lines inside a cyan and violet viewfinder.</desc>
   <rect width="96" height="96" rx="24" fill="#111b33"/>
   <path d="M28 14H15v14M68 14h13v14M15 68v13h13M81 68v13H68" fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round"/>
