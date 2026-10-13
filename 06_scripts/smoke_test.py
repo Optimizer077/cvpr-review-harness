@@ -40,7 +40,7 @@ def draw_figure(page, top: float, variant: int) -> None:
     for k, h in enumerate((40, 70, 100) if variant == 1 else (100, 55, 30)):
         page.draw_rect(fitz.Rect(x0 + 20 + 65 * k, base - h, x0 + 60 + 65 * k, base), color=(0, 0, 0),
                        fill=(0.85, 0.35, 0.1) if k == 2 else (0.2, 0.45, 0.8))
-    page.insert_text((x0 + 80, base + 8), "toy metric (dB)", fontsize=4)
+    page.insert_text((x0 + 80, base + 8), "toy metric (%)", fontsize=4)
     page.insert_text((x0, base + 26), "Figure 1. Toy results of three methods. Ours is the last bar.", fontsize=9)
 
 
