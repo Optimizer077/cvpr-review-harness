@@ -50,7 +50,7 @@ def make_pdf(path: Path, variant: int) -> None:
 
     doc = fitz.open()
     lines = ["CVPR", "#*****", "Toy Title For A Smoke Test", "Anonymous CVPR submission", "Abstract",
-             f"We propose a toy method (variant {variant}). It improves a toy metric by 1 dB."]
+             f"We propose a toy method (variant {variant}). It improves a toy metric by 1 point."]
     for heading in _SECTIONS:
         lines.append(heading)
         lines += [f"Body text of {heading} sentence {k} variant {variant}." for k in range(6)]
