@@ -8,6 +8,8 @@ from pathlib import Path
 
 from .common import PROTOCOL_DIR, load_json, load_scales, review_dir
 
+from .venues import scales_for, check_extensions
+
 logger = logging.getLogger(__name__)
 
 SEVERITIES = ("major", "moderate", "minor")
@@ -21,9 +23,9 @@ def _in_range(value: object, scale: dict) -> bool:
 
 def check_review(job: dict, rnd: dict, round_path: Path) -> list[str]:
     """Return a list of problems for one job (empty = valid)."""
-    scales = load_scales(rnd.get("scale"))
-    criteria = load_json(PROTOCOL_DIR / "section_criteria.json")["criteria"]
-    categories = set(load_json(PROTOCOL_DIR / "taxonomy.json")["categories"])
+    scales = scales_for(rnd)
+    criteria = rnd["review_config"]["criteria"] if "review_config" in rnd else load_json(PROTOCOL_DIR / "section_criteria.json")["criteria"]
+    categories = set(rnd["review_config"]["categories"] if "review_config" in rnd else load_json(PROTOCOL_DIR / "taxonomy.json")["categories"])
     out_dir = review_dir(round_path, job)
     errs: list[str] = []
     for name in ("review.md", "review.json", "debrief.md"):
@@ -44,8 +46,11 @@ def check_review(job: dict, rnd: dict, round_path: Path) -> list[str]:
         return errs
     if data["job_id"] != job["job_id"]:
         errs.append(f"job_id {data['job_id']!r} != {job['job_id']!r}")
+    if data["reviewer_id"] != job["reviewer"] or data["round"] != rnd["round"] or data["stage"] != "initial":
+        errs.append("reviewer_id/round/stage mismatch")
     if data["paper_sha256"] != rnd["paper"]["main_pdf_sha256"]:
         errs.append("paper_sha256 does not match the round snapshot")
+    errs += check_extensions(job, rnd, data)
     errs += _check_overall(job, data, scales)
     errs += _check_sections(job, data, scales, criteria)
     errs += _check_weaknesses(data, categories)
@@ -64,7 +69,7 @@ def _check_overall(job: dict, data: dict, scales: dict) -> list[str]:
         return ["overall must be an object"]
     errs = []
     first = data.get("first_impression")
-    if not isinstance(first, dict) or not _in_range(first.get("rating"), scales["overall"]):
+    if not job.get("careful") and (not isinstance(first, dict) or not _in_range(first.get("rating"), scales["overall"])):
         errs.append("first_impression.rating missing or out of range")
     if not _in_range(ov.get("rating"), scales["overall"]):
         errs.append(f"overall.rating {ov.get('rating')!r} out of range")
@@ -97,8 +102,6 @@ def _check_sections(job: dict, data: dict, scales: dict, criteria: dict[str, lis
 
 def _check_weaknesses(data: dict, categories: set[str]) -> list[str]:
     errs = []
-    if not data["weaknesses"]:
-        errs.append("no weaknesses listed (every real review lists some)")
     seen: set[str] = set()
     for w in data["weaknesses"]:
         wid = w.get("id", "?")
@@ -121,9 +124,9 @@ def _check_weaknesses(data: dict, categories: set[str]) -> list[str]:
 
 def check_satisfaction(job: dict, rnd: dict, round_path: Path) -> list[str]:
     """Validate a reviewer's verdict on the authors' answers (stage 'satisfy')."""
-    scales = load_scales(rnd.get("scale"))
-    criteria = load_json(PROTOCOL_DIR / "section_criteria.json")["criteria"]
-    categories = set(load_json(PROTOCOL_DIR / "taxonomy.json")["categories"])
+    scales = scales_for(rnd)
+    criteria = rnd["review_config"]["criteria"] if "review_config" in rnd else load_json(PROTOCOL_DIR / "section_criteria.json")["criteria"]
+    categories = set(rnd["review_config"]["categories"] if "review_config" in rnd else load_json(PROTOCOL_DIR / "taxonomy.json")["categories"])
     sdir = round_path / "satisfaction" / job["job_id"]
     errs = [f"missing or empty {n}" for n in ("reply.md", "satisfaction.json")
             if not (sdir / n).exists() or (sdir / n).stat().st_size < 50]
@@ -135,6 +138,8 @@ def check_satisfaction(job: dict, rnd: dict, round_path: Path) -> list[str]:
         return [f"satisfaction.json is not valid JSON: {exc}"]
     if data.get("job_id") != job["job_id"] or data.get("stage") != "satisfy":
         errs.append("job_id/stage mismatch")
+    if data.get("round") != rnd["round"]:
+        errs.append("round mismatch")
     if data.get("paper_sha256") != rnd["paper"]["main_pdf_sha256"]:
         errs.append("paper_sha256 does not match the round snapshot")
     got = [i.get("id") for i in data.get("items", [])]
@@ -154,6 +159,7 @@ def check_satisfaction(job: dict, rnd: dict, round_path: Path) -> list[str]:
     errs += _check_overall(job, {"overall": data.get("overall"),
                                  "first_impression": {"rating": (data.get("overall") or {}).get("rating")}}, scales)
     errs += _check_sections(job, {"section_scores": data.get("section_scores", {})}, scales, criteria)
+    errs += check_extensions(job, rnd, data)
     return errs
 
 

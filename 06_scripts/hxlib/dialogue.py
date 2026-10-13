@@ -16,6 +16,8 @@ from .common import PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, list_rounds, load_j
     review_dir, round_dir, save_json, scale_wording
 from .prompts import read_text, rubric_for
 
+from .venues import instrument, scales_for, reviewer_card, common_rules, venue_block, careful
+
 logger = logging.getLogger(__name__)
 
 STATUSES = ("satisfied", "partly", "not_satisfied")
@@ -182,15 +184,16 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     """Prompt for one reviewer to judge the authors' answers against the new draft."""
     persona = personas[job["reviewer"]]
     snap, sdir = rpath / "snapshot", rpath / "satisfaction" / job["job_id"]
-    scales = load_scales(session.get("scale"))
+    scales = scales_for(session)
     view = {"front": "view_front.txt", "skim": "view_skim.txt", "main": "view_main.txt",
             "full": "view_full.txt"}[job["view"]]
     parts = [
         f"# Answer check {job['job_id']} - {session['venue']}, round {rnd['round']:02d}: the authors "
         "answered your review and revised the paper",
-        "## 1. Who you are\n\n" + read_text(PERSONA_DIR / persona["file"]),
-        "## 2. Rules for every reviewer\n\n" + read_text(PROTOCOL_DIR / "reviewer_common.md"),
-        "## 3. How to judge the answers\n\n" + read_text(PROTOCOL_DIR / "satisfaction_rules.md"),
+        "## 1. Who you are\n\n" + reviewer_card(session, persona),
+        "## 2. Rules for every reviewer\n\n" + common_rules(session),
+        "## 3. How to judge the answers\n\n" + instrument(session, PROTOCOL_DIR / (
+            "careful_satisfaction.md" if careful(session) else "satisfaction_rules.md")),
         "## 4. Your thread so far (read in this order)\n\n" + "\n".join(
             f"- {t}" for t in _thread(session_path, job["job_id"], rnd["round"])),
         "## 5. This round\n\n"
@@ -202,7 +205,7 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     ]
     if job["sections"]:
         parts.append(f"## 6. Re-score these sections on the new draft: {', '.join(job['sections'])}\n\n"
-                     + rubric_for(job["sections"]))
+                     + rubric_for(job["sections"], session))
     parts.append("\n".join([
         "## 7. What you write (exactly two files)",
         f"1. `{sdir / 'reply.md'}` - in character, addressed to the authors: point by point, what "
@@ -211,8 +214,9 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
         f"`stage`='satisfy', `paper_sha256`='{rnd['paper']['main_pdf_sha256']}'.",
         "", f"Rating scale: {scale_wording(scales['overall'])}",
         f"Confidence scale: {scale_wording(scales['confidence'])}", "",
-        read_text(TEMPLATE_DIR / "satisfaction_schema.md"),
+        instrument(session, TEMPLATE_DIR / "satisfaction_schema.md"),
         "" if job["overall"] else "This is a section-only job: set `overall` and `previous_rating` to null.",
         "Reply with one line: counts of satisfied / partly / not_satisfied, new issues, old -> new rating.",
     ]))
+    parts.append(venue_block(session, job))
     return "\n\n".join(parts) + "\n"

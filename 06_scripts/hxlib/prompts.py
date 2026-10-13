@@ -14,6 +14,8 @@ from typing import Optional
 from .common import (DOMAIN_DIR, PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, load_json, load_scales,
                      review_dir, scale_wording)
 
+from .venues import instrument, scales_for, careful, reviewer_card, common_rules, venue_block
+
 logger = logging.getLogger(__name__)
 
 _VIEW_TEXT = {
@@ -24,7 +26,7 @@ _VIEW_TEXT = {
              "section headings and the conclusion. Open the PDF pages that hold Fig. 1 and the main "
              "results table to look at them. You do not read the method or the experiments text in "
              "detail; consult `paper_main.txt` only to check one specific doubt, and say so."),
-    "main": ("view_main.txt", "the full main paper (8 pages + references). Open PDF pages to inspect "
+    "main": ("view_main.txt", "the full main paper, including references. Open PDF pages to inspect "
              "figures and tables."),
     "full": ("view_full.txt", "the full main paper and the supplementary material. Open PDF pages to "
              "inspect figures and tables."),
@@ -43,9 +45,9 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def rubric_for(sections: list[str]) -> str:
+def rubric_for(sections: list[str], session: Optional[dict] = None) -> str:
     """Return the rubric blocks (`## <key>` headings in section_rubrics.md) for the given sections."""
-    text = read_text(PROTOCOL_DIR / "section_rubrics.md")
+    text = instrument(session or {}, PROTOCOL_DIR / "section_rubrics.md")
     blocks = re.split(r"(?m)^## ", text)
     head, chunks = blocks[0], {b.split("\n", 1)[0].strip(): "## " + b for b in blocks[1:]}
     picked = [chunks[s] for s in sections if s in chunks]
@@ -55,14 +57,12 @@ def rubric_for(sections: list[str]) -> str:
     return head.strip() + "\n\n" + "\n".join(picked)
 
 
-def domain_pack(domain: Optional[str]) -> str:
+def domain_pack(domain: Optional[str], session: Optional[dict] = None) -> str:
     """Inline domain pack text, or empty."""
     if not domain:
         return ""
     path = DOMAIN_DIR / f"{domain}.md"
-    if not path.exists():
-        raise FileNotFoundError(f"Domain pack {path} not found")
-    return read_text(path)
+    return instrument(session or {}, path)
 
 
 def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict],
@@ -74,20 +74,23 @@ def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     view_file, view_desc = _VIEW_TEXT[job["view"]]
     has_supp = (snap / "supplement.pdf").exists()
     supp_line = _SUPP_POLICY[persona.get("reads_supplement", "if_needed")] if has_supp else \
-        "There is no supplementary material."
+        "No separate supplement PDF was provided; check appendices in main.pdf."
     if job["view"] == "full" and has_supp:
         supp_line = _SUPP_POLICY["yes"]
     venue = session["venue"]
     parts: list[str] = [
         f"# Review job {job['job_id']} - {venue}, session {session['name']}, round {rnd['round']:02d}, "
         "stage: initial independent review",
-        "You are about to act as one reviewer of a CVPR submission. Read this whole prompt first. "
+        f"You are about to act as one simulated reviewer for {venue}. Read this whole prompt first. "
         "Stay in character for the review; step out of character only in `debrief.md`.",
-        "## 1. Who you are\n\n" + read_text(PERSONA_DIR / persona["file"]) + _leniency_line(persona),
-        "## 2. Rules for every reviewer\n\n" + read_text(PROTOCOL_DIR / "reviewer_common.md"),
+        "## 1. Who you are\n\n" + reviewer_card(session, persona) + ("" if careful(session) else _leniency_line(persona)),
+        "## 2. Rules for every reviewer\n\n" + common_rules(session),
     ]
     if job["overall"]:
-        parts.append("## 3. The official review form you fill in\n\n" + read_text(PROTOCOL_DIR / "cvpr_form.md"))
+        if session.get("venue_profile", {}).get("venue", "cvpr") == "cvpr":
+            parts.append("## 3. Review form\n\n" + instrument(session, PROTOCOL_DIR / "cvpr_form.md"))
+        else:
+            parts.append("## 3. Review report\n\nUse Summary, Strengths, Weaknesses, Preliminary recommendation, Justification and Confidence headings. Add decision-relevant questions and limitations; assess the venue dimensions specified below.")
     else:
         parts.append("## 3. Section-only job\n\nThis job scores sections only. Do NOT give an overall "
                      "rating: set `overall` to null in review.json and omit the rating fields in review.md. "
@@ -95,12 +98,13 @@ def initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     if job["sections"]:
         parts.append("## 4. Sections you score (harness addition to the official form)\n\n"
                      f"Score exactly these sections: {', '.join(job['sections'])}.\n\n"
-                     + rubric_for(job["sections"]))
-    pack = domain_pack(session.get("domain")) if persona.get("uses_domain_pack") else ""
+                     + rubric_for(job["sections"], session))
+    pack = domain_pack(session.get("domain"), session) if persona.get("uses_domain_pack") else ""
     if pack:
         parts.append("## 5. What you know about this subfield\n\n" + pack)
     parts.append(_reading_block(snap, view_file, view_desc, supp_line, persona, job, session))
     parts.append(_output_block(out_dir, job, session, rnd))
+    parts.append(venue_block(session, job))
     return "\n\n".join(parts) + "\n"
 
 
@@ -120,7 +124,7 @@ def _reading_block(snap: Path, view_file: str, view_desc: str, supp_line: str, p
     web = ("You MAY use WebSearch/WebFetch to look for the closest prior work, the way a real reviewer "
            "searches before writing 'this resembles X'. Cite only papers you actually found (title, "
            "venue or arXiv id, URL). Do not search for the submission itself or try to identify its "
-           "authors (double-blind)." if persona.get("web_search") else
+           "authors (double-blind)." if persona.get("web_search") or careful(session) else
            "You do not search the web; you rely on what you already know, as this reviewer would.")
     return "\n".join([
         "## 6. What you read (and nothing else)",
@@ -131,25 +135,21 @@ def _reading_block(snap: Path, view_file: str, view_desc: str, supp_line: str, p
         "`Fig. N`, `Tab. N` or `Eq. N`.",
         f"- {supp_line}",
         f"- {web}",
-        f"- Review period: {session['venue']}; prior work counts if it was public before "
-        f"{session['prior_work_cutoff']}.",
+        f"- Review period: {session['venue']}. Prior-work search boundary: {session.get('prior_work_cutoff') or 'none assumed'}. "
+        "Apply the venue policy below; date alone does not establish a mandatory comparison.",
         "- Do NOT open any other file: no other reviews, no earlier rounds, no session or harness "
         "files, no author notes, no project folders, no LaTeX sources. You are a reviewer who only "
         "received the PDF.",
         "",
-        "**Reading order (how real reviewers read).** First skim the way you would on first contact: "
-        "title, abstract, Fig. 1 and the figure/table captions, the contribution list and the main "
-        "results table. Write down your first-impression rating (`first_impression` in review.json) "
-        "BEFORE reading the method in detail. Then read the rest as your persona would. Your final "
-        "rating may differ from the first impression, but real reviewers move away from it only for "
-        "clear reasons.",
+        ("**Reading order.** Map the contribution, read and verify the evidence, then form your recommendation. Set first_impression to null. Record anything not checked." if careful(session) else
+         "**Reading order.** Skim the opening and record first_impression before the detailed read. Then read according to the persona and explain changes in your final judgement."),
     ])
 
 
 def _output_block(out_dir: Path, job: dict, session: dict, rnd: dict) -> str:
-    schema = read_text(TEMPLATE_DIR / "review_schema.md")
-    scales = load_scales(session.get("scale"))
-    tax = load_json(PROTOCOL_DIR / "taxonomy.json")
+    schema = instrument(session, TEMPLATE_DIR / "review_schema.md")
+    scales = scales_for(session)
+    tax = {"categories": session["review_config"]["categories"]} if "review_config" in session else load_json(PROTOCOL_DIR / "taxonomy.json")
     return "\n".join([
         "## 7. What you write (exactly three files)",
         f"1. `{out_dir / 'review.md'}` - the in-character review as it would be submitted on the "
@@ -162,7 +162,7 @@ def _output_block(out_dir: Path, job: dict, session: dict, rnd: dict) -> str:
         "triggered your reaction, say why a reviewer like you reacts to it, and give the smallest "
         "change (wording, order, a pointer to an existing result, a figure fix) that would have "
         "prevented it, or say that no text change can fix it. Label each of your own comments that is "
-        "a lazy heuristic under the CVPR rules (e.g. 'not novel' without a citation, 'needs more "
+        "an unsupported heuristic under the selected venue rules (e.g. 'not novel' without a citation, 'needs more "
         "experiments' with no specific experiment, 'not SOTA' as the only reason, a request for "
         "contemporaneous work): `[lazy]`. List what you did not read and so could not credit, and "
         "say what moved you between your first impression and your final rating. The debrief never "

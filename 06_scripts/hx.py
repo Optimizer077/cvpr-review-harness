@@ -25,7 +25,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hxlib.aggregate import aggregate_round, write_progress, write_round_report  # noqa: E402
 from hxlib.common import (PROTOCOL_DIR, SESSIONS_DIR, TEMPLATE_DIR, list_rounds, load_json,  # noqa: E402
                           load_scales, now_iso, resolve_session, review_dir, round_dir, save_json, today)
-from hxlib.panel import build_jobs, draw_panel, load_personas  # noqa: E402
+from hxlib.panel import build_jobs, draw_panel, load_personas, load_section_map
+from hxlib.venues import profile_for, freeze  # noqa: E402
 from hxlib.paper import snapshot_paper  # noqa: E402
 from hxlib.prompts import write_initial_prompts  # noqa: E402
 from hxlib import dialogue  # noqa: E402
@@ -38,7 +39,7 @@ logger = logging.getLogger("hx")
 def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Path], supp: Optional[Path],
                 tex: Optional[Path], retest_of: Optional[int] = None) -> Path:
     """Create round folder, snapshot (or copy a previous snapshot for a retest), jobs and prompts."""
-    personas = load_personas()
+    personas = session.get("instruments", {}).get("personas") or load_personas()
     rpath = round_dir(session_path, number)
     if rpath.exists():
         raise FileExistsError(f"{rpath} already exists")
@@ -51,9 +52,12 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
     sections = load_json(rpath / "snapshot" / "sections.json")
     present = [s["key"] for s in sections]
     jobs = build_jobs(session["mode"], session["panel_ids"], present, personas, session.get("only_sections"),
-                      session.get("heldout_ids"))
+                      session.get("heldout_ids"), session.get("instruments", {}).get("section_map"),
+                      session.get("reading_mode", "persona"))
     rnd = {"round": number, "created": now_iso(), "retest_of": retest_of, "paper": paper,
            "panel": session["panel_ids"], "mode": session["mode"], "scale": session["scale"], "jobs": jobs}
+    if "review_config" in session:
+        rnd["review_config"] = session["review_config"]
     if retest_of is None and session.get("loop", "dialogue") == "dialogue" and number > 1:
         dialogue.prepare_satisfaction(session_path, rnd, rpath)
     paths = write_initial_prompts(session, rnd, personas, rpath)
@@ -71,8 +75,21 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
 
 
 def cmd_new(args: argparse.Namespace) -> None:
-    personas = load_personas()
-    panel_ids = args.reviewers.split(",") if args.reviewers else draw_panel(args.panel, args.seed, personas)
+    profile = profile_for(args.venue)
+    venue = profile["venue"]
+    reading = args.reading or profile["reading"]
+    if venue != "cvpr" and reading != "careful":
+        raise ValueError("New ML venue profiles require careful reading; behavioral simulation is CVPR-only")
+    contribution = args.contribution_type
+    if contribution not in profile["contribution_types"]:
+        raise ValueError(f"Unsupported contribution type for {venue}: {contribution}")
+    panel_name = args.panel or (contribution if venue == "neurips" and contribution != "general" else profile["panel"])
+    scale = args.scale or profile["scale"]
+    if venue != "cvpr" and scale != profile["scale"]:
+        raise ValueError(f"{profile['label']} requires scale {profile['scale']}")
+    load_scales(scale)
+    personas = load_personas(venue)
+    panel_ids = [x.strip() for x in args.reviewers.split(",")] if args.reviewers else draw_panel(panel_name, args.seed, personas, venue)
     unknown = [r for r in panel_ids + (args.heldout.split(",") if args.heldout else []) if r not in personas]
     if unknown:
         raise KeyError(f"Unknown persona ids: {unknown}")
@@ -80,16 +97,21 @@ def cmd_new(args: argparse.Namespace) -> None:
     spath = SESSIONS_DIR / name
     if spath.exists():
         raise FileExistsError(f"{spath} exists; use --tag")
-    spath.mkdir(parents=True)
-    load_scales(args.scale)  # fail early on an unknown profile
-    session = {"name": name, "created": now_iso(), "venue": args.venue, "prior_work_cutoff": args.cutoff,
-               "scale": args.scale or load_json(PROTOCOL_DIR / "scales.json")["default_overall"],
-               "domain": args.domain, "panel_name": args.panel if not args.reviewers else "custom",
+    session = {"name": name, "created": now_iso(), "venue": profile["label"], "prior_work_cutoff": args.cutoff or profile["cutoff"],
+               "venue_profile": profile, "reading_mode": reading, "contribution_type": contribution,
+               "scale": scale,
+               "domain": args.domain, "panel_name": panel_name if not args.reviewers else "custom",
                "panel_ids": panel_ids, "seed": args.seed, "mode": args.mode,
                "heldout_ids": args.heldout.split(",") if args.heldout else [], "loop": args.loop,
                "only_sections": args.sections.split(",") if args.sections else None,
                "tex_dir": str(Path(args.tex).resolve()) if args.tex else None, "rounds": []}
-    shutil.copy2(TEMPLATE_DIR / "AUTHOR_CONSTRAINTS.md", spath / "AUTHOR_CONSTRAINTS.md")
+    freeze(session, personas, load_section_map(venue))
+    if args.domain and f"07_domain_packs/{args.domain}.md" not in session["instruments"]["texts"]:
+        raise ValueError(f"Unknown domain pack: {args.domain}")
+    spath.mkdir(parents=True)
+    constraints = (TEMPLATE_DIR / "AUTHOR_CONSTRAINTS.md").read_text(encoding="utf-8")
+    constraints = constraints.replace("8 content pages + references; supplement unlimited.", profile["page_budget"])
+    (spath / "AUTHOR_CONSTRAINTS.md").write_text(constraints, encoding="utf-8")
     rpath = _make_round(spath, session, 1, Path(args.paper), Path(args.supp) if args.supp else None,
                         Path(args.tex) if args.tex else None)
     print(f"session {spath}\npanel {panel_ids}\nround 1 -> {rpath}")
@@ -141,7 +163,7 @@ def cmd_stage(args: argparse.Namespace) -> None:
     elif args.stage == "writer":
         (rpath / "writer").mkdir(exist_ok=True)
         if not (rpath / "FEEDBACK.json").exists():
-            dialogue.write_feedback(rnd, rpath, load_personas())
+            dialogue.write_feedback(rnd, rpath, session.get("instruments", {}).get("personas") or load_personas())
         print(f"answer sheet: {dialogue.write_response_scaffold(rpath)}")
         (pdir / "WRITER.md").write_text(stages.writer_prompt(session, rnd, rpath, spath), encoding="utf-8")
     _print_launch(rpath, args.stage)
@@ -161,20 +183,28 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 1 if bad else 0
 
 
-def cmd_aggregate(args: argparse.Namespace) -> None:
+def cmd_aggregate(args: argparse.Namespace) -> int:
     spath = resolve_session(args.session)
+    session = load_json(spath / "SESSION.json")
     numbers = [args.round] if args.round else list_rounds(spath)
+    for n in numbers:
+        rp = round_dir(spath, n)
+        invalid = {jid: errors for jid, errors in validate_round(load_json(rp / "ROUND.json"), rp).items() if errors}
+        if invalid:
+            print(f"round {n}: aggregation refused; validate and repair invalid jobs: {', '.join(invalid)}")
+            return 1
     for n in numbers:
         rpath = round_dir(spath, n)
         rnd = load_json(rpath / "ROUND.json")
         agg = aggregate_round(rnd, rpath)
         write_round_report(agg, rpath)
         if not rnd.get("retest_of"):
-            items = dialogue.write_feedback(rnd, rpath, load_personas())
+            items = dialogue.write_feedback(rnd, rpath, session.get("instruments", {}).get("personas") or load_personas())
             print(f"round {n}: FEEDBACK.md with {len(items)} open points")
         fb = agg["groups"]["feedback"]["overall"]
         print(f"round {n}: {agg['reviews_found']}/{agg['jobs']} reviews, feedback rating {fb}")
     print(write_progress(spath))
+    return 0
 
 
 def _print_launch(rpath: Path, stage: str) -> None:
@@ -202,8 +232,8 @@ def cmd_status(args: argparse.Namespace) -> None:
     _print_launch(rpath, "satisfy")
 
 
-def cmd_personas(_: argparse.Namespace) -> None:
-    for pid, p in load_personas().items():
+def cmd_personas(args: argparse.Namespace) -> None:
+    for pid, p in load_personas(profile_for(args.venue)["venue"] if args.venue else None).items():
         print(f"{pid:<4} {p.get('name', ''):<34} pool={','.join(p.get('pool', [])):<16} "
               f"view={p.get('reading_view', '-'):<5} w={p.get('draw_weight', '-')}")
 
@@ -212,14 +242,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("personas").set_defaults(fn=cmd_personas)
+    q = sub.add_parser("personas")
+    q.add_argument("--venue")
+    q.set_defaults(fn=cmd_personas)
     p = sub.add_parser("new")
     p.add_argument("--paper", required=True)
     p.add_argument("--supp")
     p.add_argument("--tex")
     p.add_argument("--name", required=True)
     p.add_argument("--tag")
-    p.add_argument("--panel", default="realistic")
+    p.add_argument("--panel", help="venue-specific panel; defaults to realistic (CVPR) or balanced")
     p.add_argument("--reviewers", help="comma list of persona ids; overrides --panel")
     p.add_argument("--heldout", help="comma list of persona ids for held-out reviewers the writer never sees")
     p.add_argument("--loop", choices=("dialogue", "fresh"), default="dialogue",
@@ -228,10 +260,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--mode", choices=("full", "sections", "both"), default="full")
     p.add_argument("--sections", help="comma list of section keys to restrict scoring")
     p.add_argument("--domain", default=None, help="domain pack name in 07_domain_packs (no .md)")
-    p.add_argument("--venue", default="CVPR 2027")
-    p.add_argument("--cutoff", default="2026-09-15",
-                   help="prior-work cutoff; CVPR 2027 treats papers online after 2026-09-15 as contemporaneous")
-    p.add_argument("--scale", default=None, help="rating profile in 02_protocol/scales.json (default: cvpr26_5)")
+    p.add_argument("--venue", default="cvpr", help="cvpr, iclr, icml, neurips (versioned profiles)")
+    p.add_argument("--reading", choices=("persona", "careful"))
+    p.add_argument("--contribution-type", default="general", choices=("general", "theory", "use_inspired", "concept_feasibility", "negative_results"))
+    p.add_argument("--cutoff", default=None,
+                   help="optional search date boundary; does not override the venue publication-status policy")
+    p.add_argument("--scale", default=None, help="rating profile in 02_protocol/scales.json (default: selected venue profile)")
     p.set_defaults(fn=cmd_new)
     for name, fn in (("round", cmd_round),):
         q = sub.add_parser(name)

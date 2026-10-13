@@ -4,13 +4,14 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.9 or newer">
-  <img src="https://img.shields.io/badge/Reviewers-16_personas-7C3AED?style=flat-square" alt="16 reviewer personas">
-  <img src="https://img.shields.io/badge/Panels-7_presets-0891B2?style=flat-square" alt="7 panel presets">
+  <img src="https://img.shields.io/badge/Reviewers-30_personas-7C3AED?style=flat-square" alt="30 reviewer personas">
+  <img src="https://img.shields.io/badge/Venues-CVPR_%C2%B7_ICLR_%C2%B7_ICML_%C2%B7_NeurIPS-0891B2?style=flat-square" alt="CVPR, ICLR, ICML and NeurIPS">
   <img src="https://img.shields.io/badge/Revision_rounds-No_fixed_cap-059669?style=flat-square" alt="No fixed revision-round cap">
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
+  <a href="#choose-your-venue">Venues</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#choose-your-panel">Panels</a> ·
   <a href="#the-revision-loop">Revision loop</a> ·
@@ -20,11 +21,57 @@
 
 ## Give your paper a demanding first audience
 
-**Find the weak points in your paper. Revise them. Check whether the changes helped.** CVPR Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Sixteen personas bring different expertise and reading habits; every open criticism can be tracked through later drafts.
+**Find the weak points in your paper. Revise them. Check whether the changes helped.** CVPR Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Thirty personas cover CVPR, ICLR, ICML and NeurIPS. Choose a venue, examine the evidence through distinct scientific lenses, and track each open criticism through later drafts.
 
 **Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
-> This is an independent research tool for simulated feedback. It is not affiliated with CVPR, and its scores are not acceptance predictions.
+> This is an independent research tool for simulated feedback. It is not affiliated with these conferences, and its scores are not acceptance predictions.
+
+## Choose your venue
+
+<picture>
+<source media="(max-width: 640px)" srcset="assets/venues-mobile.svg">
+<img src="assets/venues.svg" alt="Four venue profiles: CVPR behavioral simulation; ICLR knowledge and mechanisms; ICML separate scientific dimensions; NeurIPS contribution-specific panels. Careful mode maps claims, inspects evidence, records uncertainty and explains judgement." width="100%">
+</picture>
+
+| `--venue` | Pinned guidance | Default review | Recommendation scale |
+|---|---|---|---|
+| `cvpr` | CVPR 2027; existing calibration sources | 3-person seeded `realistic` panel | Existing `cvpr26_5`; provenance recorded |
+| `iclr` | ICLR 2027 | 3-person `balanced`, careful reading | **Harness-defined 1-5**, not a verified official form |
+| `icml` | ICML 2026 main track | 3-person `balanced`, careful reading | Verified 1-6; Weak Reject / Weak Accept at 3/4 |
+| `neurips` | NeurIPS 2026 main track | 3-person panel matched to contribution type, careful reading | Verified 1-6; Borderline Reject / Borderline Accept at 3/4 |
+
+```sh
+python 06_scripts/hx.py new --paper main.pdf --name mypaper --venue iclr
+python 06_scripts/hx.py new --paper main.pdf --name mypaper --venue icml
+python 06_scripts/hx.py new --paper main.pdf --name mypaper --venue neurips --contribution-type negative_results
+python 06_scripts/hx.py personas --venue neurips
+```
+
+These are alternative examples; use a different `--name` or `--tag` if running several on the same day. Venue aliases are case-insensitive. Known full labels such as `ICML 2026` are accepted; unknown years are rejected rather than silently assigned old rules. The repository keeps its original name for compatibility.
+
+**Careful reading is the default for ICLR, ICML and NeurIPS.** It checks central claims against specific evidence, inspects relevant appendices and figures, and records what was not checked. It removes forced score offsets, premature first-impression ratings and invented weaknesses. Add `--reading careful` to use it with CVPR too. The original CVPR behavior simulation remains available by default.
+
+Every careful review includes an `evidence_audit` in its JSON. ICML and NeurIPS also include four separately justified venue dimensions. Validation checks the output structure and ranges; a human or orchestrator must still examine the scientific observations. Read unchecked coverage as an unresolved limitation, not evidence that the paper is wrong.
+
+<details>
+<summary><strong>Meet the 14 new scientific reviewer lenses</strong></summary>
+
+| Venue | Persona IDs and focus | Panel choices |
+|---|---|---|
+| ICLR | I01 representation/mechanism; I02 empirical reliability; I03 mathematics; I04 knowledge/scope | `balanced`, `empirical`, `gauntlet` |
+| ICML | M01 theory/assumptions; M02 experimental design; M03 algorithms/originality; M04 practical significance | `balanced`, `empirical`, `gauntlet` |
+| NeurIPS | N01 broad contribution; N02 theory; N03 use-inspired; N04 concept/feasibility; N05 negative results; N06 reproducibility/responsible evaluation | `balanced`, `theory`, `use_inspired`, `concept_feasibility`, `negative_results`, `gauntlet` |
+
+NeurIPS accepts `--contribution-type general|theory|use_inspired|concept_feasibility|negative_results`. Choose the author's declared type. Unless you supply `--panel`, a non-general type selects its specialist panel. A panel changes reviewers; the contribution type changes evaluation criteria. All reviewers honor the declared type even with a custom panel.
+
+New panels are curated fixed sets, so `--seed` does not change them. They are not estimates of real reviewer frequencies. `gauntlet` includes only the selected venue's personas. Custom `--reviewers` and `--heldout` IDs must belong to that venue. `--mode sections` and `both` use that venue's dedicated section assignments.
+
+</details>
+
+New sessions embed their rules, persona cards, rubrics, scales and section assignments so later rounds use the same instruments. Old sessions keep their legacy behavior. Scores from different profiles or reading modes are not directly comparable. Page budgets live in `AUTHOR_CONSTRAINTS.md`; ICLR 2027's budget requires confirmation before layout revisions.
+
+[Read the source-backed design and its limitations](01_sources/multi_venue_review_design.md). The revision loop is for preparing a draft; it does not reproduce official rebuttal submission rules.
 
 ## How it works
 
@@ -136,6 +183,8 @@ If a job fails validation, rerun that job with a fresh agent. Use `python 06_scr
 
 ## Choose your panel
 
+The presets below are for **CVPR**. For ICLR, ICML and NeurIPS, use the venue-specific panels above.
+
 | Panel | Reviewers | Best used for |
 |---|---|---|
 | `realistic` | 3, drawn from expertise pools | A varied first assessment. |
@@ -159,7 +208,7 @@ Use `--seed 1` to change a drawn panel or `--reviewers R03,R11` to select specif
 For a focused pass, add `--sections abstract,introduction`. The section panel uses its own [section-to-persona mapping](04_panels/section_panel.json).
 
 <details>
-<summary><strong>Meet all 16 reviewer personas</strong></summary>
+<summary><strong>Meet the 16 original CVPR reviewer personas</strong></summary>
 
 | ID | Persona | Primary focus |
 |---|---|---|
@@ -300,7 +349,7 @@ sessions/         Local paper snapshots and review campaigns
 | `stage <session> fixcheck` | Prepare a check of earlier weaknesses. |
 | `stage <session> pairwise` | Prepare a blind comparison of changed sections. |
 
-Use `python 06_scripts/hx.py <command> --help` for command-specific options. Set the venue, prior-work cutoff, and rating profile at session creation with `--venue`, `--cutoff`, and `--scale` as appropriate for your project.
+Use `python 06_scripts/hx.py <command> --help` for command-specific options. Select a versioned profile with `--venue`. `--cutoff` is an optional search boundary, not a replacement for venue policy. New ML profiles enforce their documented scales; `--scale` remains available for legacy CVPR calibration.
 
 </details>
 

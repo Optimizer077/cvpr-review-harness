@@ -1,0 +1,6 @@
+# ICML 2026: separate correctness from importance
+Score soundness, presentation, significance and originality separately (1 poor, 2 fair, 3 good, 4 excellent). A technically sound paper may have modest significance; a potentially valuable idea may have unsupported claims. Explain that distinction rather than lowering every dimension together.
+Judge originality through the knowledge and methods added, including useful combinations and insights. Evaluate the evidence appropriate to the contribution: proof for theoretical assertions, controlled comparisons for empirical assertions, and explicit scope for practical claims. Reward candid limitations.
+Ask decision-relevant questions and explain what evidence or clarification would change the recommendation. Do not impose experiments merely because an unrelated paper genre usually contains them. Verify any prior-work allegation against primary sources; no universal calendar cutoff is assumed here.
+This profile covers the main research track, not the separate position-paper track. The shared report headings are a harness layout; the rating and four dimension scales follow the source.
+Source: https://icml.cc/Conferences/2026/ReviewerInstructions

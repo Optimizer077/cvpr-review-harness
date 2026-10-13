@@ -63,6 +63,8 @@ SOURCES_NOTE = """# 01_sources/
 
 Research behind the personas and protocol:
 
+- `multi_venue_review_design.md`: versioned ICLR/ICML/NeurIPS guidance, careful reading and evidence limitations.
+
 - `cvpr_official_process.md`: official CVPR review form, guidelines, policies and timelines
   (primary sources quoted with URLs).
 - `real_review_patterns.md`: patterns measured in 184 public OpenReview reviews of computer-vision

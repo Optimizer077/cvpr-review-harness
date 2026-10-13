@@ -1,0 +1,6 @@
+# ICLR 2027: knowledge and decision relevance
+Assess what the community learns and whether the evidence warrants that knowledge. An insightful analysis or combination of known methods can contribute without winning a leaderboard. Make the recommendation turn on a small set of material scientific considerations, with concrete questions whose answers could change it.
+Consult relevant supplementary arguments before declaring evidence missing. Distinguish incomplete exposition from a false result. Read an author's clarification with an open mind and explain any rating change.
+Prior work: the 2027 guidance treats peer-reviewed publications from July 17, 2026 onward as contemporaneous; absence of comparison to an arXiv-only paper is not by itself grounds for rejection. Verify publication status and dates before making a novelty objection. Do not import CVPR's cutoff.
+The numeric recommendation is explicitly harness-defined because a complete official 2027 rating legend was not verified. Use the shared Summary / Strengths / Weaknesses / Preliminary recommendation / Justification / Confidence headings as an internal report format.
+Source: https://iclr.cc/Conferences/2027/ReviewerGuidelines

@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .common import PROTOCOL_DIR, load_json, round_dir, save_json
 from .prompts import read_text
+from .venues import instrument
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ def fixcheck_prompt(session: dict, rnd: dict, round_path: Path) -> str:
     out = round_path / "fixcheck"
     lines = [
         f"# Fix check - {session['name']}, round {rnd['round']:02d} vs round {rnd['round'] - 1:02d}",
-        read_text(PROTOCOL_DIR / "fixcheck_rules.md"),
+        instrument(session, PROTOCOL_DIR / "fixcheck_rules.md"),
         f"- Weakness list from the previous draft: `{out / 'previous_weaknesses.json'}` ({len(items)} items).",
         f"- New draft: `{round_path / 'snapshot' / 'view_full.txt'}` and `{round_path / 'snapshot' / 'main.pdf'}`.",
         f"- Previous draft (to see what changed): `{prev / 'snapshot' / 'view_full.txt'}`.",
@@ -76,7 +77,7 @@ def pairwise_prompt(session: dict, rnd: dict, round_path: Path, seed: int) -> st
     save_json(pdir / "_key" / "KEY.json", key)
     lines = [
         f"# Blind pairwise judgement - {session['venue']}",
-        read_text(PROTOCOL_DIR / "pairwise_rules.md"),
+        instrument(session, PROTOCOL_DIR / "pairwise_rules.md"),
         "Sections to compare: " + (", ".join(key) or "none (no section changed)"),
         f"Files: `{pdir}/A_<section>.txt` and `{pdir}/B_<section>.txt`. Do NOT open `{pdir / '_key'}`.",
         f"Write `{pdir / 'pairwise.json'}` = [{{\"section\": str, \"preferred\": \"A|B|tie\", "
@@ -90,7 +91,9 @@ def writer_prompt(session: dict, rnd: dict, round_path: Path, session_path: Path
     """Brief for the writer agent (or the user) after a round has been reviewed and aggregated."""
     lines = [
         f"# Writer brief - {session['name']}, after round {rnd['round']:02d}",
-        read_text(PROTOCOL_DIR / "writer_rules.md"),
+        instrument(session, PROTOCOL_DIR / "writer_rules.md"),
+        f"Venue: {session['venue']}; contribution type: {session.get('contribution_type', 'general')}. "
+        "Use the submission-stage page budget in AUTHOR_CONSTRAINTS.md. This is author preparation, not an official rebuttal submission.",
         "## Inputs",
         f"- The to-do list: `{round_path / 'FEEDBACK.md'}` - every open point with the reviewer's "
         "suggested fix and what would satisfy them, most important first, then section scores.",

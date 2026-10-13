@@ -1,6 +1,6 @@
 # Section rubrics
 
-Section scores are a harness addition: the official CVPR form has no per-section scores. They let a
+Section scores are a harness addition, not a native venue rating. They let a
 writer agent see where a draft loses reviewers. Score only what you actually read.
 
 **Section score (1-10), anchored on what a reviewer would do:**
@@ -37,7 +37,7 @@ Typical failures: jargon soup; method described only by adjectives; a list of ex
 
 ## introduction
 What reviewers check: pages 1-2 and Fig. 1 set the rating prior for most reviewers.
-- `motivation_stakes` - why the problem matters to CVPR readers, concretely.
+- `motivation_stakes` - why the problem matters to the intended research community, concretely.
 - `gap_precision` - what exactly prior methods cannot do, with citations, stated so it can be checked.
 - `insight_why` - the key idea and WHY it should work, before the details.
 - `contributions_verifiable` - each listed contribution maps to a section and evidence; no padding.

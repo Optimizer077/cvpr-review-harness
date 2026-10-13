@@ -2,14 +2,98 @@
   "_readme": "Scales. The official CVPR rating wording is not public (OpenReview form is login-gated; see 01_sources/cvpr_official_process.md sec. 2). The default profile uses the only label set on an official 2026 page (CVPR 2026 reviewer training, final-justification examples). The 6-level profile follows forum reports for ICCV 2025 / CVPR 2026. Pick per session with `hx.py new --scale`; never mix profiles within a session.",
   "default_overall": "cvpr26_5",
   "overall_profiles": {
-    "cvpr26_5": {"min": 1, "max": 5, "labels": {"1": "Reject", "2": "Weak Reject", "3": "Borderline", "4": "Weak Accept", "5": "Strong Accept"},
-                 "source": "CVPR 2026 reviewer training (RT26) final-justification examples; VERIFIED labels, numeric mapping SECONDARY"},
-    "six_level": {"min": 1, "max": 6, "labels": {"1": "Reject", "2": "Weak Reject", "3": "Borderline Reject", "4": "Borderline Accept", "5": "Weak Accept", "6": "Accept"},
-                  "source": "forum reports for ICCV 2025 and CVPR 2026; SECONDARY"}
+    "cvpr26_5": {
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "Reject",
+        "2": "Weak Reject",
+        "3": "Borderline",
+        "4": "Weak Accept",
+        "5": "Strong Accept"
+      },
+      "source": "CVPR 2026 reviewer training (RT26) final-justification examples; VERIFIED labels, numeric mapping SECONDARY"
+    },
+    "six_level": {
+      "min": 1,
+      "max": 6,
+      "labels": {
+        "1": "Reject",
+        "2": "Weak Reject",
+        "3": "Borderline Reject",
+        "4": "Borderline Accept",
+        "5": "Weak Accept",
+        "6": "Accept"
+      },
+      "source": "forum reports for ICCV 2025 and CVPR 2026; SECONDARY"
+    },
+    "iclr_harness_5": {
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "Reject",
+        "2": "Weak Reject",
+        "3": "Borderline",
+        "4": "Weak Accept",
+        "5": "Strong Accept"
+      },
+      "source": "HARNESS-DEFINED ordinal scale, not a verified ICLR 2027 OpenReview rating legend. Do not submit these numbers as official ICLR scores."
+    },
+    "icml2026_6": {
+      "min": 1,
+      "max": 6,
+      "labels": {
+        "1": "Strong Reject",
+        "2": "Reject",
+        "3": "Weak Reject",
+        "4": "Weak Accept",
+        "5": "Accept",
+        "6": "Strong Accept"
+      },
+      "source": "Verified ICML 2026 main-track Reviewer Instructions: https://icml.cc/Conferences/2026/ReviewerInstructions"
+    },
+    "neurips2026_6": {
+      "min": 1,
+      "max": 6,
+      "labels": {
+        "1": "Strong Reject",
+        "2": "Reject",
+        "3": "Borderline Reject",
+        "4": "Borderline Accept",
+        "5": "Accept",
+        "6": "Strong Accept"
+      },
+      "source": "Verified NeurIPS 2026 Main Track Handbook: https://neurips.cc/Conferences/2026/MainTrackHandbook"
+    }
   },
-  "confidence": {"min": 1, "max": 5, "labels": {"1": "Educated guess: outside my area", "2": "Somewhat confident: I may have missed or misread central parts", "3": "Fairly confident: I understood the main points but did not check every detail", "4": "Confident: I checked the important details and know the area", "5": "Certain: I know this area very well and checked the paper carefully"},
-                 "source": "harness wording; CVPR's own wording is NOT FOUND (field confidence_level exists)"},
-  "section": {"min": 1, "max": 10, "wording": "1-10, anchors in section_rubrics.md (harness addition, not on the CVPR form)"},
-  "criterion": {"min": 1, "max": 5, "wording": "1 absent/wrong, 2 weak, 3 adequate, 4 good, 5 exemplary"},
-  "review_md_headings": ["Summary", "Strengths", "Weaknesses", "Preliminary recommendation", "Justification", "Confidence"]
+  "confidence": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Educated guess: outside my area",
+      "2": "Somewhat confident: I may have missed or misread central parts",
+      "3": "Fairly confident: I understood the main points but did not check every detail",
+      "4": "Confident: I checked the important details and know the area",
+      "5": "Certain: I know this area very well and checked the paper carefully"
+    },
+    "source": "harness wording; CVPR's own wording is NOT FOUND (field confidence_level exists)"
+  },
+  "section": {
+    "min": 1,
+    "max": 10,
+    "wording": "1-10, anchors in section_rubrics.md (harness addition, not a native venue score)"
+  },
+  "criterion": {
+    "min": 1,
+    "max": 5,
+    "wording": "1 absent/wrong, 2 weak, 3 adequate, 4 good, 5 exemplary"
+  },
+  "review_md_headings": [
+    "Summary",
+    "Strengths",
+    "Weaknesses",
+    "Preliminary recommendation",
+    "Justification",
+    "Confidence"
+  ]
 }

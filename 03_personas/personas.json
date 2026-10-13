@@ -1,53 +1,608 @@
 {
-  "_readme": "Persona registry. pool: which assignment slots a persona can fill (expert = matched to the exact subfield, adjacent = neighbouring CV area, outsider = keyword mismatch). reading_view: front|skim|main|full (see hxlib/panel.py VIEW_SECTIONS). reads_supplement: no|if_needed|yes. draw_weight: relative frequency of the matching primary reviewer type in 184 real CV reviews (01_sources/real_review_patterns.md sec. 5: expert-constructive 27% -> R03/R05/R13, terse 18% -> R09/R16, novelty skeptic 12.5%, benchmark-table 10%, checklist 9% -> R10/R07, champion 8%, theory 6.5%, LLM-generic 5-14% -> R15, practitioner 2%, hostile 0.5%; R08/R14 not separately coded, set low). Axes follow AgentReview (commitment, intention, knowledgeability). leniency: fixed rating offset in scale levels vs a calibrated reviewer (close experts harsher, out-of-domain and LLM-assisted milder; 01_sources/reviewer_behavior_literature.md rules 2, 4, 14). killer: adversarial persona; draw panels hold at most one (rule 3).",
+  "_readme": "Persona registry. pool: which assignment slots a persona can fill (expert = matched to the exact subfield, adjacent = neighbouring CV area, outsider = keyword mismatch). reading_view: front|skim|main|full (see hxlib/panel.py VIEW_SECTIONS). reads_supplement: no|if_needed|yes. draw_weight: relative frequency of the matching primary reviewer type in 184 real CV reviews (01_sources/real_review_patterns.md sec. 5: expert-constructive 27% -> R03/R05/R13, terse 18% -> R09/R16, novelty skeptic 12.5%, benchmark-table 10%, checklist 9% -> R10/R07, champion 8%, theory 6.5%, LLM-generic 5-14% -> R15, practitioner 2%, hostile 0.5%; R08/R14 not separately coded, set low). Axes follow AgentReview (commitment, intention, knowledgeability). leniency: fixed rating offset in scale levels vs a calibrated reviewer (close experts harsher, out-of-domain and LLM-assisted milder; 01_sources/reviewer_behavior_literature.md rules 2, 4, 14). killer: adversarial persona; draw panels hold at most one (rule 3). New I/M/N personas are curated venue-guided lenses, not measured reviewer frequencies; their draw weights are not empirical.",
   "personas": [
-    {"id": "R01", "slug": "benchmark_hawk", "name": "The Leaderboard Reviewer", "file": "R01_benchmark_hawk.md", "role": "reviewer",
-     "pool": ["expert", "adjacent"], "reading_view": "main", "reads_supplement": "if_needed", "web_search": false, "uses_domain_pack": true,
-     "draw_weight": 0.1, "leniency": 0, "axes": {"knowledge": "medium-high", "commitment": "medium", "intention": "benign"}},
-    {"id": "R02", "slug": "novelty_skeptic", "name": "The Novelty Skeptic", "file": "R02_novelty_skeptic.md", "role": "reviewer",
-     "pool": ["expert", "adjacent"], "reading_view": "main", "reads_supplement": "no", "web_search": true, "uses_domain_pack": true,
-     "draw_weight": 0.125, "leniency": -0.5, "axes": {"knowledge": "high", "commitment": "medium-high", "intention": "benign"}},
-    {"id": "R03", "slug": "subfield_expert", "name": "The Subfield Expert", "file": "R03_subfield_expert.md", "role": "reviewer",
-     "pool": ["expert"], "reading_view": "full", "reads_supplement": "yes", "web_search": true, "uses_domain_pack": true,
-     "draw_weight": 0.2, "leniency": -0.5, "axes": {"knowledge": "very high", "commitment": "high", "intention": "benign"}},
-    {"id": "R04", "slug": "theory_checker", "name": "The Theory Checker", "file": "R04_theory_checker.md", "role": "reviewer",
-     "pool": ["adjacent", "expert"], "reading_view": "full", "reads_supplement": "yes", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.065, "leniency": -0.25, "axes": {"knowledge": "high (math)", "commitment": "high", "intention": "benign"}},
-    {"id": "R05", "slug": "rigor_methodologist", "name": "The Rigor Methodologist", "file": "R05_rigor_methodologist.md", "role": "reviewer",
-     "pool": ["expert", "adjacent"], "reading_view": "full", "reads_supplement": "yes", "web_search": false, "uses_domain_pack": true,
-     "draw_weight": 0.04, "leniency": -0.5, "axes": {"knowledge": "high", "commitment": "high", "intention": "benign"}},
-    {"id": "R06", "slug": "efficiency_pragmatist", "name": "The Efficiency Pragmatist", "file": "R06_efficiency_pragmatist.md", "role": "reviewer",
-     "pool": ["adjacent"], "reading_view": "main", "reads_supplement": "if_needed", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.02, "leniency": 0, "axes": {"knowledge": "medium-high", "commitment": "medium", "intention": "benign"}},
-    {"id": "R07", "slug": "clarity_editor", "name": "The Clarity Editor", "file": "R07_clarity_editor.md", "role": "reviewer",
-     "pool": ["adjacent", "outsider"], "reading_view": "main", "reads_supplement": "no", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.03, "leniency": 0, "axes": {"knowledge": "medium", "commitment": "high", "intention": "benign"}},
-    {"id": "R08", "slug": "adjacent_generalist", "name": "The Adjacent-Area Generalist", "file": "R08_adjacent_generalist.md", "role": "reviewer",
-     "pool": ["adjacent"], "reading_view": "main", "reads_supplement": "no", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.05, "leniency": 0.25, "axes": {"knowledge": "medium", "commitment": "medium", "intention": "benign"}},
-    {"id": "R09", "slug": "busy_senior", "name": "The Busy Senior Reviewer", "file": "R09_busy_senior.md", "role": "reviewer",
-     "pool": ["adjacent", "expert"], "reading_view": "skim", "reads_supplement": "no", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.15, "leniency": 0, "axes": {"knowledge": "high (broad)", "commitment": "low", "intention": "benign"}},
-    {"id": "R10", "slug": "junior_checklist", "name": "The Junior Checklist Reviewer", "file": "R10_junior_checklist.md", "role": "reviewer",
-     "pool": ["expert", "adjacent"], "reading_view": "main", "reads_supplement": "if_needed", "web_search": false, "uses_domain_pack": true,
-     "draw_weight": 0.06, "leniency": 0.25, "axes": {"knowledge": "medium", "commitment": "medium-high", "intention": "benign"}},
-    {"id": "R11", "slug": "hostile_reviewer2", "name": "The Hostile Reviewer 2", "file": "R11_hostile_reviewer2.md", "role": "reviewer",
-     "pool": ["expert", "adjacent"], "reading_view": "main", "reads_supplement": "no", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.01, "leniency": -1, "killer": true, "axes": {"knowledge": "medium-high", "commitment": "low-medium", "intention": "negative prior"}},
-    {"id": "R12", "slug": "champion", "name": "The Champion", "file": "R12_champion.md", "role": "reviewer",
-     "pool": ["expert", "adjacent"], "reading_view": "main", "reads_supplement": "if_needed", "web_search": false, "uses_domain_pack": true,
-     "draw_weight": 0.08, "leniency": 1, "axes": {"knowledge": "medium-high", "commitment": "medium-high", "intention": "positive prior"}},
-    {"id": "R13", "slug": "reproducibility_auditor", "name": "The Reproducibility Auditor", "file": "R13_reproducibility_auditor.md", "role": "reviewer",
-     "pool": ["expert"], "reading_view": "full", "reads_supplement": "yes", "web_search": false, "uses_domain_pack": true,
-     "draw_weight": 0.03, "leniency": 0, "axes": {"knowledge": "high", "commitment": "high", "intention": "benign"}},
-    {"id": "R14", "slug": "competing_lab", "name": "The Competing-Lab Reviewer", "file": "R14_competing_lab.md", "role": "reviewer",
-     "pool": ["expert"], "reading_view": "main", "reads_supplement": "if_needed", "web_search": true, "uses_domain_pack": true,
-     "draw_weight": 0.02, "leniency": -0.75, "killer": true, "axes": {"knowledge": "very high (closest line)", "commitment": "high", "intention": "mixed"}},
-    {"id": "R15", "slug": "llm_assisted", "name": "The LLM-Assisted Reviewer", "file": "R15_llm_assisted.md", "role": "reviewer",
-     "pool": ["expert", "adjacent", "outsider"], "reading_view": "front", "reads_supplement": "no", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.07, "leniency": 0.5, "axes": {"knowledge": "low-medium (in practice)", "commitment": "low", "intention": "benign"}},
-    {"id": "R16", "slug": "misassigned_outsider", "name": "The Misassigned Outsider", "file": "R16_misassigned_outsider.md", "role": "reviewer",
-     "pool": ["outsider"], "reading_view": "main", "reads_supplement": "no", "web_search": false, "uses_domain_pack": false,
-     "draw_weight": 0.03, "leniency": 0.25, "axes": {"knowledge": "low (this subfield)", "commitment": "medium", "intention": "benign"}}
+    {
+      "id": "R01",
+      "slug": "benchmark_hawk",
+      "name": "The Leaderboard Reviewer",
+      "file": "R01_benchmark_hawk.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "if_needed",
+      "web_search": false,
+      "uses_domain_pack": true,
+      "draw_weight": 0.1,
+      "leniency": 0,
+      "axes": {
+        "knowledge": "medium-high",
+        "commitment": "medium",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R02",
+      "slug": "novelty_skeptic",
+      "name": "The Novelty Skeptic",
+      "file": "R02_novelty_skeptic.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "no",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "draw_weight": 0.125,
+      "leniency": -0.5,
+      "axes": {
+        "knowledge": "high",
+        "commitment": "medium-high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R03",
+      "slug": "subfield_expert",
+      "name": "The Subfield Expert",
+      "file": "R03_subfield_expert.md",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "draw_weight": 0.2,
+      "leniency": -0.5,
+      "axes": {
+        "knowledge": "very high",
+        "commitment": "high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R04",
+      "slug": "theory_checker",
+      "name": "The Theory Checker",
+      "file": "R04_theory_checker.md",
+      "role": "reviewer",
+      "pool": [
+        "adjacent",
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.065,
+      "leniency": -0.25,
+      "axes": {
+        "knowledge": "high (math)",
+        "commitment": "high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R05",
+      "slug": "rigor_methodologist",
+      "name": "The Rigor Methodologist",
+      "file": "R05_rigor_methodologist.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": false,
+      "uses_domain_pack": true,
+      "draw_weight": 0.04,
+      "leniency": -0.5,
+      "axes": {
+        "knowledge": "high",
+        "commitment": "high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R06",
+      "slug": "efficiency_pragmatist",
+      "name": "The Efficiency Pragmatist",
+      "file": "R06_efficiency_pragmatist.md",
+      "role": "reviewer",
+      "pool": [
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "if_needed",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.02,
+      "leniency": 0,
+      "axes": {
+        "knowledge": "medium-high",
+        "commitment": "medium",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R07",
+      "slug": "clarity_editor",
+      "name": "The Clarity Editor",
+      "file": "R07_clarity_editor.md",
+      "role": "reviewer",
+      "pool": [
+        "adjacent",
+        "outsider"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "no",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.03,
+      "leniency": 0,
+      "axes": {
+        "knowledge": "medium",
+        "commitment": "high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R08",
+      "slug": "adjacent_generalist",
+      "name": "The Adjacent-Area Generalist",
+      "file": "R08_adjacent_generalist.md",
+      "role": "reviewer",
+      "pool": [
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "no",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.05,
+      "leniency": 0.25,
+      "axes": {
+        "knowledge": "medium",
+        "commitment": "medium",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R09",
+      "slug": "busy_senior",
+      "name": "The Busy Senior Reviewer",
+      "file": "R09_busy_senior.md",
+      "role": "reviewer",
+      "pool": [
+        "adjacent",
+        "expert"
+      ],
+      "reading_view": "skim",
+      "reads_supplement": "no",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.15,
+      "leniency": 0,
+      "axes": {
+        "knowledge": "high (broad)",
+        "commitment": "low",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R10",
+      "slug": "junior_checklist",
+      "name": "The Junior Checklist Reviewer",
+      "file": "R10_junior_checklist.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "if_needed",
+      "web_search": false,
+      "uses_domain_pack": true,
+      "draw_weight": 0.06,
+      "leniency": 0.25,
+      "axes": {
+        "knowledge": "medium",
+        "commitment": "medium-high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R11",
+      "slug": "hostile_reviewer2",
+      "name": "The Hostile Reviewer 2",
+      "file": "R11_hostile_reviewer2.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "no",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.01,
+      "leniency": -1,
+      "killer": true,
+      "axes": {
+        "knowledge": "medium-high",
+        "commitment": "low-medium",
+        "intention": "negative prior"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R12",
+      "slug": "champion",
+      "name": "The Champion",
+      "file": "R12_champion.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "if_needed",
+      "web_search": false,
+      "uses_domain_pack": true,
+      "draw_weight": 0.08,
+      "leniency": 1,
+      "axes": {
+        "knowledge": "medium-high",
+        "commitment": "medium-high",
+        "intention": "positive prior"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R13",
+      "slug": "reproducibility_auditor",
+      "name": "The Reproducibility Auditor",
+      "file": "R13_reproducibility_auditor.md",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": false,
+      "uses_domain_pack": true,
+      "draw_weight": 0.03,
+      "leniency": 0,
+      "axes": {
+        "knowledge": "high",
+        "commitment": "high",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R14",
+      "slug": "competing_lab",
+      "name": "The Competing-Lab Reviewer",
+      "file": "R14_competing_lab.md",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "if_needed",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "draw_weight": 0.02,
+      "leniency": -0.75,
+      "killer": true,
+      "axes": {
+        "knowledge": "very high (closest line)",
+        "commitment": "high",
+        "intention": "mixed"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R15",
+      "slug": "llm_assisted",
+      "name": "The LLM-Assisted Reviewer",
+      "file": "R15_llm_assisted.md",
+      "role": "reviewer",
+      "pool": [
+        "expert",
+        "adjacent",
+        "outsider"
+      ],
+      "reading_view": "front",
+      "reads_supplement": "no",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.07,
+      "leniency": 0.5,
+      "axes": {
+        "knowledge": "low-medium (in practice)",
+        "commitment": "low",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "R16",
+      "slug": "misassigned_outsider",
+      "name": "The Misassigned Outsider",
+      "file": "R16_misassigned_outsider.md",
+      "role": "reviewer",
+      "pool": [
+        "outsider"
+      ],
+      "reading_view": "main",
+      "reads_supplement": "no",
+      "web_search": false,
+      "uses_domain_pack": false,
+      "draw_weight": 0.03,
+      "leniency": 0.25,
+      "axes": {
+        "knowledge": "low (this subfield)",
+        "commitment": "medium",
+        "intention": "benign"
+      },
+      "venue": "cvpr"
+    },
+    {
+      "id": "I01",
+      "name": "Representation and Mechanism",
+      "file": "I01_representation_and_mechanism.md",
+      "venue": "iclr",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "I02",
+      "name": "Empirical Reliability",
+      "file": "I02_empirical_reliability.md",
+      "venue": "iclr",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "I03",
+      "name": "Mathematical Understanding",
+      "file": "I03_mathematical_understanding.md",
+      "venue": "iclr",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "I04",
+      "name": "Knowledge and Scope",
+      "file": "I04_knowledge_and_scope.md",
+      "venue": "iclr",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "M01",
+      "name": "Theory and Assumptions",
+      "file": "M01_theory_and_assumptions.md",
+      "venue": "icml",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "M02",
+      "name": "Experimental Design",
+      "file": "M02_experimental_design.md",
+      "venue": "icml",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "M03",
+      "name": "Algorithms and Originality",
+      "file": "M03_algorithms_and_originality.md",
+      "venue": "icml",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "M04",
+      "name": "Practical Significance",
+      "file": "M04_practical_significance.md",
+      "venue": "icml",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "N01",
+      "name": "Broad Scientific Contribution",
+      "file": "N01_broad_scientific_contribution.md",
+      "venue": "neurips",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "N02",
+      "name": "Theory and Foundations",
+      "file": "N02_theory_and_foundations.md",
+      "venue": "neurips",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "N03",
+      "name": "Use-Inspired Research",
+      "file": "N03_use-inspired_research.md",
+      "venue": "neurips",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "N04",
+      "name": "Concept and Feasibility",
+      "file": "N04_concept_and_feasibility.md",
+      "venue": "neurips",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "N05",
+      "name": "Negative Results and Diagnosis",
+      "file": "N05_negative_results_and_diagnosis.md",
+      "venue": "neurips",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    },
+    {
+      "id": "N06",
+      "name": "Reproducibility and Responsible Evaluation",
+      "file": "N06_reproducibility_and_responsible_evaluation.md",
+      "venue": "neurips",
+      "role": "reviewer",
+      "pool": [
+        "expert"
+      ],
+      "reading_view": "full",
+      "reads_supplement": "yes",
+      "web_search": true,
+      "uses_domain_pack": true,
+      "leniency": 0,
+      "draw_weight": 1,
+      "evidence_basis": "curated, not empirical"
+    }
   ]
 }

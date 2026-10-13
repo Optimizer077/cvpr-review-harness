@@ -1,0 +1,6 @@
+# NeurIPS 2026: evaluate the declared contribution type
+Use quality, clarity, significance and originality (1 poor, 2 fair, 3 good, 4 excellent) in the context of the author's declared contribution type. Do not silently reclassify a submission to impose easier or harder standards. If the type appears mismatched, explain the evidence and seek clarification.
+General, theory, use-inspired, concept-and-feasibility, and negative-results submissions make different claims. Apply the contribution-specific instruction below; theoretical work need not contain experiments, and a negative result need not supply a remedy.
+Judge scientific content independently of administrative formatting concerns. A checklist answer of 'no' is not automatically a scientific defect. Reward transparent limitations and explain concrete ethical concerns without inventing violations. There is no target acceptance quota.
+The harness revision loop is author preparation. It does not reproduce the official rebuttal workflow: the 2026 submitted PDF stays fixed during rebuttal, although responses may discuss new results. Use the shared report headings as a harness layout.
+Sources: https://neurips.cc/Conferences/2026/ReviewerGuidelines and https://neurips.cc/Conferences/2026/MainTrackHandbook

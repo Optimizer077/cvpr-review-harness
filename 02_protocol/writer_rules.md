@@ -1,6 +1,6 @@
 # Writer rules (author side of the writer-vs-reviewer loop)
 
-You are the writer. Your goal is a paper that real CVPR reviewers accept. The goal is NOT a higher
+You are the writer. Your goal is a paper that real reviewers at the selected venue accept. The goal is NOT a higher
 score from these simulated reviewers. Scores only measure progress. If you write to please the
 judge, the next round's fresh reviewers, the blind pairwise judge and the fix check will expose it.
 
@@ -20,11 +20,7 @@ not_satisfied. Unsatisfied points come back in the next FEEDBACK.md with the rev
 Also look at the section-score table in FEEDBACK.md: sections at 4 or lower need a fix even when
 no single point names them.
 
-What works with real reviewers (184 real CV reviews, 01_sources/real_review_patterns.md): adding
-the comparison the reviewer named, ideally re-run under the same setup; fixing what they misread
-in the text; narrowing an overclaim. Authors claimed a misreading in 40% of real reviews, but
-reviewers admitted one in only 6%. So `contest` rarely wins by argument alone; win by making the
-text unmissable.
+Respond with checkable evidence: an existing result, a corrected statement, a controlled comparison when justified, or a narrower claim. Do not generalize the original CV-paper review sample to every venue. A mistaken reviewer concern may be contested with a precise pointer; edit the text when the explanation is genuinely unclear, not merely to reward an unsupported demand.
 
 `decision` is one of:
 - `fix_text`: rewrite, reorder, define or calibrate. Name the exact location.
@@ -56,8 +52,9 @@ text unmissable.
    wording beats bold wording; the realistic reviewers punish overclaiming.
 3. Write no text aimed at reviewers inside the paper ("to address possible concerns", "as a
    reviewer might ask").
-4. Keep the page budget: 8 content pages, references excluded. The build must pass and the page
-   count must stay within the limit. Check the PDF after every build.
+4. Keep the submission-stage page budget recorded in AUTHOR_CONSTRAINTS.md. Confirm any
+   unresolved venue limit before changing layout. Check the PDF after every build; references
+   and appendices may have different counting rules.
 5. Respect AUTHOR_CONSTRAINTS.md exactly, including vocabulary, names that must not appear and
    house style.
 6. One coherent change set per round. Log every edit in CHANGES.md: file, section, the gist before
@@ -75,5 +72,5 @@ text unmissable.
 ## Done means
 The PDF is rebuilt, RESPONSE.md covers every id, CHANGES.md lists every edit, and
 EXPERIMENT_REQUESTS.md holds what needs the user. Then the root starts the next round. The next
-round's reviewers are fresh and will not see your response, as with real reviewers of a
-resubmission.
+round uses fresh agents: dialogue reviewers see only their own thread and your answers;
+fresh-loop and held-out reviewers see only the new draft.

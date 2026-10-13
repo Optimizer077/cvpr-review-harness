@@ -5,10 +5,10 @@ harness. `README.md` is the human guide. Rules here are about how reviews are ru
 and logged. They state no research direction and no opinion on any paper.
 
 ## What the harness is for
-It produces realistic CVPR reviews of a draft: independent reviews by reviewer personas modelled on
+It produces simulated CVPR, ICLR, ICML and NeurIPS reviews of a draft: independent reviews by reviewer personas modelled on
 real reviewer types, a score for every section, and a debrief telling the writer what caused each
 reaction. It also runs a loop against a writer agent: the writer revises, and fresh reviewers
-review the revision. It does NOT simulate the rest of the CVPR process (no rebuttal, discussion or
+review the revision. It does NOT simulate an entire official conference process (no rebuttal, discussion or
 area-chair stage, by design). The aim is a paper that real reviewers accept. A high
 simulated score is not the aim.
 
@@ -67,8 +67,9 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
 ## Independence and anti-gaming (non-negotiable)
 1. Every reviewer, checker and judge is a NEW agent instance. Never reuse one across rounds or
    jobs (no SendMessage to an old reviewer).
-2. Reviewers never see other reviews, earlier rounds, scores, debriefs,
-   the writer's response, AUTHOR_CONSTRAINTS.md, LaTeX sources or project folders.
+2. Reviewers never see other reviewers' outputs, aggregate scores, AUTHOR_CONSTRAINTS.md, LaTeX
+   sources or project folders. Initial and held-out reviewers see only the current draft. Dialogue
+   reviewers additionally see their own prior thread and the author's answers to their own points.
 3. Persona cards, rubrics, scales and panels stay frozen within a session. A change starts a new
    session, because scores are only comparable under fixed instruments.
 4. The writer never edits harness files. No number enters the paper without the paper project's
@@ -98,12 +99,26 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
 - Use individual named Agent calls; do not use the Workflow tool. Agents talk only through the
   markdown files above.
 - Local files only; never publish the paper or reviews to a hosted service.
-- Reviews are simulations. Never present them as real CVPR feedback or as an acceptance forecast.
+- Reviews are simulations. Never present them as real conference feedback or as an acceptance forecast.
 
 ## Environment
 - Python: `python3` >= 3.9 with PyMuPDF (`pip install pymupdf`); everything else is the standard library.
 - Smoke test: `python3 06_scripts/hx.py personas` and `python3 06_scripts/smoke_test.py` must pass
-  after any change to scripts, personas, panels or protocol.
+  after any change to scripts, personas, panels or protocol. Also run `python3 06_scripts/test_venues.py`.
 - Public copy: `python3 06_scripts/export_public.py` writes a de-identified `release/` folder and zip
   (no sessions, no build notes, no raw downloads) and fails if an identifying string remains.
 - Back up a protocol or persona file before editing it: `<file>.bak_before_<reason>_<YYYY-MM-DD>`.
+
+## Venue-aware careful review
+- Select the requested versioned venue profile before creating a session; do not substitute CVPR
+  rules for an ML venue or silently change a year. New ML personas are curated lenses, not an
+  empirical estimate of real reviewer frequencies.
+- ICLR, ICML and NeurIPS default to careful reading. Check central claims, relevant supplement
+  and PDF figures; keep evidence locations and unchecked coverage in the audit. Treat extracted
+  section boundaries as provisional. Validate structure, then inspect scientific substance.
+- Honor the declared NeurIPS contribution type. Do not demand empirical benchmarks for pure
+  theory or a remedy for a well-supported negative result by default.
+- Newly created sessions embed review instruments. Old sessions retain legacy fallbacks; start a
+  new session to adopt new rules. Record the repository commit in LOG.md for code reproducibility.
+- Keep the selected profile's rating provenance visible, especially the harness-defined ICLR
+  scale. This is draft preparation, not the venue's official rebuttal procedure.

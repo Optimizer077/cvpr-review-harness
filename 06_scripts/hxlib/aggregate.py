@@ -16,6 +16,7 @@ from typing import Optional
 
 from .common import SECTION_KEYS, list_rounds, load_json, load_scales, review_dir, round_dir, save_json
 from .dialogue import round_items
+from .venues import scales_for
 
 logger = logging.getLogger(__name__)
 GROUPS = ("feedback", "heldout")
@@ -55,6 +56,8 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
                                "stage": job.get("stage", "initial"), "rating": ov.get("rating"),
                                "previous_rating": data.get("previous_rating"),
                                "confidence": ov.get("confidence"), "first_impression": first,
+                               "venue_assessment": data.get("venue_assessment"),
+                               "evidence_audit": data.get("evidence_audit"),
                                "sections": {k: v["score"] for k, v in data["section_scores"].items()}}
         if satisfy:
             satisfaction.update(i["status"] for i in data["items"])
@@ -66,7 +69,11 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
         "paper_sha256": rnd["paper"]["main_pdf_sha256"], "main_words": rnd["paper"].get("main_words"),
         "injection_flags": rnd["paper"].get("injection_flags", []),
         "reviews_found": len(rows), "jobs": len(rnd["jobs"]), "rows": rows, "groups": groups,
-        "scale_max": load_scales(rnd.get("scale"))["overall"]["max"],
+        "scale_max": scales_for(rnd)["overall"]["max"],
+        "scale": scales_for(rnd)["overall"],
+        "venue_profile": rnd.get("review_config", {}).get("profile", {}).get("id", "legacy_cvpr"),
+        "reading_mode": rnd.get("review_config", {}).get("reading", "persona"),
+        "contribution_type": rnd.get("review_config", {}).get("contribution_type", "general"),
         "weakness_counts": {
             "by_category": dict(Counter(w["category"] for w in weak).most_common()),
             "by_severity": dict(Counter(w["severity"] for w in weak)),
@@ -130,6 +137,8 @@ def write_round_report(agg: dict, round_path: Path) -> None:
     lines = [title, "", headline(agg), "",
              f"Reviews found: {agg['reviews_found']}/{agg['jobs']}. Panel: "
              f"{', '.join(agg['panel'])}. Main-text words: {agg.get('main_words', '-')}.", ""]
+    lines += [f"Profile: {agg.get('venue_profile', 'legacy_cvpr')}; reading: {agg.get('reading_mode', 'persona')}; contribution: {agg.get('contribution_type', 'general')}.",
+              f"Rating scale: {agg.get('scale', {}).get('profile', 'legacy')}. {agg.get('scale', {}).get('source', '')}", ""]
     if agg.get("injection_flags"):
         lines += ["**Injection / hidden-text flags:** " + "; ".join(agg["injection_flags"]), ""]
     for group in GROUPS:
@@ -151,6 +160,17 @@ def write_round_report(agg: dict, round_path: Path) -> None:
             lines.append(f"| **{stat}** | {gs['first_impression'].get(stat, '-')} | "
                          f"{gs['overall'].get(stat, '-')} | | "
                          + " | ".join(str(gs["sections"][s][stat]) for s in secs) + " |")
+        lines.append("")
+        for jid, row in g_rows.items():
+            assessment = row.get("venue_assessment") or {}
+            dims = assessment.get("dimensions", {})
+            if dims:
+                lines += [f"- {jid} venue dimensions: " + "; ".join(f"{k} {v['score']}/4" for k, v in dims.items())]
+            audit = row.get("evidence_audit") or {}
+            if audit:
+                unchecked = [k for k, v in audit["coverage"].items() if v["status"] == "not_checked"]
+                verdicts = dict(Counter(c["verdict"] for c in audit["claim_checks"]))
+                lines += [f"- {jid} evidence audit: {verdicts}; sections not checked: {', '.join(unchecked) or 'none reported'}. See this review's JSON for evidence locations."]
         lines.append("")
     wc = agg["weakness_counts"]
     lines += [f"Feedback weaknesses by severity: {wc['by_severity']}; decisive: {wc['decisive']}.",

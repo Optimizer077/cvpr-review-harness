@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="1110" viewBox="0 0 480 1110" role="img" aria-labelledby="title desc">
+<title id="title">Four venues, careful evidence checks</title><desc id="desc">CVPR, ICLR, ICML and NeurIPS profiles, followed by the careful-reading workflow.</desc>
+<rect width="480" height="1110" rx="20" fill="#0b1222"/><g font-family="Segoe UI, Arial, sans-serif">
+<text x="24" y="38" fill="#94a3b8" font-size="14" letter-spacing="2">VENUE-AWARE REVIEW</text>
+<text x="24" y="76" fill="#f8fafc" font-size="25" font-weight="700">Different contributions.</text>
+<text x="24" y="108" fill="#f8fafc" font-size="25" font-weight="700">Appropriate scrutiny.</text>
+    <g transform="translate(24 132)">
+      <rect width="432" height="142" rx="14" fill="#13253a" stroke="#38bdf8"/>
+      <rect width="432" height="5" rx="2" fill="#38bdf8"/>
+      <text x="18" y="39" fill="#7dd3fc" font-size="24" font-weight="700">CVPR</text>
+      <text x="18" y="67" fill="#f1f5f9" font-size="18">16 behavioral personas</text>
+      <text x="18" y="96" fill="#cbd5e1" font-size="18">Reading habits + expertise</text>
+      <text x="18" y="121" fill="#cbd5e1" font-size="18">Careful mode available</text>
+    </g>
+    <g transform="translate(24 290)">
+      <rect width="432" height="142" rx="14" fill="#211d3c" stroke="#a78bfa"/>
+      <rect width="432" height="5" rx="2" fill="#a78bfa"/>
+      <text x="18" y="39" fill="#c4b5fd" font-size="24" font-weight="700">ICLR</text>
+      <text x="18" y="67" fill="#f1f5f9" font-size="18">4 scientific lenses</text>
+      <text x="18" y="96" fill="#cbd5e1" font-size="18">Knowledge + mechanisms</text>
+      <text x="18" y="121" fill="#cbd5e1" font-size="18">Harness-defined rating</text>
+    </g>
+    <g transform="translate(24 448)">
+      <rect width="432" height="142" rx="14" fill="#12302f" stroke="#2dd4bf"/>
+      <rect width="432" height="5" rx="2" fill="#2dd4bf"/>
+      <text x="18" y="39" fill="#5eead4" font-size="24" font-weight="700">ICML</text>
+      <text x="18" y="67" fill="#f1f5f9" font-size="18">4 scientific lenses</text>
+      <text x="18" y="96" fill="#cbd5e1" font-size="18">Soundness + significance</text>
+      <text x="18" y="121" fill="#cbd5e1" font-size="18">Separate dimension scores</text>
+    </g>
+    <g transform="translate(24 606)">
+      <rect width="432" height="142" rx="14" fill="#35271d" stroke="#fbbf24"/>
+      <rect width="432" height="5" rx="2" fill="#fbbf24"/>
+      <text x="18" y="39" fill="#fcd34d" font-size="24" font-weight="700">NeurIPS</text>
+      <text x="18" y="67" fill="#f1f5f9" font-size="18">6 scientific lenses</text>
+      <text x="18" y="96" fill="#cbd5e1" font-size="18">5 contribution types</text>
+      <text x="18" y="121" fill="#cbd5e1" font-size="18">Specialist panel routing</text>
+    </g>
+<text x="24" y="796" fill="#94a3b8" font-size="14" letter-spacing="1">CAREFUL MODE</text>
+<circle cx="44" cy="833" r="19" fill="#13253a" stroke="#64748b"/><text x="44" y="839" text-anchor="middle" fill="#f8fafc" font-size="17">1</text><text x="78" y="830" fill="#f8fafc" font-size="20" font-weight="600">Map claims</text><text x="78" y="854" fill="#94a3b8" font-size="16">Question, scope and assumptions</text>
+<circle cx="44" cy="893" r="19" fill="#13253a" stroke="#64748b"/><text x="44" y="899" text-anchor="middle" fill="#f8fafc" font-size="17">2</text><text x="78" y="890" fill="#f8fafc" font-size="20" font-weight="600">Inspect evidence</text><text x="78" y="914" fill="#94a3b8" font-size="16">Proofs, controls and PDF figures</text>
+<circle cx="44" cy="953" r="19" fill="#13253a" stroke="#64748b"/><text x="44" y="959" text-anchor="middle" fill="#f8fafc" font-size="17">3</text><text x="78" y="950" fill="#f8fafc" font-size="20" font-weight="600">Record uncertainty</text><text x="78" y="974" fill="#94a3b8" font-size="16">Checked evidence and unresolved gaps</text>
+<circle cx="44" cy="1013" r="19" fill="#13253a" stroke="#64748b"/><text x="44" y="1019" text-anchor="middle" fill="#f8fafc" font-size="17">4</text><text x="78" y="1010" fill="#f8fafc" font-size="20" font-weight="600">Explain judgement</text><text x="78" y="1034" fill="#94a3b8" font-size="16">Location, scientific impact and remedy</text>
+<text x="24" y="1080" fill="#94a3b8" font-size="14">Simulated feedback, not an acceptance forecast</text></g></svg>

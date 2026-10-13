@@ -1,0 +1,100 @@
+{
+  "panels": {
+    "balanced": {
+      "kind": "fixed",
+      "members": [
+        "N01",
+        "N02",
+        "N06"
+      ]
+    },
+    "gauntlet": {
+      "kind": "all"
+    },
+    "theory": {
+      "kind": "fixed",
+      "members": [
+        "N01",
+        "N02",
+        "N06"
+      ]
+    },
+    "use_inspired": {
+      "kind": "fixed",
+      "members": [
+        "N01",
+        "N03",
+        "N06"
+      ]
+    },
+    "concept_feasibility": {
+      "kind": "fixed",
+      "members": [
+        "N01",
+        "N04",
+        "N06"
+      ]
+    },
+    "negative_results": {
+      "kind": "fixed",
+      "members": [
+        "N01",
+        "N05",
+        "N06"
+      ]
+    }
+  },
+  "sections": {
+    "title": [
+      "N01",
+      "N06"
+    ],
+    "abstract": [
+      "N01",
+      "N06"
+    ],
+    "introduction": [
+      "N01",
+      "N06"
+    ],
+    "related_work": [
+      "N01",
+      "N06"
+    ],
+    "method": [
+      "N02",
+      "N04"
+    ],
+    "theory": [
+      "N02"
+    ],
+    "experiments": [
+      "N03",
+      "N05"
+    ],
+    "ablations_analysis": [
+      "N01",
+      "N06"
+    ],
+    "figures_tables": [
+      "N01",
+      "N06"
+    ],
+    "limitations": [
+      "N01",
+      "N06"
+    ],
+    "conclusion": [
+      "N01",
+      "N06"
+    ],
+    "supplementary": [
+      "N02",
+      "N06"
+    ],
+    "references": [
+      "N01",
+      "N06"
+    ]
+  }
+}

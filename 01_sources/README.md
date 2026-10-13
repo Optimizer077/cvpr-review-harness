@@ -12,3 +12,5 @@ Research behind the personas and protocol:
 
 The raw review downloads used for the counts are not redistributed. They come from public
 OpenReview data and its HuggingFace mirrors named in `real_review_patterns.md`.
+
+- [Multi-venue design](multi_venue_review_design.md): official ICLR/ICML/NeurIPS sources, curated personas, careful-reading protocol and evidence limitations.

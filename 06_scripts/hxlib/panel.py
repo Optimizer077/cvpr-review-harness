@@ -18,20 +18,20 @@ VIEW_SECTIONS: dict[str, tuple[str, ...]] = {
 }
 
 
-def load_personas() -> dict[str, dict]:
+def load_personas(venue: str | None = None) -> dict[str, dict]:
     """Persona registry keyed by id (R01...)."""
     reg = load_json(PERSONA_DIR / "personas.json")
-    return {p["id"]: p for p in reg["personas"]}
+    return {p["id"]: p for p in reg["personas"] if venue is None or p.get("venue", "cvpr") == venue}
 
 
-def load_panels() -> dict[str, dict]:
+def load_panels(venue: str = "cvpr") -> dict[str, dict]:
     """Panel definitions from 04_panels/panels.json."""
-    return load_json(PANEL_DIR / "panels.json")["panels"]
+    return load_json(PANEL_DIR / ("panels.json" if venue == "cvpr" else f"{venue}.json"))["panels"]
 
 
-def load_section_map() -> dict[str, list[str]]:
+def load_section_map(venue: str = "cvpr") -> dict[str, list[str]]:
     """Section -> reviewer ids for section-mode review."""
-    return load_json(PANEL_DIR / "section_panel.json")["sections"]
+    return load_json(PANEL_DIR / ("section_panel.json" if venue == "cvpr" else f"{venue}.json"))["sections"]
 
 
 def _weighted_pick(rng: random.Random, candidates: list[dict]) -> dict:
@@ -47,11 +47,12 @@ def _weighted_pick(rng: random.Random, candidates: list[dict]) -> dict:
     return candidates[-1]
 
 
-def draw_panel(panel_name: str, seed: int, personas: Optional[dict[str, dict]] = None) -> list[str]:
+def draw_panel(panel_name: str, seed: int, personas: Optional[dict[str, dict]] = None, venue: str = "cvpr") -> list[str]:
     """Return reviewer ids for a named panel. Draw panels are seeded and sample without replacement."""
-    personas = personas or load_personas()
+    personas = personas or load_personas(venue)
+    personas = {k: p for k, p in personas.items() if p.get("venue", "cvpr") == venue}
     reviewers = list(personas.values())
-    spec = load_panels()[panel_name]
+    spec = load_panels(venue)[panel_name]
     kind = spec["kind"]
     if kind == "all":
         return sorted(p["id"] for p in reviewers)
@@ -79,7 +80,8 @@ def draw_panel(panel_name: str, seed: int, personas: Optional[dict[str, dict]] =
 
 def build_jobs(mode: str, panel_ids: list[str], sections_present: list[str],
                personas: dict[str, dict], only_sections: Optional[list[str]] = None,
-               heldout_ids: Optional[list[str]] = None) -> list[dict]:
+               heldout_ids: Optional[list[str]] = None, section_map: Optional[dict] = None,
+               reading: str = "persona") -> list[dict]:
     """Turn a panel into review jobs.
 
     mode 'full': each panel reviewer writes the whole-paper review and scores the sections they read.
@@ -93,12 +95,12 @@ def build_jobs(mode: str, panel_ids: list[str], sections_present: list[str],
     jobs: dict[str, dict] = {}
     if mode in ("full", "both"):
         for rid in panel_ids:
-            view = personas[rid]["reading_view"]
+            view = "full" if reading == "careful" else personas[rid]["reading_view"]
             secs = [s for s in VIEW_SECTIONS[view] if s in wanted]
             jobs[rid] = {"job_id": rid, "reviewer": rid, "overall": True, "sections": secs,
                          "view": view}
     if mode in ("sections", "both"):
-        for sec, rids in load_section_map().items():
+        for sec, rids in (section_map if section_map is not None else load_section_map()).items():
             if sec not in wanted:
                 continue
             for rid in rids:
@@ -112,12 +114,15 @@ def build_jobs(mode: str, panel_ids: list[str], sections_present: list[str],
                 if sec == "supplementary":
                     job["view"] = "full"
     for rid in heldout_ids or []:
-        view = personas[rid]["reading_view"]
+        view = "full" if reading == "careful" else personas[rid]["reading_view"]
         jid = f"H{rid}"
         jobs[jid] = {"job_id": jid, "reviewer": rid, "overall": True, "group": "heldout",
                      "sections": [s for s in VIEW_SECTIONS[view] if s in wanted], "view": view}
     order = {k: i for i, k in enumerate(SECTION_KEYS)}
     for job in jobs.values():
         job.setdefault("group", "feedback")
+        if reading == "careful":
+            job["view"] = "full"
+            job["careful"] = True
         job["sections"].sort(key=lambda s: order[s])
     return list(jobs.values())

@@ -1,0 +1,76 @@
+{
+  "panels": {
+    "balanced": {
+      "kind": "fixed",
+      "members": [
+        "I01",
+        "I02",
+        "I03"
+      ]
+    },
+    "gauntlet": {
+      "kind": "all"
+    },
+    "empirical": {
+      "kind": "fixed",
+      "members": [
+        "I01",
+        "I02",
+        "I04"
+      ]
+    }
+  },
+  "sections": {
+    "title": [
+      "I02",
+      "I04"
+    ],
+    "abstract": [
+      "I02",
+      "I04"
+    ],
+    "introduction": [
+      "I02",
+      "I04"
+    ],
+    "related_work": [
+      "I02",
+      "I04"
+    ],
+    "method": [
+      "I01",
+      "I03"
+    ],
+    "theory": [
+      "I03"
+    ],
+    "experiments": [
+      "I01",
+      "I02"
+    ],
+    "ablations_analysis": [
+      "I02",
+      "I04"
+    ],
+    "figures_tables": [
+      "I02",
+      "I04"
+    ],
+    "limitations": [
+      "I02",
+      "I04"
+    ],
+    "conclusion": [
+      "I02",
+      "I04"
+    ],
+    "supplementary": [
+      "I02",
+      "I03"
+    ],
+    "references": [
+      "I02",
+      "I04"
+    ]
+  }
+}

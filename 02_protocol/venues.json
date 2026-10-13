@@ -1,0 +1,72 @@
+{
+  "cvpr": {
+    "id": "cvpr2027",
+    "label": "CVPR 2027",
+    "scale": "cvpr26_5",
+    "reading": "persona",
+    "panel": "realistic",
+    "guidance": "cvpr_venue.md",
+    "dimensions": [],
+    "page_budget": "8 content pages; references excluded. Confirm supplementary rules for your submission.",
+    "cutoff": "2026-09-15",
+    "contribution_types": {
+      "general": "General research contribution."
+    }
+  },
+  "iclr": {
+    "id": "iclr2027",
+    "label": "ICLR 2027",
+    "scale": "iclr_harness_5",
+    "reading": "careful",
+    "panel": "balanced",
+    "guidance": "iclr_venue.md",
+    "dimensions": [],
+    "page_budget": "Confirm the ICLR 2027 submission-stage page budget in the current author instructions before revising layout.",
+    "cutoff": null,
+    "contribution_types": {
+      "general": "General research contribution."
+    }
+  },
+  "icml": {
+    "id": "icml2026",
+    "label": "ICML 2026",
+    "scale": "icml2026_6",
+    "reading": "careful",
+    "panel": "balanced",
+    "guidance": "icml_venue.md",
+    "dimensions": [
+      "soundness",
+      "presentation",
+      "significance",
+      "originality"
+    ],
+    "page_budget": "8 main-body pages at submission; references and appendices excluded. This is not the camera-ready budget.",
+    "cutoff": null,
+    "contribution_types": {
+      "general": "General main-track research contribution."
+    }
+  },
+  "neurips": {
+    "id": "neurips2026",
+    "label": "NeurIPS 2026",
+    "scale": "neurips2026_6",
+    "reading": "careful",
+    "panel": "balanced",
+    "guidance": "neurips_venue.md",
+    "dimensions": [
+      "quality",
+      "clarity",
+      "significance",
+      "originality"
+    ],
+    "page_budget": "9 main-body pages at submission; references, appendix and checklist excluded. This is not the camera-ready budget.",
+    "cutoff": null,
+    "contribution_types": {
+      "general": "Evaluate the claimed contribution and evidence without imposing a particular paper genre.",
+      "theory": "Prioritize precise assumptions, valid reasoning, proof completeness and conceptual value. Do not require experiments or leaderboard comparisons for a theoretical contribution.",
+      "use_inspired": "Check the real problem, stakeholder-relevant metrics and practical constraints. Include relevant domain and non-ML baselines; justify any demand for standard ML benchmarks.",
+      "concept_feasibility": "Evaluate originality and potential significance alongside a sound feasibility demonstration. Distinguish demonstrated claims from a plausible research direction; do not demand a mature benchmark suite by default.",
+      "negative_results": "Assess whether the negative finding is informative, important and supported by diagnostic analysis. Separate a meaningful limitation from an under-tuned run. A remedy is not mandatory."
+    }
+  }
+}

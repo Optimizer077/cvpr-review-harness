@@ -17,7 +17,7 @@
     <text x="52" y="169" font-size="54" font-weight="700" letter-spacing="-1.5" fill="#f8fafc">CVPR Review Harness</text>
     <text x="55" y="220" font-size="28" fill="#cbd5e1">Review deeply. Revise deliberately.</text>
     <rect x="55" y="250" width="571" height="2" rx="1" fill="url(#accent)"/>
-    <text x="55" y="304" font-size="21" fill="#b8c4da">16 perspectives</text>
+    <text x="55" y="304" font-size="21" fill="#b8c4da">30 perspectives</text>
     <circle cx="227" cy="297" r="3.5" fill="#5eead4"/>
     <text x="245" y="304" font-size="21" fill="#b8c4da">Actionable feedback</text>
     <circle cx="456" cy="297" r="3.5" fill="#a78bfa"/>
