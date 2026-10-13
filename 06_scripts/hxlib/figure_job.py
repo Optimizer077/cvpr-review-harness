@@ -98,16 +98,35 @@ def load_inventory(snapshot: Path) -> Optional[list[dict]]:
     return items
 
 
+def caption_refs(snapshot: Path) -> list[dict]:
+    """Captions found in the text (`captions.json`), first entry per id, in text order.
+
+    Each: {id, doc, page, kind, number, caption}; ids follow figures.json (`fig_3`, `supp_tab_2`).
+    The figure snapshot adds an inventory placeholder for every ref it did not locate, and
+    validation falls back to the main-paper refs when figures.json is missing.
+    """
+    path = snapshot / "captions.json"
+    try:
+        caps = load_json(path) if path.exists() else []
+    except ValueError as exc:  # JSONDecodeError
+        logger.warning("Unreadable captions %s: %s", path, exc)
+        caps = []
+    refs: list[dict] = []
+    for cap in caps if isinstance(caps, list) else []:
+        match = _CAPTION_ID.match(str(cap.get("text", ""))) if isinstance(cap, dict) else None
+        if not match or cap.get("doc") not in ("main", "supp") or not isinstance(cap.get("page"), int):
+            continue
+        kind = "table" if match.group(1) == "Table" else "figure"
+        fid = f"{'supp_' if cap['doc'] == 'supp' else ''}{kind[:3]}_{match.group(2)}"
+        if all(r["id"] != fid for r in refs):
+            refs.append({"id": fid, "doc": cap["doc"], "page": cap["page"], "kind": kind,
+                         "number": match.group(2), "caption": " ".join(str(cap["text"]).split())})
+    return refs
+
+
 def caption_ids(snapshot: Path) -> list[str]:
     """Main-paper ids (fig_<n>, tab_<n>) from the snapshot's captions, for when figures.json is missing."""
-    path = snapshot / "captions.json"
-    ids: list[str] = []
-    for cap in load_json(path) if path.exists() else []:
-        match = _CAPTION_ID.match(str(cap.get("text", "")))
-        fid = f"{'tab' if match.group(1) == 'Table' else 'fig'}_{match.group(2)}" if match else None
-        if cap.get("doc") == "main" and fid and fid not in ids:
-            ids.append(fid)
-    return ids
+    return [r["id"] for r in caption_refs(snapshot) if r["doc"] == "main"]
 
 
 def inventory_ids(items: list[dict]) -> tuple[list[str], list[str]]:

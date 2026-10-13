@@ -17,7 +17,8 @@ Same anchors as section scores (`section_rubrics.md`), read for one figure or ta
 | 1-2 | Broken: unreadable, contradicts the text, or misrepresents the evidence for a central claim. |
 
 **Criterion score (1-5):** 1 absent or wrong; 2 weak; 3 adequate; 4 good; 5 exemplary.
-A figure score of 9+ needs every non-null criterion at 4+; any criterion at 1 caps the figure at 4.
+A figure score of 9+ needs every non-null criterion at 4+; any criterion at 1 caps the figure at 4,
+except a `legibility` of 1 from small text alone (calibration under `legibility`).
 
 ## Criteria
 
@@ -32,8 +33,9 @@ Can a reader state what to conclude from the figure itself, quickly?
 
 ### `legibility`
 Can every label, mark and detail be read and identified at print size? Use the measured sizes.
-- 1: Text or detail that carries the message cannot be read in print: smallest text below 5 pt,
-  unreadable in the crop, or blur that hides what the figure is about.
+- 1: Text or detail that carries the message cannot be read in print: ticks, legend, labels or
+  values below 5 pt (measured, or judged on the page image when unmeasured), unreadable in the
+  crop, or blur that hides what the figure is about.
 - 2: Labels that matter are flagged `small_text` (below 6 pt) or overlap; a raster is flagged
   `low_resolution` and looks blurred; an axis, legend or column label is missing.
 - 3: Smallest text 6-7 pt and readable in the crop with effort; some crowding.
@@ -42,7 +44,16 @@ Can every label, mark and detail be read and identified at print size? Use the m
 - 5: Text close to caption or body size (9-10 pt in the CVPR template); every detail the caption
   names is readable in print without zooming.
 
-Text inside raster images has no measurement: judge it from the crop and say so.
+`min text pt` measures only text stored as text, sub- and superscripts excluded. Text inside raster
+images or drawn as outlines has no measurement: judge it on the page image, not the crop, and write
+'unmeasured' in `visible_evidence`.
+
+**Calibration: small text.** The same size gets the same marks in every figure and every paper.
+Text that carries meaning below 5 pt is `legibility` 1, from 5 to under 6 pt 2, from 6 to 7 pt 3.
+Its weakness is `minor`, or `moderate` when that text is the only place a number or method name
+the paper relies on is printed (`figure_review_rules.md`, rule 16), and a figure whose only defect
+is small text scores 7-8 when it is minor and 5-6 when it is moderate. Example: tick labels at
+4.8 pt in one paper and 5.0 pt in another, both minor: `legibility` 1 and 2, figure 7 or 8 in both.
 
 ### `encoding_fit`
 Do the chart type and the encodings fit the data and the comparison?
@@ -117,17 +128,19 @@ figure, use the role of the panel that carries the caption's main claim.
   marked cell against the printed numbers); units and ↑/↓ per metric; abbreviations defined in
   the caption or table; one precision per column; numbers identical to the text; reproduced and
   copied baseline numbers distinguished; groups with different training data or settings
-  separated. Read the numbers as text, not as marks.
+  separated. Read the numbers as text, not as marks. A best mark that disagrees with the printed
+  numbers is `figure_text_inconsistency`; it lowers `caption_alignment`, not `encoding_fit`.
 - **other** (dataset samples, attention or feature maps, statistics): what it is meant to show is
   visible, labelled and cited; colour scales of maps are stated.
 
 ## Defects
 Every FIG weakness names one defect id. "Lowers" is the criterion the defect usually costs;
-"category" is the usual weakness category from `taxonomy.json`.
+"category" is the usual weakness category from `taxonomy.json` (the figure job uses figures,
+visual_results, notation, overclaiming, clarity and correctness).
 
 | id | definition | typical fix | lowers | category |
 |---|---|---|---|---|
-| `illegible_text` | Text that carries meaning cannot be read in print: flagged `small_text`, overlapping, or unreadable in the crop. | Set the figure at its final width and enlarge text to 7 pt or more; cut text the message does not need. | legibility | figures |
+| `illegible_text` | Text that carries meaning cannot be read in print: flagged `small_text` (or, when unmeasured, too small on the page image), overlapping, or unreadable in the crop. | Set the figure at its final width and enlarge text to 7 pt or more; cut text the message does not need. | legibility | figures |
 | `low_resolution` | A raster has too few pixels for its printed size (flagged `low_resolution`), or shows blur or compression artefacts that are not part of the results. | Export plots and diagrams as vector PDF; place rasters at 300 ppi or more at print size, in a lossless format. | legibility | figures |
 | `clutter` | More panels, series, labels or decoration than the message needs; marks or labels collide. | Keep the series and panels the claim needs, move the rest to the supplement, drop gridlines, shadows and 3D effects. | message_clarity | figures |
 | `unclear_message` | A reader cannot tell what to conclude, `perceived_message` differs from `intended_message`, or the claimed difference is too small to see in print. | Make the key comparison the most salient element (order, emphasis, direct labels, larger panels) and state the takeaway in the caption. | message_clarity | figures |
@@ -140,8 +153,8 @@ Every FIG weakness names one defect id. "Lowers" is the criterion the defect usu
 | `figure_text_inconsistency` | A number, method name, setting or described observation in a figure or table differs from the main text or another table. | Regenerate from one source of numbers, use one name per method, correct the text. | caption_alignment | correctness |
 | `diagram_equation_mismatch` | The method diagram and the equations or notation disagree: other symbols, modules missing on one side, a data flow the equations do not describe. | Use the paper's symbols in the diagram; draw exactly the modules the equations use; mark training-only paths. | caption_alignment | notation |
 | `unfair_comparison` | Methods are shown under different conditions (crops, zoom, input, resolution, colour range), or a baseline the text compares against is left out. | The same inputs, crops, insets and colour range for all methods, and the baselines of the main table. Changing what is shown needs the user's approval. | comparison_fairness | visual_results |
-| `missing_failure_cases` | No example anywhere in the paper or supplement where the method fails or does not help. Check the supplement before raising it. | Add one failure case to the qualitative figure or the supplement, with one line on why it fails. | comparison_fairness | limitations |
-| `inconsistent_style` | The same method has different colours, markers or names across figures, or fonts and sizes vary across figures without reason. | One style file: a fixed colour, marker and name per method in every figure. | encoding_fit | presentation_other |
-| `redundant_with_table` | The figure repeats numbers already in a table and shows nothing the table does not (a trend, a distribution). | Keep one in the main paper; or make the figure show the trend and move the other to the supplement. | message_clarity | presentation_other |
-| `not_referenced` | The main text never cites the figure or table (flagged `not_referenced`), or cites it far from where its claim is made. | Cite it where its claim is made and place it near that point. | caption_alignment | presentation_other |
+| `missing_failure_cases` | No example anywhere in the paper or supplement where the method fails or does not help. Check the supplement before raising it. | Add one failure case to the qualitative figure or the supplement, with one line on why it fails. | comparison_fairness | visual_results |
+| `inconsistent_style` | The same method has different colours, markers or names across figures, or fonts and sizes vary across figures without reason. | One style file: a fixed colour, marker and name per method in every figure. | encoding_fit | figures |
+| `redundant_with_table` | The figure repeats numbers already in a table and shows nothing the table does not (a trend, a distribution). | Keep one in the main paper; or make the figure show the trend and move the other to the supplement. | message_clarity | figures |
+| `not_referenced` | The main text never cites the figure or table (flagged `not_referenced`), or cites it far from where its claim is made. | Cite it where its claim is made and place it near that point. | caption_alignment | figures |
 | `other` | A defect not in this list, including instructions to reviewers hidden in a figure. Name it in the weakness text. | Specific to the defect. | as fits | as fits |

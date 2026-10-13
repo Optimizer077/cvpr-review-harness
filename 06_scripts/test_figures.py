@@ -3,7 +3,9 @@
 
 Layouts: a figure above its caption, a table below its caption, a two-column page, pages without
 figures, supplement caps, deterministic crop hashes for blind pairwise, and a failure inside the
-figure code that must leave the paper snapshot usable. PyMuPDF and the standard library only.
+figure code that must leave the paper snapshot usable. Also: placeholders for captions the text
+has but the locator missed, flags and prompt lines for unmeasured plot text, and line-anchor
+detection for the figure prompt. PyMuPDF and the standard library only.
 """
 from __future__ import annotations
 
@@ -19,8 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fitz  # noqa: E402
 
 from hxlib import figure_render  # noqa: E402
-from hxlib.common import load_json, sha256_file  # noqa: E402
+from hxlib.common import load_json, save_json, sha256_file  # noqa: E402
+from hxlib.figure_job import caption_ids, inventory_ids  # noqa: E402
 from hxlib.figure_locate import body_font_size, locate_on_page, text_extent  # noqa: E402
+from hxlib.figure_prompts import _figure_lines, has_line_anchors  # noqa: E402
 from hxlib.paper import extract_lines, snapshot_paper  # noqa: E402
 from hxlib.prompts_stages import _figure_pairs  # noqa: E402
 
@@ -258,6 +262,70 @@ class FigureSnapshotTests(unittest.TestCase):
         self.assertIsNone(figure_render.figure_reading_line(dest, "main"))
         ok = snapshot_paper(pdf, self.root / "snap_ok")
         self.assertEqual(ok["figures"]["figures"], 1)
+
+    def test_caption_in_text_but_not_located_gets_placeholder(self):
+        main, supp = self.root / "main.pdf", self.root / "supp.pdf"
+        single_column_pdf(main)  # p.1: Fig. 1 and Tab. 1; p.2: prose only
+        prose_only_pdf(supp, 3)
+        snap = self.root / "snap"
+        snap.mkdir()
+        save_json(snap / "captions.json", [
+            {"doc": "main", "page": 1, "anchor": "", "text": "Figure 1. A toy bar chart. The last bar is ours."},
+            {"doc": "main", "page": 1, "anchor": "", "text": "Fig. 1. Additionally, a wrapped mention."},
+            {"doc": "main", "page": 2, "anchor": "", "text": "Figure 2.  A figure the locator\nmisses."},
+            {"doc": "main", "page": 9, "anchor": "", "text": "Table 9. Past the last page."},
+            {"doc": "supp", "page": 2, "anchor": "", "text": "Figure 1. A supplement figure."},
+            {"doc": "supp", "page": 3, "anchor": "", "text": "Figure 2. Past the supplement cap."}])
+        with patch.object(figure_render, "SUPP_MAX_PAGES", 2), \
+                self.assertLogs("hxlib.figure_render", level="WARNING"):
+            summary, items = snapshot(main, snap, supp)
+        self.assertEqual(list(items), ["fig_1", "tab_1", "fig_2", "supp_fig_1"])
+        self.assertEqual(summary["not_located"], ["fig_2", "supp_fig_1"])
+        fig2 = items["fig_2"]
+        self.assertEqual((fig2["crop"], fig2["crop_sha256"], fig2["page_image"]), (None, None, "pages/main_p02.png"))
+        self.assertEqual(fig2["caption"], "Figure 2. A figure the locator misses.")
+        self.assertEqual(fig2["flags"][0], "not_located: caption found in text")
+        self.assertTrue(any(f.startswith("not_referenced") for f in fig2["flags"]))
+        self.assertTrue((snap / "pages" / "supp_p02.png").exists(), "placeholder page gets a page image")
+        self.assertFalse((snap / "pages" / "supp_p03.png").exists(), "pages past the cap are skipped")
+        self.assertEqual(inventory_ids(list(items.values()))[0], ["fig_1", "tab_1", "fig_2"])
+        self.assertEqual(caption_ids(snap), ["fig_1", "fig_2", "tab_9"])
+        self.assertIn("| fig_2 | Fig. 2 | 2 | pages/main_p02.png |", (snap / "FIGURES.md").read_text(encoding="utf-8"))
+        self.assertIn("NOT LOCATED, use page image", _figure_lines(snap, [fig2])[0])
+
+    def test_unmeasured_plot_text_flags_and_prompt_lines(self):
+        snap = self.root / "snap"
+        item = {"id": "fig_1", "doc": "main", "kind": "figure", "number": "1", "label": "Fig. 1", "page": 1,
+                "page_image": "pages/main_p01.png", "caption": "Figure 1. Toy.", "caption_words": 3,
+                "crop": "figures/fig_1.png", "mentions": [{"page": 1, "anchor": ""}], "min_text_pt": 5.0,
+                "min_script_pt": 4.0, "text_not_measured": True, "min_image_ppi": None, "flags": []}
+        self.assertFalse(any(f.startswith("small_text") for f in figure_render._flags(item)),
+                         "unmeasured plot text: no small_text flag from subcaption or script sizes")
+        self.assertTrue(any("5.0 pt" in f for f in figure_render._flags(dict(item, text_not_measured=False))))
+        self.assertFalse(figure_render._flags(dict(item, min_text_pt=7.0, text_not_measured=False)),
+                         "scripts alone (4.0 pt) never raise small_text")
+        self.assertIn("| 5.0 (scripts 4.0); plot text unmeasured |", figure_render.figures_markdown([item]))
+        line = _figure_lines(snap, [item])[0]
+        self.assertIn("; plot text unmeasured (raster or outlined): judge it on the page image", line)
+        self.assertIn(str(snap / "pages" / "main_p01.png"), line)
+        self.assertIn("sub/superscripts 4.0 pt", line)
+        legacy = {k: v for k, v in item.items() if k not in ("min_script_pt", "text_not_measured")}
+        self.assertNotIn("unmeasured", _figure_lines(snap, [legacy])[0])
+        self.assertIn("| 5.0 |", figure_render.figures_markdown([legacy]))
+
+    def test_line_anchor_detection(self):
+        snap = self.root / "snap"
+        snap.mkdir()
+        self.assertFalse(has_line_anchors({"paper": {}}, snap), "no view_main.txt")
+        self.assertTrue(has_line_anchors({"paper": {"line_numbers": True}}, snap))
+        page = "\n".join(f"L{100 + i:03d}  line {i}" for i in range(12))
+        (snap / "view_main.txt").write_text(f"===== [main p.1] =====\n{page}\n===== [main p.2] =====\n{page}\n",
+                                            encoding="utf-8")
+        self.assertTrue(has_line_anchors({"paper": {}}, snap), "12 anchors per page")
+        self.assertFalse(has_line_anchors({"paper": {"line_numbers": False}}, snap), "recorded value wins")
+        stray = "===== [main p.1] =====\nL101  a\n      b\n===== [main p.2] =====\nL202  c\n      d\n"
+        (snap / "view_main.txt").write_text(stray, encoding="utf-8")
+        self.assertFalse(has_line_anchors({"paper": {}}, snap), "a few stray numbers are not anchors")
 
 
 if __name__ == "__main__":
