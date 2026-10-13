@@ -49,7 +49,7 @@ python -m pip install pymupdf
 python 06_scripts/hx.py personas
 ```
 
-These examples use `python`; use `python3` if that is your Python command. Clone access is required while the repository is private.
+These examples use `python`; use `python3` if that is your Python command.
 
 ### 2. Create a review session
 
