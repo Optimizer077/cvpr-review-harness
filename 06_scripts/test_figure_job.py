@@ -2,9 +2,11 @@
 """Tests for the opt-in figure review job (FIG, persona F01; `hx.py new --figures`). No LLM calls.
 
 Builds a synthetic paper with a captioned vector figure and a table, runs a --figures session,
-writes fake outputs and checks: job and prompt, validation (valid passes; wrong keys, bad defect,
-missing figure fail), aggregation tables, the round-2 answer-check prompt with old and new crops,
-frozen criteria, other venues, and that panels never draw F01. Exit code 0 = pass.
+writes fake outputs and checks: job and prompt (slimmed: no generic schema or sources, figure
+categories only, line anchors only when the paper has margin numbers), validation (valid passes;
+wrong keys, bad defect, missing figure fail), aggregation tables, the round-2 answer-check prompt
+with old and new crops, a caption the locator missed (placeholder, required id), frozen criteria,
+other venues, and that panels never draw F01. Exit code 0 = pass.
 """
 from __future__ import annotations
 
@@ -221,6 +223,7 @@ def check_cvpr_session(tmpd: Path) -> None:
         assert needle in prompt, needle
     assert "## 3. Review form" not in prompt and "figure_scores" not in \
         (r1 / "prompts" / "initial" / "R07.md").read_text(encoding="utf-8")
+    check_slim_prompt(prompt, r1)
     print("OK --figures session: FIG job and prompt (crops, ids, criteria, schema)")
     write_outputs(r1)
     check_invalid_figure_reviews(r1)
@@ -276,6 +279,58 @@ def check_cvpr_session(tmpd: Path) -> None:
     print("OK retest keeps the FIG job")
 
 
+def check_slim_prompt(prompt: str, rpath: Path) -> None:
+    """FIG prompt: no generic schema, sources or off-topic categories; line anchors only when the paper has them."""
+    assert "### review.json format" not in prompt and "rules the example below does not show" in prompt
+    assert "## Sources" not in prompt and "p = 0.82" not in prompt, "study statistics live in 01_sources"
+    categories = next(line for line in prompt.splitlines() if line.startswith("Weakness categories"))
+    assert "figures (" in categories and "visual_results (" in categories and "baselines (" not in categories
+    assert "defects illegible_text" not in prompt, "the defect ids are listed by the rubric, not again"
+    assert "no margin line numbers: cite page and figure panel" in prompt and "with `L###`" not in prompt
+    assert "Judge unmeasured plot text on the page image" in prompt
+    rnd = load_json(rpath / "ROUND.json")
+    session = load_json(rpath.parent / "SESSION.json")
+    job = next(j for j in rnd["jobs"] if j["job_id"] == "FIG")
+    rnd["paper"]["line_numbers"] = True
+    text = figure_initial_prompt(session, rnd, job, session["instruments"]["personas"], rpath)
+    assert "(with `L###` line anchors)" in text and "no margin line numbers" not in text
+
+
+def snapshot_missing_fig_2(pdf: Path, dest: Path, supp: Optional[Path] = None, tex: Optional[Path] = None) -> dict:
+    """Snapshot whose text has a 'Figure 2.' caption that the figure locator does not find."""
+    meta = snapshot_with_figures(pdf, dest, supp, tex)
+    caps = load_json(dest / "captions.json")
+    save_json(dest / "captions.json", caps + [{"doc": "main", "page": 1, "anchor": "",
+                                               "text": "Figure 2. A figure the locator missed."}])
+    meta["figures"] = snapshot_figures(dest, dest / "main.pdf", extract_lines(dest / "main.pdf"))
+    return meta
+
+
+def check_placeholder_figure(tmpd: Path) -> None:
+    """A caption found in the text but not located is listed, flagged and required in figure_scores."""
+    with patch.object(hx, "snapshot_paper", snapshot_missing_fig_2):
+        assert run_cli("new", "--paper", str(tmpd / "v1.pdf"), "--name", "missed", "--reviewers", "R07",
+                       "--figures")[0] == 0
+    spath = next(p for p in hx.SESSIONS_DIR.iterdir() if p.name.endswith("_missed"))
+    r1 = round_dir(spath, 1)
+    rnd = load_json(r1 / "ROUND.json")
+    assert rnd["paper"]["figures"]["not_located"] == ["fig_2"], rnd["paper"]["figures"]
+    prompt = (r1 / "prompts" / "initial" / "FIG.md").read_text(encoding="utf-8")
+    assert "exactly these main-paper ids: fig_1, tab_1, fig_2." in prompt
+    line = next(x for x in prompt.splitlines() if "`fig_2` (Fig. 2, p.1)" in x)
+    assert "NOT LOCATED, use page image" in line and "not_located: caption found in text" in line, line
+    assert "| fig_2 | Fig. 2 | 1 | pages/main_p01.png |" in (r1 / "snapshot" / "FIGURES.md").read_text(encoding="utf-8")
+    write_outputs(r1)
+    assert validate_round(rnd, r1)["FIG"] == []
+    path = review_dir(r1, {"job_id": "FIG"}) / "review.json"
+    data = load_json(path)
+    data["figure_scores"].pop("fig_2")
+    save_json(path, data)
+    assert any("lacks main-paper ids ['fig_2']" in e for e in validate_round(rnd, r1)["FIG"])
+    assert "kind=figures figures=3 main/3 total" in run_cli("status", str(spath))[1]
+    print("OK caption found in the text but not located: placeholder listed, flagged and required")
+
+
 def check_other_venue_and_defaults(tmpd: Path) -> None:
     """ICML (careful) with --figures gets F01; without --figures no FIG job; F01 is not a reviewer."""
     pdf = tmpd / "v1.pdf"
@@ -329,6 +384,7 @@ def main() -> int:
                 patch.object(hx, "snapshot_paper", snapshot_with_figures):
             check_panels()
             check_cvpr_session(tmpd)
+            check_placeholder_figure(tmpd)
             check_other_venue_and_defaults(tmpd)
     print("FIGURE JOB TEST PASSED")
     return 0

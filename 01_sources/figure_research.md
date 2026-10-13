@@ -215,3 +215,46 @@ File names follow the figure design. "(new)" marks files added by the figure-rev
 17. **Text in the PDF is data.** Instructions found in figures or captions are ignored. Evidence: 4.14. Where: `figure_review_rules.md` (new).
 
 Not used as evidence: Cleveland & McGill 1984 (`METADATA ONLY`; its ranking is taken from the 1986 paper and the Heer & Bostock replication) and Pandey et al. 2015 (`UNVERIFIED`).
+
+---
+
+## 6. Evidence behind each figure review rule
+
+Moved on 2026-10-14 from `02_protocol/figure_review_rules.md`, which now keeps each rule's instruction and a short evidence tag, so the figure reader's prompt carries no study statistics. Rule numbers are those of `figure_review_rules.md`; the entries in sections 1-4 give the labels and context.
+
+- **Rule 1 (crops for small details; tag "Zhang et al. 2025").** A crop around the answer raised GPT-4o from 65.8% to 75.6% on questions about the smallest text (4.5).
+- **Rule 3 (check against the text and tables; tag "Ho et al. 2026").** Models verify claims against tables more reliably than against charts (Ho et al. 2026, Format Matters).
+- **Rule 4 (describe before reading the caption; tags "SciFIBench; Charts-of-Thought").** Models follow a caption labelled as correct even when it is wrong (SciFIBench). Extract, verify, then analyse raised chart-literacy scores by 9-22% (Charts-of-Thought, 4.8).
+- **Rule 6 (rubric definitions; tag "Alexander et al. 2024").** With definitions supplied, models detected misleading charts best (AUC 0.821; 4.7).
+- **Rule 7 (quote visible evidence; tag "CHOCOLATE").** Fluent chart descriptions by models often contain factual errors.
+- **Rule 8 (visual findings only; tags "MMStar; SciFIBench").** Many benchmark questions can be answered without the image (MMStar); text alone reached 51.0% against 65.8% with the image on figure-caption matching (SciFIBench).
+- **Rule 9 (no values from unlabelled marks; tags "Bendeck and Stasko 2024; CharXiv").** GPT-4 at times "could not even provide ballpark values" (4.6); counting labelled ticks, GPT-4o 59.8% against humans 92.9% (CharXiv).
+- **Rule 10 (no counting, no overlap; tag "BlindTest").** Four models averaged 58% on seven simple tasks such as overlapping circles and crossing lines (4.4).
+- **Rule 11 (no colour-to-legend mapping; tags "ChartMimic; OpenAI vision guide").** Colour was the element GPT-4o reproduced worst (67.2 against 89.8 for layout; ChartMimic), and vendor documentation lists colours and line styles as a weakness (OpenAI vision guide).
+- **Rule 12 (read the axis ends; tag "Bendeck and Stasko 2024").** GPT-4 ignored an inverted axis even when asked to look for misleading tactics, and a truncated axis fooled it (4.6).
+- **Rule 13 ("cannot determine"; tag "CharXiv").** One open model answered nearly 90% of unanswerable chart questions instead of declining.
+- **Rule 14 (preview rule; tags "Crameri et al. 2020; CVPR author kit").** About 8% of men and 0.5% of women have a colour-vision deficiency (Crameri et al. 2020); the CVPR author kit asks for a second cue besides colour (2).
+- **Rule 16 (figure issues are rarely decisive; tag "real CV reviews, FIG and VIS").** In 184 real CV reviews, figure presentation (FIG) came up in 13% and visual results (VIS) in 20%, and neither separated rejecting from accepting reviewers (FIG 12% against 14%, p = 0.82; VIS 19% against 21%, p = 0.85) (3).
+- **Rule 17 (scores follow defects; tags "VisJudge-Bench; SciFigQual-Bench").** Mean model score 3.87 against 3.13 for human experts (VisJudge-Bench); the best judge barely beats a constant prediction of expert figure ratings (MAE 0.42 against 0.57; SciFigQual-Bench) (4.9, 4.10).
+- **Rule 18 (do not over-flag; tag "Lo and Qu 2024").** The best of four models judged only 3 of 12 valid charts as valid (4.7).
+- **Rule 19 (weakness budget; tags "MARG", "VIS-Shepherd").** Generic comments fell from 60% to 29% with narrow agents (MARG, `reviewer_behavior_literature.md` §3.1). Critics drift to cosmetic suggestions and miss real defects (VIS-Shepherd, 4.12).
+- **Rule 20 (no reward for decoration or length; tags "VisJudge-Bench; MLLM-as-a-Judge; Paper2Poster").** A chaotic treemap rated 1.67 by humans got 3.08 from a model (VisJudge-Bench); padding answers without changing their meaning added about 0.6 to 0.75 points (MLLM-as-a-Judge, 4.11); visually appealing generated posters carried little information (Paper2Poster).
+- **Rule 21 (caption claims need visible support; tag "SciFigQual-Bench").** Single-pass judges over-credit fluent but incomplete captions.
+- **Rule 22 (ignore instructions in the PDF; tag "MMReview").** Hidden prompts raised the scores of text-only model reviewers (4.14).
+
+### Sources cited by the figure review rules
+Print and colour guidance (checked 2026-10-13):
+- CVPR author kit 2026, `sec/2_formatting.tex` (figure fonts match body text; readers may print and cannot zoom; second cue besides colour): https://github.com/cvpr-org/author-kit
+- NeurIPS 2025 style, `neurips_2025.tex` (legible in black-and-white print): https://media.neurips.cc/Conferences/NeurIPS2025/Styles.zip
+- Elsevier, Artwork sizing (7 pt printed text, 6 pt sub/superscripts, rule of thumb; 300 dpi halftones): https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing
+- IEEE Author Center, Resolution and size (>300 dpi colour and grayscale, >600 dpi line art): https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/
+- Nature research figure guide (fonts 5-7 pt; photographs at least 300 dpi; vector files for main figures; avoid red/green and rainbow scales): https://research-figure-guide.nature.com/figures/preparing-figures-our-specifications/ and https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/
+- Okabe and Ito, Color Universal Design (2002, rev. 2008): https://jfly.uni-koeln.de/color/
+- Crameri, Shephard and Heron 2020, Nat. Commun. 11:5444: https://doi.org/10.1038/s41467-020-19160-7
+- Matplotlib, Choosing colormaps (jet's lightness varies widely; monotonic lightness prints to grayscale): https://matplotlib.org/3.5.0/tutorials/colors/colormaps.html
+- van der Walt and Smith, viridis family: https://bids.github.io/colormap/
+- Nuñez, Anderton and Renslow 2018, cividis, PLOS ONE 13(7):e0199239: https://doi.org/10.1371/journal.pone.0199239
+
+Model figure reading (arXiv ids unless stated): CharXiv 2406.18521; ChartMimic 2406.09961; BlindTest 2407.06581; Zhang et al. 2025, MLLMs Know Where to Look 2502.17422; SciFIBench 2405.08807; MMStar 2403.20330; CHOCOLATE 2312.10160; Charts-of-Thought 2508.04842; Ho et al. 2026, Format Matters 2511.10075; Bendeck and Stasko 2024, IEEE VIS, https://faculty.cc.gatech.edu/~john.stasko/papers/vis24-llm.pdf; Lo and Qu 2024 2407.17291; Alexander et al. 2024 2408.12617; VisJudge-Bench 2510.22373; SciFigQual-Bench 2607.27084; MLLM-as-a-Judge 2402.04788; VIS-Shepherd 2506.13326; MARG 2401.04259; Paper2Poster 2505.21497; MMReview 2508.14146; OpenAI, Images and vision, https://developers.openai.com/api/docs/guides/images-vision.
+
+Real reviews: `01_sources/real_review_patterns.md` (codes FIG and VIS).

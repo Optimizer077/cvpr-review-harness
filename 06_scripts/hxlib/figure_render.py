@@ -2,7 +2,9 @@
 
 For every page: `pages/<doc>_pNN.png`. For every captioned figure/table that `figure_locate`
 finds: a crop with its caption (`figures/<id>.png`), a grayscale preview (print) and, for colour
-figures, a deuteranopia preview (Machado et al. 2009, severity 1.0, applied in linear RGB).
+figures, a deuteranopia preview (Machado et al. 2009, severity 1.0, applied in linear RGB). A
+caption that the text extraction found (`captions.json`) but the locator did not gets a
+placeholder entry without crop, flagged `not_located`, so the figure still has to be reviewed.
 `figures/figures.json` holds the inventory with measurements and objective flags; `FIGURES.md`
 is the same as a table for agents and people. Measurements are facts about the PDF; whether a
 figure works is for the reviewers to judge. `figure_reading_line` tells a reviewer prompt which
@@ -18,6 +20,7 @@ from pathlib import Path
 from typing import Any, Iterator, Optional
 
 from .common import load_json, save_json, sha256_file
+from .figure_job import caption_refs
 from .figure_locate import body_font_size, locate_on_page, measure, text_extent
 
 logger = logging.getLogger(__name__)
@@ -25,8 +28,11 @@ logger = logging.getLogger(__name__)
 PAGE_DPI = 150           # whole-page images: enough to see layout and Fig. 1 at a glance
 CROP_LONG_SIDE_PX = 1600  # crops: long side target, so small text stays legible to a model
 CROP_DPI_RANGE = (150, 300)
-PREVIEW_DPI = 110        # grayscale / colour-vision previews: colours and contrast, not small text
-SMALL_TEXT_PT = 6.0      # flag: smallest vector text in a figure below this size
+# grayscale / colour-vision previews: at 110 dpi reviewers sampled pixels to tell close shades apart;
+# 200 dpi shows thin lines and markers. Cost on two papers with 10-11 figures and tables: previews
+# 0.8-1.0 s -> 1.8-2.8 s, preview files 2-3 MB -> 6-9 MB per snapshot.
+PREVIEW_DPI = 200
+SMALL_TEXT_PT = 6.0      # flag: smallest vector text in a figure below this size (min_text_pt only)
 LOW_PPI = 150            # flag: a raster image placed below this effective resolution
 COLOUR_FRACTION = 0.01   # a crop with fewer saturated pixels than this counts as grayscale
 # Supplement caps (runtime): a figure-heavy supplement costs about 0.5 s per page (layout analysis,
@@ -131,12 +137,16 @@ def find_mentions(pages: list[list[tuple[str, str]]]) -> dict[str, list[dict]]:
     return out
 
 
-def _flags(item: dict) -> list[str]:
+def _flags(item: dict, not_located: str = "not_located: use the page image") -> list[str]:
+    """Objective flags. small_text uses `min_text_pt` only: never `min_script_pt`, and not when
+    `text_not_measured` says the plot text is in rasters or outlines (the measured spans may then
+    be only subcaptions or scripts; reviewers judge that text on the page image)."""
     flags = []
     if item["crop"] is None:
-        flags.append("not_located: use the page image")
-    if item.get("min_text_pt") is not None and item["min_text_pt"] < SMALL_TEXT_PT:
-        flags.append(f"small_text: smallest vector text {item['min_text_pt']} pt (< {SMALL_TEXT_PT})")
+        flags.append(not_located)
+    text_pt = item.get("min_text_pt")
+    if text_pt is not None and text_pt < SMALL_TEXT_PT and not item.get("text_not_measured"):
+        flags.append(f"small_text: smallest vector text {text_pt} pt (< {SMALL_TEXT_PT})")
     if item.get("min_image_ppi") is not None and item["min_image_ppi"] < LOW_PPI:
         flags.append(f"low_resolution: a raster image at {item['min_image_ppi']} ppi (< {LOW_PPI})")
     if item["doc"] == "main" and not item["mentions"]:
@@ -170,9 +180,41 @@ def _inventory_item(page, pno: int, f: dict, doc_label: str, dest: Path, mention
     return item
 
 
-def _render_doc(doc_label: str, pdf: Path, dest: Path,
-                mentions: dict[str, list[dict]]) -> tuple[list[dict], int]:
-    """Inventory items of one PDF and the number of supplement pages left out (SUPP_MAX_PAGES)."""
+def _placeholders(doc_label: str, pages: list, refs: list[dict], items: list[dict], dest: Path,
+                  mentions: dict[str, list[dict]]) -> list[dict]:
+    """Entries for captions of this PDF that the text has but the locator missed (inventoried pages)."""
+    known = {i["id"] for i in items}
+    out = []
+    for ref in refs:
+        if ref["doc"] != doc_label or ref["id"] in known or not 1 <= ref["page"] <= len(pages):
+            continue
+        image = dest / "pages" / f"{doc_label}_p{ref['page']:02d}.png"
+        if not image.exists():  # a supplement page without a located figure has no image yet
+            pages[ref["page"] - 1].get_pixmap(dpi=PAGE_DPI).save(image)
+        out.append(_placeholder_item(ref, mentions))
+        logger.warning("%s: caption found in the text but not located on p.%d", ref["id"], ref["page"])
+    return out
+
+
+def _placeholder_item(ref: dict, mentions: dict[str, list[dict]]) -> dict:
+    """Inventory entry for a caption the text has but the locator missed: page image, no crop."""
+    supp = ref["doc"] == "supp"
+    item = {"id": ref["id"], "doc": ref["doc"], "kind": ref["kind"], "number": ref["number"],
+            "label": f"{'Supp. ' if supp else ''}{'Fig.' if ref['kind'] == 'figure' else 'Tab.'} {ref['number']}",
+            "page": ref["page"], "page_image": f"pages/{ref['doc']}_p{ref['page']:02d}.png",
+            "caption": ref["caption"], "caption_words": len(ref["caption"].split()), "full_width": None,
+            "crop": None, "crop_sha256": None, "mentions": mentions.get(f"{ref['kind']} {ref['number']}", [])}
+    item["flags"] = _flags(item, "not_located: caption found in text")
+    return item
+
+
+def _render_doc(doc_label: str, pdf: Path, dest: Path, mentions: dict[str, list[dict]],
+                refs: list[dict]) -> tuple[list[dict], int]:
+    """Inventory items of one PDF and the number of supplement pages left out (SUPP_MAX_PAGES).
+
+    `refs` are the captions found in the text (`caption_refs`); one the locator did not find on
+    an inventoried page becomes a placeholder item.
+    """
     import fitz
 
     supp = doc_label == "supp"
@@ -190,6 +232,8 @@ def _render_doc(doc_label: str, pdf: Path, dest: Path,
             for f in found:
                 items.append(_inventory_item(page, pno, f, doc_label, dest, mentions, items))
             page.release()
+        items += _placeholders(doc_label, pages, refs, items, dest, mentions)
+    items.sort(key=lambda i: i["page"])  # stable: placeholders follow the located items of their page
     if skipped:
         logger.warning("supplement: %d page(s) after page %d not inventoried", skipped, SUPP_MAX_PAGES)
     return items, skipped
@@ -216,10 +260,11 @@ def snapshot_figures(dest: Path, main_pdf: Path, main_pages: list, supp_pdf: Opt
     (dest / "pages").mkdir(parents=True, exist_ok=True)
     (dest / "figures").mkdir(parents=True, exist_ok=True)
     main_mentions = find_mentions(main_pages)
-    items, _ = _render_doc("main", main_pdf, dest, main_mentions)
+    refs = caption_refs(dest)  # captions.json, written by the paper snapshot before the figures
+    items, _ = _render_doc("main", main_pdf, dest, main_mentions, refs)
     skipped = 0
     if supp_pdf is not None:
-        supp_items, skipped = _render_doc("supp", supp_pdf, dest, find_mentions(supp_pages or []))
+        supp_items, skipped = _render_doc("supp", supp_pdf, dest, find_mentions(supp_pages or []), refs)
         items += supp_items
     save_json(dest / "figures" / "figures.json", items)
     (dest / "FIGURES.md").write_text(figures_markdown(items, skipped), encoding="utf-8")
@@ -235,10 +280,13 @@ def snapshot_figures(dest: Path, main_pdf: Path, main_pages: list, supp_pdf: Opt
 def figures_markdown(items: list[dict], supp_pages_skipped: int = 0) -> str:
     """Inventory table: one row per figure/table with files, measurements and flags."""
     lines = ["# Figures and tables in this snapshot", "",
-             "Measured from the PDF, not judged. `min text` is the smallest vector text inside the figure "
-             "(text inside raster images cannot be measured); `min ppi` is the lowest effective resolution "
-             "of a placed raster image. Previews: `_gray` (black-and-white print), `_deuteranopia` "
-             "(red-green colour-vision deficiency, Machado et al. 2009), colour figures only. "
+             "Measured from the PDF, not judged. `min text` is the smallest text the PDF stores as text "
+             "inside the figure; it can come from panel subcaptions or sub- and superscripts, and it never "
+             "covers text inside raster images or drawn as outlines ('plot text unmeasured': judge that text "
+             "on the page image). `scripts` is the smallest sub- or superscript when measured apart. "
+             "`min ppi` is the lowest effective resolution of a placed raster image. Previews: `_gray` "
+             "(black-and-white print), `_deuteranopia` (red-green colour-vision deficiency, Machado et al. "
+             "2009), colour figures only. "
              "Paths are relative to this file's folder.", ""]
     if supp_pages_skipped:
         lines += [f"Supplement pages after page {SUPP_MAX_PAGES} ({supp_pages_skipped}) are not listed here; "
@@ -251,11 +299,20 @@ def figures_markdown(items: list[dict], supp_pages_skipped: int = 0) -> str:
         mention = f"p.{first['page']} {first['anchor']}".strip() if first else "-"
         cap = i["caption"][:70].replace("|", "/")
         lines.append(f"| {i['id']} | {i['label']} | {i['page']} | {i['crop'] or i['page_image']} | {cap} | "
-                     f"{i['caption_words']} | "
-                     f"{i.get('min_text_pt') if i.get('min_text_pt') is not None else '-'} | "
+                     f"{i['caption_words']} | {_text_cell(i)} | "
                      f"{i.get('min_image_ppi') if i.get('min_image_ppi') is not None else '-'} | {mention} | "
                      f"{'; '.join(i['flags']) or '-'} |")
     return "\n".join(lines) + "\n"
+
+
+def _text_cell(item: dict) -> str:
+    """FIGURES.md `min text pt` cell: the value, sub/superscripts apart, and unmeasured plot text."""
+    cell = str(item["min_text_pt"]) if item.get("min_text_pt") is not None else "-"
+    if item.get("min_script_pt") is not None:
+        cell += f" (scripts {item['min_script_pt']})"
+    if item.get("text_not_measured"):
+        cell += "; plot text unmeasured"
+    return cell
 
 
 def measured_facts(item: dict) -> str:
