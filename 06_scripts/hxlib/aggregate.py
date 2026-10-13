@@ -3,7 +3,12 @@
 Two reviewer groups: `feedback` (the writer reads them) and `heldout` (the writer never sees them;
 their scores decide progress when present). A change in a group mean counts as a gain only when it
 exceeds 2 x the standard error of a difference of two panel means, computed from the test-retest
-SD measured by retest rounds (same draft, fresh reviewers).
+SD measured by retest rounds (same draft, fresh reviewers). Retest pairs compare rows of the same
+stage only: a dialogue re-score (`satisfy`) is not a retest of an initial review.
+
+Section-only jobs have no first impression. The previous rating of a dialogue verdict is the job's
+recorded overall rating in its previous dialogue round; the self-reported `previous_rating` is used
+only when no record exists.
 """
 from __future__ import annotations
 
@@ -12,15 +17,50 @@ import math
 import statistics
 from collections import Counter
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from .common import SECTION_KEYS, list_rounds, load_json, load_scales, review_dir, round_dir, save_json
 from .dialogue import round_items
-from .figure_job import figure_stats, figure_summary, figure_table
+from .figure_job import figure_stats, figure_summary, figure_table, output_path
 from .venues import scales_for
 
 logger = logging.getLogger(__name__)
 GROUPS = ("feedback", "heldout")
+
+
+def _load_optional(path: Path) -> Optional[Any]:
+    """JSON content of an optional stage output, or None (with a warning) when unreadable."""
+    try:
+        return load_json(path)
+    except ValueError as exc:  # JSONDecodeError or UnicodeDecodeError (non-UTF-8 agent output)
+        logger.warning("ignoring unreadable %s: %s", path, exc)
+        return None
+
+
+def recorded_rating(session: Path, round_no: Optional[int], job_id: str) -> Optional[int]:
+    """Overall rating that job `job_id` recorded in round `round_no` (review or verdict), or None."""
+    if not round_no or not (round_dir(session, round_no) / "ROUND.json").exists():
+        return None
+    rpath = round_dir(session, round_no)
+    job = next((j for j in load_json(rpath / "ROUND.json")["jobs"] if j["job_id"] == job_id), None)
+    if job is None or not job["overall"] or not output_path(job, rpath).exists():
+        return None
+    data = _load_optional(output_path(job, rpath))
+    rating = (data.get("overall") or {}).get("rating") if isinstance(data, dict) else None
+    return rating if isinstance(rating, int) and not isinstance(rating, bool) else None
+
+
+def _previous_rating(job: dict, round_path: Path, reported: object) -> object:
+    """A verdict's previous rating: the recorded one when available, else the reported value."""
+    if not job["overall"]:
+        return None
+    recorded = recorded_rating(round_path.parent, job.get("answers_from_round"), job["job_id"])
+    if recorded is None:
+        return reported
+    if reported is not None and reported != recorded:
+        logger.warning("%s: reported previous_rating %r differs from the recorded rating %r; using the "
+                       "record", job["job_id"], reported, recorded)
+    return recorded
 
 
 def _stats(values: list[float]) -> dict:
@@ -52,16 +92,19 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
             continue
         data = load_json(path)
         ov = data.get("overall") or {}
-        first = None if satisfy else (data.get("first_impression") or {}).get("rating")
+        first = (None if satisfy or not job["overall"]
+                 else (data.get("first_impression") or {}).get("rating"))
+        previous = (_previous_rating(job, round_path, data.get("previous_rating")) if satisfy
+                    else data.get("previous_rating"))
         rows[job["job_id"]] = {"reviewer": job["reviewer"], "group": job.get("group", "feedback"),
                                "stage": job.get("stage", "initial"), "rating": ov.get("rating"),
-                               "previous_rating": data.get("previous_rating"),
+                               "previous_rating": previous,
                                "confidence": ov.get("confidence"), "first_impression": first,
                                "venue_assessment": data.get("venue_assessment"),
                                "evidence_audit": data.get("evidence_audit"),
-                               "sections": {k: v["score"] for k, v in data["section_scores"].items()}}
+                               "sections": {k: v["score"] for k, v in (data.get("section_scores") or {}).items()}}
         if satisfy:
-            satisfaction.update(i["status"] for i in data["items"])
+            satisfaction.update(i["status"] for i in data.get("items") or [])
             satisfaction["new_issues"] += len(data.get("new_issues", []))
     weak = round_items(rnd, round_path)
     groups = {g: _group_stats({k: r for k, r in rows.items() if r["group"] == g}) for g in GROUPS}
@@ -88,8 +131,9 @@ def aggregate_round(rnd: dict, round_path: Path) -> dict:
         "figures": figure_summary(rnd, round_path),  # FIG job: id -> score, role, main issue
     }
     fix = round_path / "fixcheck" / "fixcheck.json"
-    if fix.exists():
-        out["fixcheck"] = dict(Counter(i.get("status") for i in load_json(fix)))
+    checks = _load_optional(fix) if fix.exists() else None
+    if isinstance(checks, list):
+        out["fixcheck"] = dict(Counter(i.get("status") for i in checks if isinstance(i, dict)))
     out["pairwise"] = _decode_pairwise(round_path)
     return out
 
@@ -98,9 +142,9 @@ def _decode_pairwise(round_path: Path) -> list[dict]:
     res, key = round_path / "pairwise" / "pairwise.json", round_path / "pairwise" / "_key" / "KEY.json"
     if not (res.exists() and key.exists()):
         return []
-    mapping = load_json(key)
+    mapping, results = load_json(key), _load_optional(res)
     decoded = []
-    for item in load_json(res):
+    for item in results if isinstance(results, list) else []:
         sec, pref = item["section"], item.get("preferred")
         winner = mapping.get(sec, {}).get(pref, "tie") if pref in ("A", "B") else "tie"
         decoded.append({"section": sec, "winner": winner, "margin": item.get("margin"),
@@ -194,7 +238,12 @@ def write_round_report(agg: dict, round_path: Path) -> None:
 
 
 def noise_floor(session: Path) -> dict[str, dict]:
-    """Single-score test-retest SD per measure: sqrt(mean(d^2) / 2) over retest pairs."""
+    """Single-score test-retest SD per measure: sqrt(mean(d^2) / 2) over retest pairs.
+
+    A pair is the same job id in a retest round and its base round, with the same stage in both
+    (a retest of a dialogue round re-reviews from scratch; pairing it with a satisfy re-score would
+    measure the answers' effect, not reviewer noise).
+    """
     diffs: dict[str, list[float]] = {}
     for n in list_rounds(session):
         path = round_dir(session, n) / "SCORES.json"
@@ -207,7 +256,7 @@ def noise_floor(session: Path) -> dict[str, dict]:
         base = load_json(base_path)
         for jid, row in agg["rows"].items():
             ref = base["rows"].get(jid)
-            if not ref:
+            if not ref or row.get("stage", "initial") != ref.get("stage", "initial"):
                 continue
             for key in ("rating", "first_impression"):
                 if row.get(key) is not None and ref.get(key) is not None:
@@ -224,6 +273,15 @@ def _verdict(delta: float, sd: Optional[float], n: int) -> str:
         return ""
     threshold = 2 * sd * math.sqrt(2 / n)
     return f" ({'above' if abs(delta) > threshold else 'within'} noise, threshold {threshold:.2f})"
+
+
+def _rating_delta(overall: dict, prev: Optional[dict], group: str, noise: dict[str, dict]) -> str:
+    """', delta +x (above/within noise, threshold t)' for a group's rating mean, or ''."""
+    old = prev["groups"][group]["overall"] if prev else {}
+    if not overall.get("n") or not old.get("n"):
+        return ""
+    delta = round(overall["mean"] - old["mean"], 2)
+    return f", delta {delta:+}" + _verdict(delta, noise.get("rating", {}).get("sd"), overall["n"])
 
 
 def _figure_progress(agg: dict, prev: Optional[dict]) -> list[str]:
@@ -254,7 +312,8 @@ def write_progress(session: Path) -> str:
             gs = agg["groups"][group]
             if not gs["overall"]["n"] and not gs["sections"]:
                 continue
-            lines.append(f"- **{group}**: rating mean {gs['overall'].get('mean', '-')}, first impression "
+            lines.append(f"- **{group}**: rating mean {gs['overall'].get('mean', '-')}"
+                         f"{_rating_delta(gs['overall'], prev, group, noise)}, first impression "
                          f"{gs['first_impression'].get('mean', '-')}")
             for sec, st in gs["sections"].items():
                 delta = ""
