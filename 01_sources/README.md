@@ -9,6 +9,7 @@ Research behind the personas and protocol:
   rebuttal dynamics. Quotes are short excerpts with their forum ids.
 - `reviewer_behavior_literature.md`: studies of reviewer behaviour, LLM reviewers and
   reward hacking, with design rules derived from them.
+- `figure_research.md`: evidence behind the figure review (graphical perception, colour vision, venue figure guidance, figure complaints in the review corpus, how reliably vision-language models read figures), with the design rules and the files that implement them.
 
 The raw review downloads used for the counts are not redistributed. They come from public
 OpenReview data and its HuggingFace mirrors named in `real_review_patterns.md`.
