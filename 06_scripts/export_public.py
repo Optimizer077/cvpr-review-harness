@@ -29,7 +29,7 @@ SKIP_NAME = re.compile(r"\.bak_|\.pyc$|^\.DS_Store$")
 TEXT_SUFFIXES = {".md", ".py", ".json", ".txt", ".csv", ".yaml", ".yml", ".svg", ""}
 # Generic identifying strings (case-insensitive). Project-specific ones (names, paper titles,
 # folder names) live in a private, never-exported file: 00_plan/deid_patterns.txt, one regex per line.
-GENERIC_FORBIDDEN = (r"/home/[a-z0-9_.-]+", r"/Users/[A-Za-z0-9_.-]+", r"\b[A-Za-z]:[\\/]Users[\\/][^\\/\s]+", r"/NAS\d", r"[\w.+-]+@[\w-]+\.(com|org|edu|net)\b",
+GENERIC_FORBIDDEN = (r"(?<![\w.-])/home/[a-z0-9_.-]+", r"(?<![\w.-])/Users/[A-Za-z0-9_.-]+", r"\b[A-Za-z]:[\\/]Users[\\/][^\\/\s]+", r"/NAS\d", r"[\w.+-]+@[\w-]+\.(com|org|edu|net)\b",
                      r"claude-\d{4}", r"scratch[p]ad")
 PRIVATE_PATTERNS = ROOT / "00_plan" / "deid_patterns.txt"
 
