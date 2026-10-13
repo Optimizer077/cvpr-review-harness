@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="1110" viewBox="0 0 480 1110" role="img" aria-labelledby="title desc">
+<title id="title">The review and revision loop, vertical layout</title>
+<desc id="desc">The CLI freezes the draft and prepares prompts. Fresh agents review it or check their own feedback points. The CLI validates and aggregates outputs. The writer answers open points and rebuilds the PDF. The revised PDF starts the next round. Default: dialogue loop; no fixed round cap.</desc>
+<rect x="1" y="1" width="478" height="1108" rx="20" fill="#0d172b" stroke="#2c3f5c" stroke-width="2"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24" y="37" font-size="14" fill="#62e5d0" font-weight="700" letter-spacing="1.5">THE REVIEW &#8594; REVISION LOOP</text>
+<text x="24" y="75" font-size="30" fill="#f5f8ff" font-weight="700">Review. Revise. Recheck.</text>
+<text x="24" y="106" font-size="21" fill="#aabbd3" >A fresh context for every reviewer.</text>
+<rect x="24" y="130" width="432" height="180" rx="16" fill="#102638" stroke="#2d786f"/>
+<text x="44" y="160" font-size="15" fill="#62e5d0" font-weight="700" letter-spacing="1.2">01 / PYTHON CLI</text>
+<text x="44" y="197" font-size="28" fill="#f5f8ff" font-weight="700">Freeze &amp; prepare</text>
+<text x="44" y="231" font-size="22" fill="#d2deed" >Save a fixed copy of the draft.</text>
+<text x="44" y="260" font-size="22" fill="#d2deed" >Extract sections. Create prompts.</text>
+<text x="44" y="291" font-size="18" fill="#62e5d0" font-family="Consolas, monospace">hx.py new / hx.py round</text>
+<path d="M240 314v30m-7-8 7 8 7-8" fill="none" stroke="#93a8c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="24" y="350" width="432" height="180" rx="16" fill="#231f3c" stroke="#71639f"/>
+<text x="44" y="380" font-size="15" fill="#c5b4fa" font-weight="700" letter-spacing="1.2">02 / REVIEWER AGENTS</text>
+<text x="44" y="417" font-size="28" fill="#f5f8ff" font-weight="700">Review &amp; recheck</text>
+<text x="44" y="451" font-size="22" fill="#d2deed" >First round: review the draft.</text>
+<text x="44" y="480" font-size="22" fill="#d2deed" >Later: check your own points.</text>
+<text x="44" y="511" font-size="18" fill="#c5b4fa" >One fresh agent per job, every round</text>
+<path d="M240 534v30m-7-8 7 8 7-8" fill="none" stroke="#93a8c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="24" y="570" width="432" height="180" rx="16" fill="#102638" stroke="#2d786f"/>
+<text x="44" y="600" font-size="15" fill="#62e5d0" font-weight="700" letter-spacing="1.2">03 / PYTHON CLI</text>
+<text x="44" y="637" font-size="28" fill="#f5f8ff" font-weight="700">Validate &amp; prioritize</text>
+<text x="44" y="671" font-size="22" fill="#d2deed" >Check outputs. Aggregate scores.</text>
+<text x="44" y="700" font-size="22" fill="#d2deed" >Collect open points and fixes.</text>
+<text x="44" y="731" font-size="18" fill="#62e5d0" font-family="Consolas, monospace">SCORES.md + FEEDBACK.md</text>
+<path d="M240 754v30m-7-8 7 8 7-8" fill="none" stroke="#93a8c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="24" y="790" width="432" height="180" rx="16" fill="#231f3c" stroke="#71639f"/>
+<text x="44" y="820" font-size="15" fill="#c5b4fa" font-weight="700" letter-spacing="1.2">04 / WRITER AGENT OR AUTHOR</text>
+<text x="44" y="857" font-size="28" fill="#f5f8ff" font-weight="700">Answer &amp; revise</text>
+<text x="44" y="891" font-size="22" fill="#d2deed" >Address each open point.</text>
+<text x="44" y="920" font-size="22" fill="#d2deed" >Edit sources. Rebuild the PDF.</text>
+<text x="44" y="951" font-size="18" fill="#c5b4fa" font-family="Consolas, monospace">RESPONSE.md + revised paper</text>
+<path d="M43 1003H27v19h16m-6-25 6 6-6 6" fill="none" stroke="#62e5d0" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="58" y="1017" font-size="21" fill="#f5f8ff" font-weight="700">Revised draft &#8594; step 1</text>
+<text x="24" y="1057" font-size="19" fill="#aabbd3" >Default: dialogue loop</text>
+<text x="24" y="1086" font-size="19" fill="#aabbd3" >No fixed round cap</text>
+</g></svg>

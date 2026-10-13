@@ -22,18 +22,18 @@
     <rect x="42" y="148" width="410" height="202" rx="16" fill="#102638" stroke="#2d786f"/>
     <text x="64" y="178" font-size="13" font-weight="700" letter-spacing="2" fill="#62e5d0">01 / PYTHON CLI</text>
     <text x="64" y="213" font-size="26" font-weight="700" fill="#f5f8ff">Freeze &amp; prepare</text>
-    <text x="64" y="246" font-size="19" fill="#d2deed">Save the PDF and supplement.</text>
+    <text x="64" y="246" font-size="19" fill="#d2deed">Save a fixed copy of the draft.</text>
     <text x="64" y="274" font-size="19" fill="#d2deed">Extract sections. Create job prompts.</text>
     <path d="M64 293H430" stroke="#2a4d5d"/>
     <text x="64" y="325" font-size="16" font-family="Consolas, monospace" fill="#7ef0df">hx.py new / hx.py round</text>
     <!-- 02 Agents -->
     <rect x="548" y="148" width="410" height="202" rx="16" fill="#231f3c" stroke="#71639f"/>
     <text x="570" y="178" font-size="13" font-weight="700" letter-spacing="2" fill="#c5b4fa">02 / REVIEWER AGENTS</text>
-    <text x="570" y="213" font-size="26" font-weight="700" fill="#f5f8ff">Review independently</text>
-    <text x="570" y="246" font-size="19" fill="#d2deed">One fresh agent per review job.</text>
-    <text x="570" y="274" font-size="19" fill="#d2deed">Later dialogue: check its own thread.</text>
+    <text x="570" y="213" font-size="26" font-weight="700" fill="#f5f8ff">Review &amp; recheck</text>
+    <text x="570" y="246" font-size="19" fill="#d2deed">First round: review the draft.</text>
+    <text x="570" y="274" font-size="19" fill="#d2deed">Later rounds: check your own points.</text>
     <path d="M570 293H936" stroke="#4c426a"/>
-    <text x="570" y="325" font-size="16" fill="#d3c6ff">16 personas · selectable panels</text>
+    <text x="570" y="325" font-size="16" fill="#d3c6ff">One fresh agent per job, every round</text>
     <!-- 03 CLI -->
     <rect x="548" y="416" width="410" height="202" rx="16" fill="#102638" stroke="#2d786f"/>
     <text x="570" y="446" font-size="13" font-weight="700" letter-spacing="2" fill="#62e5d0">03 / PYTHON CLI</text>
@@ -55,6 +55,6 @@
     <text x="42" y="684" font-size="15" font-weight="700" letter-spacing="1.1" fill="#f5f8ff">CHECK THE IMPROVEMENT</text>
     <text x="42" y="715" font-size="18" fill="#aabbd3">Held-out reviews · Retests · Fix checks · Blind comparisons</text>
     <circle cx="45" cy="746" r="3" fill="#62e5d0"/>
-    <text x="58" y="752" font-size="15" fill="#aabbd3">No fixed round cap. Continue while there is actionable work within your scope.</text>
+    <text x="58" y="752" font-size="17" fill="#aabbd3">Default: dialogue loop · No fixed round cap</text>
   </g>
 </svg>

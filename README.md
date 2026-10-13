@@ -20,9 +20,7 @@
 
 ## Give your paper a demanding first audience
 
-**CVPR Review Harness helps you find what needs to change—and check whether the revision actually addresses it.** Give it a paper draft, run independent reviewer agents, and get a prioritized set of criticisms with locations, suggested fixes, and explicit criteria for resolving each point.
-
-Sixteen personas read with different priorities: the expert checks technical details, the skeptic questions novelty, the busy senior judges the opening, and the reproducibility auditor looks for missing evidence. Their feedback becomes a revision loop you can inspect, repeat, and compare across drafts.
+**Find the weak points in your paper. Revise them. Check whether the changes helped.** CVPR Review Harness turns a PDF into independent simulated reviews, section scores, and a prioritized revision plan. Sixteen personas bring different expertise and reading habits; every open criticism can be tracked through later drafts.
 
 **Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
@@ -31,34 +29,15 @@ Sixteen personas read with different priorities: the expert checks technical det
 ## How it works
 
 <p align="center">
-  <a href="assets/workflow.svg"><img src="assets/workflow.svg" alt="Clockwise workflow: freeze the draft, run independent reviewer agents, validate and aggregate feedback, then revise and start the next round. Cyan cards are CLI steps; violet cards are reviewer and writer work." width="100%"></a>
+  <picture>
+    <source media="(max-width: 640px)" srcset="assets/workflow-mobile.svg">
+    <img src="assets/workflow.svg" alt="Four-step loop: freeze the draft, run independent reviewer agents, validate and aggregate feedback, then revise. Each revised PDF starts a new round. CLI steps are cyan; reviewer and writer steps are violet." width="100%">
+  </picture>
 </p>
 
-The **Python CLI** handles the cyan steps: snapshots, prompts, validation, and reports. Your **agent environment** runs the reviewer jobs in separate contexts; a writer agent or the author revises the paper. The CLI does not launch agents or call a model API. Click the figure to view it at full size.
+The **Python CLI** prepares snapshots and prompts, validates outputs, and builds reports. Your **agent environment** runs each reviewer in a separate context; a writer agent or the author revises the paper. The CLI does not launch agents or call a model API.
 
-### From criticism to a concrete next step
-
-The feedback format connects each objection to a location and a test for resolution. For example:
-
-> **Illustrative feedback—not a result from an actual paper**
->
-> **Where:** Experiments, Table 2<br>
-> **Concern:** The runtime comparison omits hardware and batch size.<br>
-> **Suggested fix:** Add the measurement setup beside the table.<br>
-> **What would satisfy the reviewer:** Enough detail to determine whether the runtime measurements are comparable.
-
-The writer answers the point with a change or an evidence-backed explanation. A fresh instance of that persona then checks the revised paper and records whether the point is satisfied, partly satisfied, or still open.
-
-### What each run gives you
-
-| Capability | What it gives you |
-|---|---|
-| **Independent perspectives** | Separate reviewer jobs with their own persona, reading view, and output folder. |
-| **Scores with context** | Overall recommendations, first impressions, and scores for up to 13 paper sections. |
-| **Actionable feedback** | Located weaknesses, suggested fixes, and explicit criteria for satisfying each reviewer. |
-| **Iterative revision** | An answer sheet, point-by-point follow-up reviews, and a running history of open issues. |
-| **Progress checks** | Held-out reviewers, repeat reviews of an unchanged draft, fix checks, and blind comparisons. |
-| **Inspectable artifacts** | Frozen paper snapshots, Markdown reports, JSON records, and prompt hashes. |
+The figure shows the default `dialogue` loop. [Open the full-size figure](assets/workflow.svg) or its [vertical version](assets/workflow-mobile.svg).
 
 ## Quick start
 
@@ -103,10 +82,12 @@ The environment sits beside the repository so it is not included in commits or e
 ### 2. Create a review session
 
 ```sh
-python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper --panel realistic --mode both
+python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper
 ```
 
-The command freezes the draft, selects a three-person whole-paper panel, and adds the dedicated section-review jobs. It prints a session path such as `sessions/YYYY-MM-DD_mypaper` plus one launch instruction per job. **`--mode both` can produce more jobs than the whole-paper panel's size.**
+Replace `path/to/main.pdf` with your PDF path. This uses the defaults: **three reviewers**, the `realistic` panel, and `full` review mode. The command prints a session path such as `sessions/YYYY-MM-DD_mypaper` and one launch instruction per reviewer.
+
+For dedicated section-review jobs as well, add `--mode both`. This increases the number of jobs beyond the whole-paper panel.
 
 | Optional input | Add to the command |
 |---|---|
@@ -136,7 +117,7 @@ python 06_scripts/hx.py validate "<session>"
 python 06_scripts/hx.py aggregate "<session>"
 ```
 
-Every job should validate before you aggregate. Start with these three outputs:
+**Run `aggregate` only after every job validates.** Then open these files inside the printed session folder:
 
 1. **`round_01/FEEDBACK.md`** — what to fix first, why, and what would resolve it.
 2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses.
@@ -164,7 +145,7 @@ Use `--seed 1` to change a drawn panel or `--reviewers R03,R11` to select specif
 |---|---|
 | `full` **(CLI default)** | Whole-paper reviews, with section scores for the sections each reviewer reads. |
 | `sections` | Dedicated section-review jobs, without overall recommendations. |
-| `both` | Whole-paper reviews plus the dedicated section panel; used in the quick start above. |
+| `both` | Whole-paper reviews plus dedicated jobs from the section panel. |
 
 For a focused pass, add `--sections abstract,introduction`. The section panel uses its own [section-to-persona mapping](04_panels/section_panel.json).
 
@@ -198,7 +179,7 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
 
 **Review → prioritize → revise → check the answers → review again.**
 
-1. **Prepare the writer.** After aggregation, generate the writer brief and answer sheet:
+1. **Prepare the writer.** Record your source directory with `--tex "path/to/latex"` when creating the session, or set `tex_dir` in its `SESSION.json` to the absolute source-directory path before starting the writer. Then generate the brief and answer sheet:
 
    ```sh
    python 06_scripts/hx.py stage "<session>" writer
@@ -214,7 +195,7 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
 
    Omit `--supp` if there is no supplement. Pass it again when there is one; a revised round does not automatically reuse the previous supplement.
 
-4. **Run the printed prompts.** In the default `dialogue` loop, fresh instances of the same personas review their own feedback threads and mark each point satisfied, partly satisfied, or not satisfied. Held-out jobs receive fresh reviews of the draft.
+4. **Run the printed prompts.** In the default `dialogue` loop, fresh instances of the same personas check their own feedback threads against the revised draft. A point can be `satisfied`, `partly`, or `not_satisfied`; new issues can be raised. Held-out reviewers assess the draft from scratch.
 
 5. **Validate and aggregate again.** Read the updated `FEEDBACK.md` and session-wide `PROGRESS.md`, then start the next revision.
 
@@ -237,6 +218,21 @@ python 06_scripts/hx.py stage "<session>" pairwise
 Read scores alongside the underlying evidence. Language-model reviewers can share blind spots, and small score changes can be noise. [AGENTS.md](AGENTS.md) defines the independence and revision-acceptance rules.
 
 ## Reading the results
+
+### From criticism to a concrete next step
+
+The feedback format connects each objection to a location and a test for resolution. For example:
+
+> **Illustrative feedback—not a result from an actual paper**
+>
+> **Where:** Experiments, Table 2<br>
+> **Concern:** The runtime comparison omits hardware and batch size.<br>
+> **Suggested fix:** Add the measurement setup beside the table.<br>
+> **What would satisfy the reviewer:** Enough detail to determine whether the runtime measurements are comparable.
+
+The writer answers the point with a change or an evidence-backed explanation. A fresh instance of that persona then checks the revised paper and records whether the point is satisfied, partly satisfied, or still open.
+
+### Understand the scores
 
 **Read the criticisms before optimizing the numbers.** A higher mean can hide one decisive objection or a weaker section.
 
