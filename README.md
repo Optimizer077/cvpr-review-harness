@@ -6,24 +6,62 @@
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.9 or newer">
   <img src="https://img.shields.io/badge/Reviewers-16_personas-7C3AED?style=flat-square" alt="16 reviewer personas">
   <img src="https://img.shields.io/badge/Panels-7_presets-0891B2?style=flat-square" alt="7 panel presets">
-  <img src="https://img.shields.io/badge/Workflow-Agent_assisted-059669?style=flat-square&amp;logo=github&amp;logoColor=white" alt="Agent-assisted workflow">
+  <img src="https://img.shields.io/badge/Revision_rounds-No_fixed_cap-059669?style=flat-square" alt="No fixed revision-round cap">
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
+  <a href="#how-it-works">How it works</a> ·
   <a href="#choose-your-panel">Panels</a> ·
   <a href="#the-revision-loop">Revision loop</a> ·
-  <a href="REVIEW_PAPER.md">Agent entry point</a> ·
-  <a href="01_sources/README.md">Research behind the harness</a>
+  <a href="#reading-the-results">Results</a> ·
+  <a href="#troubleshooting">Troubleshooting</a>
 </p>
 
-Find the weak points in your paper before submission. **CVPR Review Harness** turns a draft into independent simulated reviews, section-level scores, and a concrete revision plan. Sixteen reviewer personas bring different expertise, priorities, and reading habits—from the subfield expert to the rushed senior reviewer.
+## Give your paper a demanding first audience
 
-Every criticism can become an actionable thread: revise the draft, explain the change, and have a fresh instance of the reviewer check whether the evidence resolves the concern.
+**CVPR Review Harness helps you find what needs to change—and check whether the revision actually addresses it.** Give it a paper draft, run independent reviewer agents, and get a prioritized set of criticisms with locations, suggested fixes, and explicit criteria for resolving each point.
+
+Sixteen personas read with different priorities: the expert checks technical details, the skeptic questions novelty, the busy senior judges the opening, and the reproducibility auditor looks for missing evidence. Their feedback becomes a revision loop you can inspect, repeat, and compare across drafts.
+
+**Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
 > This is an independent research tool for simulated feedback. It is not affiliated with CVPR, and its scores are not acceptance predictions.
 
-## What you get
+## How it works
+
+```mermaid
+flowchart LR
+    A[Paper PDF] --> B[Frozen snapshot]
+    B --> C[Independent reviewer agents]
+    C --> D[Scores and prioritized feedback]
+    D --> E[Writer revises and answers]
+    E --> F[Fresh agents check the revision]
+    F --> D
+    classDef input fill:#ecfeff,stroke:#0891b2,color:#164e63
+    classDef review fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+    classDef output fill:#ecfdf5,stroke:#059669,color:#064e3b
+    class A,B input
+    class C,F review
+    class D,E output
+```
+
+The **Python CLI** freezes drafts, prepares prompts, validates outputs, and builds reports. Your **agent environment** runs the reviewers and writer. It must support local file access and independent agent instances; the CLI itself does not launch agents or call a model API.
+
+### From criticism to a concrete next step
+
+The feedback format connects each objection to a location and a test for resolution. For example:
+
+> **Illustrative feedback—not a result from an actual paper**
+>
+> **Where:** Experiments, Table 2<br>
+> **Concern:** The runtime comparison omits hardware and batch size.<br>
+> **Suggested fix:** Add the measurement setup beside the table.<br>
+> **What would satisfy the reviewer:** Enough detail to determine whether the runtime measurements are comparable.
+
+The writer answers the point with a change or an evidence-backed explanation. A fresh instance of that persona then checks the revised paper and records whether the point is satisfied, partly satisfied, or still open.
+
+### What each run gives you
 
 | Capability | What it gives you |
 |---|---|
@@ -34,13 +72,11 @@ Every criticism can become an actionable thread: revise the draft, explain the c
 | **Progress checks** | Held-out reviewers, repeat reviews of an unchanged draft, fix checks, and blind comparisons. |
 | **Inspectable artifacts** | Frozen paper snapshots, Markdown reports, JSON records, and prompt hashes. |
 
-The Python CLI prepares review jobs and processes their outputs. **An agent environment runs the reviewers and writer**; the CLI does not call a model API or launch agents itself. Use an environment that can read local files and create independent agent instances, such as Claude Code or Codex with suitable agent support.
-
 ## Quick start
 
 ### 1. Set up the harness
 
-You need **Python 3.9+**, **PyMuPDF**, a paper PDF, and your agent environment. A supplement and LaTeX sources are optional.
+You need **Python 3.9+**, **PyMuPDF**, a paper PDF with extractable text, and an agent environment. A supplement is optional. Supply the paper's source directory if you want a writer agent to revise it.
 
 ```sh
 git clone https://github.com/Optimizer077/cvpr-review-harness.git
@@ -51,13 +87,29 @@ python 06_scripts/hx.py personas
 
 These examples use `python`; use `python3` if that is your Python command.
 
+<details>
+<summary>Optional: install in a virtual environment</summary>
+
+After cloning, create an environment with `python -m venv .venv`. Activate it with `.venv\Scripts\Activate.ps1` in PowerShell or `source .venv/bin/activate` on macOS/Linux, then run `python -m pip install pymupdf`.
+
+</details>
+
 ### 2. Create a review session
 
 ```sh
 python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper --panel realistic --mode both
 ```
 
-The command freezes the draft, selects a panel, and prints the session path and reviewer launch instructions. Add `--supp "path/to/supplement.pdf"` for supplementary material, `--tex "path/to/latex"` for the writer's source directory, or `--domain inr_neural_fields` for the included neural-fields domain pack.
+The command freezes the draft, selects a three-person whole-paper panel, and adds the dedicated section-review jobs. It prints a session path such as `sessions/YYYY-MM-DD_mypaper` plus one launch instruction per job. **`--mode both` can produce more jobs than the whole-paper panel's size.**
+
+| Optional input | Add to the command |
+|---|---|
+| Supplementary PDF | `--supp "path/to/supplement.pdf"` |
+| Paper source directory | `--tex "path/to/latex"` |
+| Neural-fields domain knowledge | `--domain inr_neural_fields` |
+| Separate evaluation reviewers | `--heldout R02,R11` |
+
+For other subfields, omit `--domain` or add an appropriate [domain pack](07_domain_packs/README.md).
 
 ### 3. Run independent reviewers
 
@@ -67,7 +119,7 @@ Give **each printed prompt to a fresh agent**, using exactly:
 Read <prompt path> and follow it exactly. Write only the files it names.
 ```
 
-Keep reviewer contexts separate. For an agent-led walkthrough, start with [REVIEW_PAPER.md](REVIEW_PAPER.md).
+Run the printed instructions in your agent environment, with separate contexts for each reviewer. Review files appear only after those agents finish. [REVIEW_PAPER.md](REVIEW_PAPER.md) gives the orchestrating agent the full procedure.
 
 ### 4. Validate and read the results
 
@@ -78,7 +130,13 @@ python 06_scripts/hx.py validate "<session>"
 python 06_scripts/hx.py aggregate "<session>"
 ```
 
-Every job should validate before you aggregate. Open `round_01/SCORES.md` for the scorecard and `round_01/FEEDBACK.md` for the prioritized revision list. If a job fails validation, rerun that job with a fresh agent.
+Every job should validate before you aggregate. Start with these three outputs:
+
+1. **`round_01/FEEDBACK.md`** — what to fix first, why, and what would resolve it.
+2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses.
+3. **`round_01/reviews/<job>/debrief.md`** — what triggered a reviewer's reaction and the smallest useful change.
+
+If a job fails validation, rerun that job with a fresh agent. Use `python 06_scripts/hx.py status "<session>"` to inspect missing files and recover launch instructions.
 
 ## Choose your panel
 
@@ -91,6 +149,8 @@ Every job should validate before you aggregate. Open `round_01/SCORES.md` for th
 | `writing` | R07 · R08 · R09 · R12 | Clarity, narrative, and how the contribution comes across. |
 | `core` | R01 · R02 · R03 · R05 · R07 · R09 · R11 | Broad coverage with seven perspectives. |
 | `gauntlet` | All 16 personas | A comprehensive pass before submission. |
+
+**A practical starting point:** use `realistic` for a broad first review, `writing` to focus on presentation, or `stress` to probe difficult objections. Use `--mode full` when you want only whole-paper jobs; add `--mode both` when you also want dedicated section coverage.
 
 Use `--seed 1` to change a drawn panel or `--reviewers R03,R11` to select specific reviewers. The panel stays fixed across revisions within a session.
 
@@ -143,8 +203,10 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
 3. **Create the next round.** Supply the revised PDF and, if applicable, the revised supplement:
 
    ```sh
-   python 06_scripts/hx.py round "<session>" --paper "path/to/revised-main.pdf"
+   python 06_scripts/hx.py round "<session>" --paper "path/to/revised-main.pdf" --supp "path/to/revised-supplement.pdf"
    ```
+
+   Omit `--supp` if there is no supplement. Pass it again when there is one; a revised round does not automatically reuse the previous supplement.
 
 4. **Run the printed prompts.** In the default `dialogue` loop, fresh instances of the same personas review their own feedback threads and mark each point satisfied, partly satisfied, or not satisfied. Held-out jobs receive fresh reviews of the draft.
 
@@ -168,7 +230,22 @@ python 06_scripts/hx.py stage "<session>" pairwise
 
 Read scores alongside the underlying evidence. Language-model reviewers can share blind spots, and small score changes can be noise. [AGENTS.md](AGENTS.md) defines the independence and revision-acceptance rules.
 
-## Where to find everything
+## Reading the results
+
+**Read the criticisms before optimizing the numbers.** A higher mean can hide one decisive objection or a weaker section.
+
+| Signal | How to interpret it |
+|---|---|
+| Overall recommendation | The default harness profile is 1–5: Reject, Weak Reject, Borderline, Weak Accept, Strong Accept. |
+| First impression | The recommendation recorded after the initial skim, before the detailed read. |
+| Section score | A 1–10 assessment tied to [section rubrics](02_protocol/section_rubrics.md), with 1–5 sub-criteria explaining it. |
+| Decisive weakness | A concern the reviewer considers sufficient to block acceptance by itself. |
+| Satisfaction status | Whether the revised draft resolves a particular point; unresolved and new points remain in the feedback list. |
+| Progress across rounds | Changes in scores, including noise thresholds when repeat reviews are available. |
+
+The headline uses held-out reviewers when present; otherwise it uses feedback reviewers. Section scores are a harness addition. Rating profiles and their source notes live in [scales.json](02_protocol/scales.json).
+
+### Output map
 
 | Artifact | Purpose |
 |---|---|
@@ -211,6 +288,18 @@ sessions/         Local paper snapshots and review campaigns
 Use `python 06_scripts/hx.py <command> --help` for command-specific options. Set the venue, prior-work cutoff, and rating profile at session creation with `--venue`, `--cutoff`, and `--scale` as appropriate for your project.
 
 </details>
+
+## Troubleshooting
+
+| What you see | What to do |
+|---|---|
+| `No module named fitz` | Install PyMuPDF with the same interpreter: `python -m pip install pymupdf`. |
+| `No SESSION.json` | Use the exact printed session path or full date-prefixed folder name, rather than only `mypaper`. |
+| Session already exists | Add `--tag second-pass` to create a separate session, or use `round` to revise the existing one. |
+| Prompts exist but no reviews | Run the printed reviewer jobs in your agent environment; `new` only prepares them. |
+| Validation reports `FAIL` | Inspect the reported errors and rerun the affected job with a fresh agent. |
+| Poor or missing extracted text | Inspect `snapshot/` and use a PDF with a usable text layer before starting the review. |
+| Small or inconsistent score gains | Use `retest` and inspect the underlying criticisms before treating a change as improvement. |
 
 ## Development and sharing
 
