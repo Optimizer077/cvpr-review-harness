@@ -8,7 +8,7 @@
   <g font-family="Arial, Helvetica, sans-serif">
     <!-- header and legend -->
     <text x="24" y="50" font-size="24" font-weight="700" fill="#f5f8ff">One round of review and revision</text>
-    <text x="24" y="80" font-size="17" fill="#aabbd3">Repeat until the open points are resolved.</text>
+    <text x="24" y="80" font-size="17" fill="#aabbd3">Another round needs a revised draft or new answers.</text>
     <rect x="24" y="100" width="16" height="16" rx="4" fill="#102638" stroke="#62e5d0"/>
     <text x="50" y="114" font-size="16" fill="#aabbd3">Python CLI: no model calls</text>
     <rect x="24" y="126" width="16" height="16" rx="4" fill="#231f3c" stroke="#a78bfa"/>
@@ -51,7 +51,7 @@
       <text x="78" y="574" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="14" fill="#c5b4fa">R11</text>
       <text x="118" y="574">Hostile Reviewer 2</text>
     </g>
-    <text x="64" y="614" font-size="16" fill="#d3c6ff">+ any of 16 personas · one fresh agent per job</text>
+    <text x="64" y="614" font-size="16" fill="#d3c6ff">+ more personas per venue · a fresh agent per job</text>
 
     <!-- 3 rank: CLI -->
     <rect x="44" y="672" width="412" height="200" rx="16" fill="#102638" stroke="#2d786f"/>

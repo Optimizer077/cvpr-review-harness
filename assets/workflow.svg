@@ -8,7 +8,7 @@
   <g font-family="Arial, Helvetica, sans-serif">
     <!-- header and legend -->
     <text x="36" y="52" font-size="24" font-weight="700" fill="#f5f8ff">One round of review and revision</text>
-    <text x="36" y="79" font-size="15" fill="#aabbd3">Repeat until the open points are resolved. There is no fixed round cap.</text>
+    <text x="36" y="79" font-size="15" fill="#aabbd3">Start another round only with a revised draft or new answers.</text>
     <rect x="700" y="40" width="14" height="14" rx="4" fill="#102638" stroke="#62e5d0"/>
     <text x="722" y="52" font-size="14" fill="#aabbd3">Python CLI: no model calls</text>
     <rect x="700" y="64" width="14" height="14" rx="4" fill="#231f3c" stroke="#a78bfa"/>
@@ -49,7 +49,7 @@
       <text x="302" y="268" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="12" fill="#c5b4fa">R11</text>
       <text x="336" y="268">Hostile Reviewer 2</text>
     </g>
-    <text x="290" y="302" font-size="14" fill="#aabbd3">+ any of 16 personas</text>
+    <text x="290" y="302" font-size="14" fill="#aabbd3">+ more personas per venue</text>
     <rect x="290" y="318" width="182" height="32" rx="8" fill="#17142e"/>
     <text x="381" y="339" text-anchor="middle" font-size="14" fill="#d3c6ff">one fresh agent per job</text>
 
