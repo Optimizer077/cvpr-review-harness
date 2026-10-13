@@ -2,7 +2,7 @@
 """Paper review harness CLI.
 
     hx.py personas                                   list reviewer personas
-    hx.py new --paper main.pdf [--supp s.pdf] [--tex DIR] --name mypaper [--panel realistic] ...
+    hx.py new --paper main.pdf [--supp s.pdf] [--tex DIR] --name mypaper [--panel realistic] [--figures] ...
     hx.py round SESSION --paper main.pdf [...]       next round on a revised draft (same panel)
     hx.py retest SESSION [--of N]                    same draft again, fresh reviewers (noise floor)
     hx.py stage SESSION {fixcheck,pairwise,writer} [--round N]   writer loop helpers
@@ -25,7 +25,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hxlib.aggregate import aggregate_round, write_progress, write_round_report  # noqa: E402
 from hxlib.common import (PROTOCOL_DIR, SESSIONS_DIR, TEMPLATE_DIR, list_rounds, load_json,  # noqa: E402
                           load_scales, now_iso, resolve_session, review_dir, round_dir, save_json, today)
-from hxlib.panel import build_jobs, draw_panel, load_personas, load_section_map
+from hxlib.panel import build_jobs, draw_panel, is_reviewer, load_personas, load_section_map  # noqa: E402
+from hxlib.figure_job import figure_personas, inventory_ids, is_figure_job, load_inventory  # noqa: E402
+from hxlib.figure_prompts import figure_satisfy_prompt  # noqa: E402
 from hxlib.venues import profile_for, freeze  # noqa: E402
 from hxlib.paper import snapshot_paper  # noqa: E402
 from hxlib.prompts import write_initial_prompts  # noqa: E402
@@ -54,7 +56,7 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
     present = [s["key"] for s in sections]
     jobs = build_jobs(session["mode"], session["panel_ids"], present, personas, session.get("only_sections"),
                       session.get("heldout_ids"), session.get("instruments", {}).get("section_map"),
-                      session.get("reading_mode", "persona"))
+                      session.get("reading_mode", "persona"), figures=session.get("figures", False))
     rnd = {"round": number, "created": now_iso(), "retest_of": retest_of, "paper": paper,
            "panel": session["panel_ids"], "mode": session["mode"], "scale": session["scale"], "jobs": jobs}
     if "review_config" in session:
@@ -71,7 +73,8 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
     for job in (j for j in jobs if j.get("stage") == "satisfy"):
         sat_dir.mkdir(parents=True, exist_ok=True)
         path = sat_dir / f"{job['job_id']}.md"
-        path.write_text(dialogue.satisfy_prompt(session, rnd, job, personas, rpath, session_path), encoding="utf-8")
+        build = figure_satisfy_prompt if is_figure_job(job) else dialogue.satisfy_prompt
+        path.write_text(build(session, rnd, job, personas, rpath, session_path), encoding="utf-8")
         paths.append(path)
     rnd["prompt_sha256"] = {p.stem: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     save_json(rpath / "ROUND.json", rnd)
@@ -95,10 +98,16 @@ def cmd_new(args: argparse.Namespace) -> None:
         raise ValueError(f"{profile['label']} requires scale {profile['scale']}")
     load_scales(scale)
     personas = load_personas(venue)
+    if args.figures:  # the figure reader is a harness instrument usable with every venue profile
+        personas.update(figure_personas(load_personas()))
     panel_ids = [x.strip() for x in args.reviewers.split(",")] if args.reviewers else draw_panel(panel_name, args.seed, personas, venue)
-    unknown = [r for r in panel_ids + (args.heldout.split(",") if args.heldout else []) if r not in personas]
+    named = panel_ids + (args.heldout.split(",") if args.heldout else [])
+    unknown = [r for r in named if r not in personas]
     if unknown:
         raise KeyError(f"Unknown persona ids: {unknown}")
+    instruments = [r for r in named if not is_reviewer(personas[r])]
+    if instruments:
+        raise ValueError(f"{instruments} are not reviewer personas; use --figures for the figure job")
     name = f"{today()}_{args.name}" + (f"_{args.tag}" if args.tag else "")
     spath = SESSIONS_DIR / name
     if spath.exists():
@@ -109,6 +118,7 @@ def cmd_new(args: argparse.Namespace) -> None:
                "panel_name": panel_name if not args.reviewers else "custom",
                "panel_ids": panel_ids, "seed": args.seed, "mode": args.mode,
                "heldout_ids": args.heldout.split(",") if args.heldout else [], "loop": args.loop,
+               "figures": bool(args.figures),
                "only_sections": args.sections.split(",") if args.sections else None,
                "tex_dir": str(Path(args.tex).resolve()) if args.tex else None, "rounds": []}
     freeze(session, personas, load_section_map(venue))
@@ -250,16 +260,26 @@ def cmd_status(args: argparse.Namespace) -> None:
         else:
             have = [f for f in ("review.md", "review.json", "debrief.md") if (review_dir(rpath, job) / f).exists()]
         print(f"  {job['job_id']:<8} {job.get('group', 'feedback'):<8} {job.get('stage', 'initial'):<7} view={job['view']:<5} overall={job['overall']!s:<5} "
-              f"sections={len(job['sections'])} files={have}")
+              f"sections={len(job['sections'])} files={have}" + (_figure_status(rpath) if is_figure_job(job) else ""))
     pending = sum(bool(errors) for errors in checks.values())
     print(f"{len(checks) - pending} complete; {pending} pending. Valid jobs do not need to run again.")
     _print_launch(rpath, "initial", checks)
     _print_launch(rpath, "satisfy", checks)
 
 
+def _figure_status(rpath: Path) -> str:
+    """Suffix for the FIG job in `status`: how many figures/tables the snapshot inventory lists."""
+    items = load_inventory(rpath / "snapshot")
+    if items is None:
+        return " kind=figures inventory=missing"
+    main, every = inventory_ids(items)
+    return f" kind=figures figures={len(main)} main/{len(every)} total"
+
+
 def cmd_personas(args: argparse.Namespace) -> None:
     for pid, p in load_personas(profile_for(args.venue)["venue"] if args.venue else None).items():
-        print(f"{pid:<4} {p.get('name', ''):<34} pool={','.join(p.get('pool', [])):<16} "
+        print(f"{pid:<4} {p.get('name', ''):<34} role={p.get('role', 'reviewer'):<15} "
+              f"pool={','.join(p.get('pool', [])) or '-':<16} "
               f"view={p.get('reading_view', '-'):<5} w={p.get('draw_weight', '-')}")
 
 
@@ -290,6 +310,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--cutoff", default=None,
                    help="optional search date boundary; does not override the venue publication-status policy")
     p.add_argument("--scale", default=None, help="rating profile in 02_protocol/scales.json (default: selected venue profile)")
+    p.add_argument("--figures", action="store_true",
+                   help="add the opt-in figure review job FIG (persona F01) to every round of the session")
     p.set_defaults(fn=cmd_new)
     for name, fn in (("round", cmd_round),):
         q = sub.add_parser(name)

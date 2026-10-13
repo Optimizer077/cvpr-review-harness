@@ -15,6 +15,7 @@ from pathlib import Path
 from .common import PERSONA_DIR, PROTOCOL_DIR, TEMPLATE_DIR, list_rounds, load_json, load_scales, \
     review_dir, round_dir, save_json, scale_wording
 from .prompts import read_text, rubric_for
+from .figure_job import figure_summary, figure_table
 
 from .venues import instrument, scales_for, reviewer_card, common_rules, venue_block, careful
 
@@ -32,7 +33,8 @@ def _item(job: dict, w: dict, round_no: int, status: str) -> dict:
             "reviewer": job["reviewer"], "severity": w.get("severity"), "decisive": bool(w.get("decisive")),
             "category": w.get("category"), "location": w.get("location"), "text": w.get("text"),
             "suggested_fix": w.get("suggested_fix", ""), "would_change_mind": w.get("would_change_mind", ""),
-            "fixable_by": w.get("fixable_by"), "raised_in_round": round_no, "status": status}
+            "fixable_by": w.get("fixable_by"), "raised_in_round": round_no, "status": status,
+            **{k: w[k] for k in ("figure_id", "defect") if k in w}}  # figure job (FIG) points only
 
 
 def round_items(rnd: dict, round_path: Path) -> list[dict]:
@@ -89,6 +91,8 @@ def write_feedback(rnd: dict, round_path: Path, personas: dict[str, dict]) -> li
                   f"- **Their suggested fix:** {i['suggested_fix'] or '-'}",
                   f"- **What would satisfy them:** {i['would_change_mind'] or '-'}",
                   f"- **Fixable by (their guess):** {i['fixable_by']}"]
+        if i.get("figure_id"):
+            lines.append(f"- **Figure / defect:** {i['figure_id']} / {i.get('defect') or '-'}")
         if i.get("reviewer_reason"):
             lines += [f"- **Their last verdict ({i['status']}):** {i['reviewer_reason']}",
                       f"- **Still asking for:** {i.get('remaining_ask') or '-'}"]
@@ -97,6 +101,9 @@ def write_feedback(rnd: dict, round_path: Path, personas: dict[str, dict]) -> li
               "|---|---|---|---|---|---|"]
     lines += [f"| {s} | {sec} | {jid} | {iss} | {loc} | {fix} |" for s, sec, jid, iss, loc, fix in
               _section_rows(rnd, round_path)]
+    figures = figure_summary(rnd, round_path)
+    if figures:
+        lines += ["", "## Figure scores (FIG job, lowest first)", "", *figure_table(figures, detailed=True)]
     lines += ["", "Detailed causes and smallest fixes per reviewer: `reviews/<id>/debrief.md` (round of the "
               "first review)."]
     (round_path / "FEEDBACK.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

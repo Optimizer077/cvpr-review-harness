@@ -167,7 +167,9 @@ def _output_block(out_dir: Path, job: dict, session: dict, rnd: dict) -> str:
 
 
 def write_initial_prompts(session: dict, rnd: dict, personas: dict[str, dict], round_path: Path) -> list[Path]:
-    """Write one prompt file per job; return their paths."""
+    """Write one prompt file per job; return their paths. The figure job (kind 'figures') gets its own prompt."""
+    from .figure_prompts import figure_initial_prompt  # lazy: figure_prompts imports this module
+
     out: list[Path] = []
     pdir = round_path / "prompts" / "initial"
     pdir.mkdir(parents=True, exist_ok=True)
@@ -175,7 +177,8 @@ def write_initial_prompts(session: dict, rnd: dict, personas: dict[str, dict], r
         if job.get("stage", "initial") != "initial":
             continue
         path = pdir / f"{job['job_id']}.md"
-        path.write_text(initial_prompt(session, rnd, job, personas, round_path), encoding="utf-8")
+        build = figure_initial_prompt if job.get("kind") == "figures" else initial_prompt
+        path.write_text(build(session, rnd, job, personas, round_path), encoding="utf-8")
         review_dir(round_path, job).mkdir(parents=True, exist_ok=True)
         out.append(path)
     return out

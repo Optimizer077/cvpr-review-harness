@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 
 from .common import PROTOCOL_DIR, load_json, load_scales, review_dir
+from .figure_job import caption_ids, figure_criteria, inventory_ids, is_figure_job, load_inventory
 
 from .venues import scales_for, check_extensions
 
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 SEVERITIES = ("major", "moderate", "minor")
 FIXABLE = ("writing", "existing_evidence", "new_experiment", "not_fixable")
 _WID = re.compile(r"^W\d+$")
+_FIGURE_ID = re.compile(r"^(supp_)?(fig|tab)_[A-Za-z0-9_]+$")
+_FIGURE_TEXT_FIELDS = ("perceived_message", "intended_message", "visible_evidence", "main_issue",
+                       "location", "one_point_fix")
 
 
 def _in_range(value: object, scale: dict) -> bool:
@@ -54,6 +58,10 @@ def check_review(job: dict, rnd: dict, round_path: Path) -> list[str]:
     errs += _check_overall(job, data, scales)
     errs += _check_sections(job, data, scales, criteria)
     errs += _check_weaknesses(data, categories)
+    if is_figure_job(job):
+        if data.get("first_impression") is not None:
+            errs.append("figure job must have first_impression = null")
+        errs += _check_figure_job(data.get("figure_scores"), data["weaknesses"], rnd, round_path, scales)
     md = (out_dir / "review.md").read_text(encoding="utf-8").lower()
     for heading in scales["review_md_headings"] if job["overall"] else ("strengths", "weaknesses"):
         if heading.lower() not in md:
@@ -122,6 +130,63 @@ def _check_weaknesses(data: dict, categories: set[str]) -> list[str]:
     return errs
 
 
+def _check_figure_job(scores: object, weaknesses: list, rnd: dict, round_path: Path,
+                      scales: dict) -> list[str]:
+    """Figure job: figure_scores for every main-paper id of the snapshot, defect-tagged weaknesses."""
+    if not isinstance(scores, dict):
+        return ["figure_scores must be an object keyed by figure id"]
+    fc = figure_criteria(rnd)
+    items = load_inventory(round_path / "snapshot")
+    errs: list[str] = []
+    if items is None:  # no inventory: require the captioned ids, accept other well-formed ids
+        main, known = caption_ids(round_path / "snapshot"), set(scores)
+        errs += [f"figure_scores key {k!r} is not a figure id (fig_<n> / tab_<n>)"
+                 for k in scores if not _FIGURE_ID.match(str(k))]
+    else:
+        main, every = inventory_ids(items)
+        known = set(every)
+        unknown = sorted(set(scores) - known)
+        if unknown:
+            errs.append(f"figure_scores has ids not in figures.json {unknown}")
+    missing = [i for i in main if i not in scores]
+    if missing:
+        errs.append(f"figure_scores lacks main-paper ids {missing}")
+    for fid, entry in scores.items():
+        errs += _check_figure_entry(str(fid), entry, fc, scales)
+    for w in weaknesses:
+        wid = w.get("id", "?")
+        if w.get("figure_id") != "global" and w.get("figure_id") not in known:
+            errs.append(f"{wid}.figure_id {w.get('figure_id')!r} is not a known figure id or 'global'")
+        if w.get("defect") not in fc["defects"]:
+            errs.append(f"{wid}.defect {w.get('defect')!r} not in the defect list")
+    return errs
+
+
+def _check_figure_entry(fid: str, entry: object, fc: dict, scales: dict) -> list[str]:
+    """One figure_scores entry: role, 1-10 score, exact 1-5 criteria (null only if nullable), texts."""
+    if not isinstance(entry, dict):
+        return [f"figure {fid} must be an object"]
+    errs = []
+    if entry.get("role") not in fc["roles"]:
+        errs.append(f"figure {fid}.role {entry.get('role')!r} not in {fc['roles']}")
+    if not _in_range(entry.get("score"), scales["section"]):
+        errs.append(f"figure {fid}.score {entry.get('score')!r} out of range")
+    crit = entry.get("criteria")
+    if not isinstance(crit, dict) or set(crit) != set(fc["criteria"]):
+        errs.append(f"figure {fid}.criteria keys {sorted(crit) if isinstance(crit, dict) else crit!r} "
+                    f"!= {fc['criteria']}")
+    else:
+        for name, val in crit.items():
+            if val is None and name in fc["nullable"]:
+                continue
+            if not _in_range(val, scales["criterion"]):
+                errs.append(f"figure {fid}.criteria.{name} {val!r} out of range")
+    for field in _FIGURE_TEXT_FIELDS:
+        if not isinstance(entry.get(field), str) or not entry[field].strip():
+            errs.append(f"figure {fid}.{field} is empty")
+    return errs
+
+
 def check_satisfaction(job: dict, rnd: dict, round_path: Path) -> list[str]:
     """Validate a reviewer's verdict on the authors' answers (stage 'satisfy')."""
     scales = scales_for(rnd)
@@ -160,6 +225,8 @@ def check_satisfaction(job: dict, rnd: dict, round_path: Path) -> list[str]:
                                  "first_impression": {"rating": (data.get("overall") or {}).get("rating")}}, scales)
     errs += _check_sections(job, {"section_scores": data.get("section_scores", {})}, scales, criteria)
     errs += check_extensions(job, rnd, data)
+    if is_figure_job(job):
+        errs += _check_figure_job(data.get("figure_scores"), new, rnd, round_path, scales)
     return errs
 
 

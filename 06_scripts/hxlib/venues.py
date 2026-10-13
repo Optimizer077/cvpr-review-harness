@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .common import HARNESS_ROOT, PROTOCOL_DIR, load_json, load_scales
+from .figure_job import FALLBACK_TEXTS
 
 
 def profile_for(name: str) -> dict:
@@ -16,16 +17,22 @@ def profile_for(name: str) -> dict:
 
 
 def freeze(session: dict, personas: dict, section_map: dict) -> None:
+    """Embed every rule, card and template text plus scales, criteria (section and figure) and
+    taxonomy in the session, so later rounds use the instruments the session started with.
+    Figure-job protocol files not yet present are frozen as their built-in fallback text."""
     texts = {}
     for folder in ("02_protocol", "03_personas", "05_templates"):
         for path in (HARNESS_ROOT / folder).glob("*.md"):
             texts[path.relative_to(HARNESS_ROOT).as_posix()] = path.read_text(encoding="utf-8")
+    for key, fallback in FALLBACK_TEXTS.items():
+        texts.setdefault(key, fallback)
     session["instruments"] = {"texts": texts, "personas": personas, "section_map": section_map}
     session["review_config"] = {
         "profile": session["venue_profile"], "reading": session["reading_mode"],
         "contribution_type": session["contribution_type"], "scales": load_scales(session["scale"]),
         "criteria": load_json(PROTOCOL_DIR / "section_criteria.json")["criteria"],
         "categories": load_json(PROTOCOL_DIR / "taxonomy.json")["categories"],
+        "figure_criteria": load_json(PROTOCOL_DIR / "figure_criteria.json"),
     }
 
 
