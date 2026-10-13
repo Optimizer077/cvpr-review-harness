@@ -23,10 +23,10 @@ logger = logging.getLogger("export")
 ROOT = Path(__file__).resolve().parents[1]
 NAME = "cvpr-review-harness"
 INCLUDE = ("README.md", "REVIEW_PAPER.md", "AGENTS.md", "CLAUDE.md", "01_sources", "02_protocol",
-           "03_personas", "04_panels", "05_templates", "06_scripts", "07_domain_packs")
+           "03_personas", "04_panels", "05_templates", "06_scripts", "07_domain_packs", "assets")
 SKIP_PARTS = {"raw_reviews", "__pycache__", "sessions", "00_plan", "release"}
 SKIP_NAME = re.compile(r"\.bak_|\.pyc$|^\.DS_Store$")
-TEXT_SUFFIXES = {".md", ".py", ".json", ".txt", ".csv", ".yaml", ".yml", ""}
+TEXT_SUFFIXES = {".md", ".py", ".json", ".txt", ".csv", ".yaml", ".yml", ".svg", ""}
 # Generic identifying strings (case-insensitive). Project-specific ones (names, paper titles,
 # folder names) live in a private, never-exported file: 00_plan/deid_patterns.txt, one regex per line.
 GENERIC_FORBIDDEN = (r"/home/[a-z0-9_.-]+", r"/Users/[A-Za-z0-9_.-]+", r"/NAS\d", r"[\w.+-]+@[\w-]+\.(com|org|edu|net)\b",

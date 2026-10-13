@@ -1,119 +1,232 @@
-# CVPR review harness
+<p align="center">
+  <img src="assets/banner.svg" alt="CVPR Review Harness — Review deeply. Revise deliberately." width="100%">
+</p>
 
-This harness writes realistic CVPR reviews of a paper draft. Sixteen reviewer personas are modelled
-on real reviewer types. They review the whole paper on the CVPR form and also score every section (title, abstract, introduction, related work, method, theory, experiments,
-ablations/analysis, figures/tables, limitations, conclusion, supplement, references). The harness
-then runs rounds against a writer agent: the writer revises, fresh reviewers review the revision,
-and the scores show whether the paper really got better.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.9 or newer">
+  <img src="https://img.shields.io/badge/Reviewers-16_personas-7C3AED?style=flat-square" alt="16 reviewer personas">
+  <img src="https://img.shields.io/badge/Panels-7_presets-0891B2?style=flat-square" alt="7 panel presets">
+  <img src="https://img.shields.io/badge/Workflow-Agent_assisted-059669?style=flat-square&amp;logo=github&amp;logoColor=white" alt="Agent-assisted workflow">
+</p>
 
-**To review a paper and get its scores, use `REVIEW_PAPER.md`** (single entry point; the score
-sheet is `sessions/<date>_<name>/round_01/SCORES.md`). Rules for agents are in `AGENTS.md`. The evidence behind the personas is in `01_sources/`.
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#choose-your-panel">Panels</a> ·
+  <a href="#the-revision-loop">Revision loop</a> ·
+  <a href="REVIEW_PAPER.md">Agent entry point</a> ·
+  <a href="01_sources/README.md">Research behind the harness</a>
+</p>
+
+Find the weak points in your paper before submission. **CVPR Review Harness** turns a draft into independent simulated reviews, section-level scores, and a concrete revision plan. Sixteen reviewer personas bring different expertise, priorities, and reading habits—from the subfield expert to the rushed senior reviewer.
+
+Every criticism can become an actionable thread: revise the draft, explain the change, and have a fresh instance of the reviewer check whether the evidence resolves the concern.
+
+> This is an independent research tool for simulated feedback. It is not affiliated with CVPR, and its scores are not acceptance predictions.
+
+## What you get
+
+| Capability | What it gives you |
+|---|---|
+| **Independent perspectives** | Separate reviewer jobs with their own persona, reading view, and output folder. |
+| **Scores with context** | Overall recommendations, first impressions, and scores for up to 13 paper sections. |
+| **Actionable feedback** | Located weaknesses, suggested fixes, and explicit criteria for satisfying each reviewer. |
+| **Iterative revision** | An answer sheet, point-by-point follow-up reviews, and a running history of open issues. |
+| **Progress checks** | Held-out reviewers, repeat reviews of an unchanged draft, fix checks, and blind comparisons. |
+| **Inspectable artifacts** | Frozen paper snapshots, Markdown reports, JSON records, and prompt hashes. |
+
+The Python CLI prepares review jobs and processes their outputs. **An agent environment runs the reviewers and writer**; the CLI does not call a model API or launch agents itself. Use an environment that can read local files and create independent agent instances, such as Claude Code or Codex with suitable agent support.
 
 ## Quick start
 
-```bash
-cd path/to/CVPR_review_harness
-H=06_scripts/hx.py
-P=path/to/your/paper   # folder with main.pdf, supplement.pdf and the LaTeX sources
+### 1. Set up the harness
 
-# 1. Freeze the draft and write one prompt per reviewer job (realistic 3-reviewer draw + section panel)
-python3 $H new --paper $P/main.pdf --supp $P/supplement.pdf --tex $P \
-    --name mypaper --panel realistic --mode both --domain inr_neural_fields
+You need **Python 3.9+**, **PyMuPDF**, a paper PDF, and your agent environment. A supplement and LaTeX sources are optional.
 
-# 2. In Claude Code: launch one fresh agent per printed prompt, all in parallel, each told:
-#    "Read <prompt path> and follow it exactly. Write only the files it names."
-
-# 3. Check and score
-python3 $H validate mypaper          # every job must be OK
-python3 $H aggregate mypaper         # writes round_01/SCORES.md and PROGRESS.md
+```sh
+git clone https://github.com/Optimizer077/cvpr-review-harness.git
+cd cvpr-review-harness
+python -m pip install pymupdf
+python 06_scripts/hx.py personas
 ```
 
-`mypaper` here stands for the session folder name that `new` prints, e.g.
-`sessions/<date>_mypaper`.
+These examples use `python`; use `python3` if that is your Python command. Clone access is required while the repository is private.
 
-## Modes and panels
+### 2. Create a review session
 
-`--mode full` gives whole-paper reviews on the CVPR form; each reviewer also scores the sections
-they actually read. `--mode sections` has the section panel (`04_panels/section_panel.json`) score
-each section, with no overall rating. `--mode both` (the default) runs both.
+```sh
+python 06_scripts/hx.py new --paper "path/to/main.pdf" --name mypaper --panel realistic --mode both
+```
 
-| panel | members | use it to |
+The command freezes the draft, selects a panel, and prints the session path and reviewer launch instructions. Add `--supp "path/to/supplement.pdf"` for supplementary material, `--tex "path/to/latex"` for the writer's source directory, or `--domain inr_neural_fields` for the included neural-fields domain pack.
+
+### 3. Run independent reviewers
+
+Give **each printed prompt to a fresh agent**, using exactly:
+
+```text
+Read <prompt path> and follow it exactly. Write only the files it names.
+```
+
+Keep reviewer contexts separate. For an agent-led walkthrough, start with [REVIEW_PAPER.md](REVIEW_PAPER.md).
+
+### 4. Validate and read the results
+
+Replace `<session>` below with the **exact session path printed by `new`**, or its full folder name under `sessions/`. The short `--name` alone is not the session identifier.
+
+```sh
+python 06_scripts/hx.py validate "<session>"
+python 06_scripts/hx.py aggregate "<session>"
+```
+
+Every job should validate before you aggregate. Open `round_01/SCORES.md` for the scorecard and `round_01/FEEDBACK.md` for the prioritized revision list. If a job fails validation, rerun that job with a fresh agent.
+
+## Choose your panel
+
+| Panel | Reviewers | Best used for |
 |---|---|---|
-| `realistic` | seeded draw: 1 expert slot, 1 expert/adjacent, 1 any | estimate a real assignment; change `--seed` for another draw |
-| `realistic4` | as above + 1 any | borderline papers often get a 4th reviewer |
-| `quick` | R09 busy senior, R03 expert, R08 adjacent | cheap first look |
-| `stress` | R02 skeptic, R03 expert, R05 methodologist, R11 hostile | find the decisive weaknesses |
-| `writing` | R07 clarity, R08 adjacent, R09 busy senior, R12 champion | prose and story passes |
-| `core` | R01 R02 R03 R05 R07 R09 R11 | balanced pre-submission check |
-| `gauntlet` | all 16 | final check before submission |
+| `realistic` | 3, drawn from expertise pools | A varied first assessment. |
+| `realistic4` | 4, drawn from expertise pools | One more perspective on the draft. |
+| `quick` | R09 · R03 · R08 | An initial pass across first impressions, expertise, and accessibility. |
+| `stress` | R02 · R03 · R05 · R11 | Novelty, technical rigor, and difficult objections. |
+| `writing` | R07 · R08 · R09 · R12 | Clarity, narrative, and how the contribution comes across. |
+| `core` | R01 · R02 · R03 · R05 · R07 · R09 · R11 | Broad coverage with seven perspectives. |
+| `gauntlet` | All 16 personas | A comprehensive pass before submission. |
 
-Use `--reviewers R03,R11` for a custom panel and `--sections abstract,introduction` to score only
-some sections.
+Use `--seed 1` to change a drawn panel or `--reviewers R03,R11` to select specific reviewers. The panel stays fixed across revisions within a session.
 
-## The reviewers
+| Mode | Behavior |
+|---|---|
+| `full` **(CLI default)** | Whole-paper reviews, with section scores for the sections each reviewer reads. |
+| `sections` | Dedicated section-review jobs, without overall recommendations. |
+| `both` | Whole-paper reviews plus the dedicated section panel; used in the quick start above. |
 
-| id | persona | what it stresses in your paper |
+For a focused pass, add `--sections abstract,introduction`. The section panel uses its own [section-to-persona mapping](04_panels/section_panel.json).
+
+<details>
+<summary><strong>Meet all 16 reviewer personas</strong></summary>
+
+| ID | Persona | Primary focus |
 |---|---|---|
-| R01 | Leaderboard reviewer | main table, recent baselines, benchmark size |
-| R02 | Novelty skeptic | "A + B" reading, closest prior work, what is truly new |
-| R03 | Subfield expert | protocol traps, implausible baseline numbers, precise terms |
-| R04 | Theory checker | equations, proofs, notation, theory that is decoration |
-| R05 | Rigor methodologist | tuning fairness, selection on test data, variance, ablation design |
-| R06 | Efficiency pragmatist | wall-clock, memory, equal-time comparisons, scaling |
-| R07 | Clarity editor | undefined terms, flow, figure legibility, line-level issues |
-| R08 | Adjacent-area generalist | why CVPR should care; intuition; visuals |
-| R09 | Busy senior | the first two pages, Fig. 1 and the main table only |
-| R10 | Junior checklist | code, limitations, recent arXiv baselines, completeness |
-| R11 | Hostile "Reviewer 2" | hedges, buried evidence, misreadable claims |
-| R12 | Champion | whether the paper gives a supporter quotable arguments |
-| R13 | Reproducibility auditor | missing settings, numbers that do not add up, code |
-| R14 | Competing lab | credit and comparison to the closest line of work |
-| R15 | LLM-assisted reviewer | generic criticisms that a quick reader will raise |
-| R16 | Misassigned outsider | whether the paper communicates beyond the subfield |
+| R01 | Leaderboard reviewer | Baselines, datasets, and the main results table. |
+| R02 | Novelty skeptic | Closest prior work and what is actually new. |
+| R03 | Subfield expert | Technical details and field-specific expectations. |
+| R04 | Theory checker | Assumptions, proofs, and the role of theory. |
+| R05 | Rigor methodologist | Fair comparisons, seeds, tuning, and ablations. |
+| R06 | Efficiency pragmatist | Runtime, memory, scaling, and practical cost. |
+| R07 | Clarity editor | Definitions, structure, figures, and readability. |
+| R08 | Adjacent generalist | Intuition and relevance beyond the immediate subfield. |
+| R09 | Busy senior | Opening pages, figures, and first impressions. |
+| R10 | Junior checklist | Completeness, implementation details, and expected comparisons. |
+| R11 | Hostile Reviewer 2 | Ambiguous claims and weaknesses a skeptical reader could press. |
+| R12 | Champion | Clear contributions and evidence a supporter can defend. |
+| R13 | Reproducibility auditor | Missing settings and results that can be checked. |
+| R14 | Competing lab | Attribution and comparison with the closest research line. |
+| R15 | LLM-assisted reviewer | Generic objections and surface-level reading patterns. |
+| R16 | Misassigned outsider | Whether the paper makes sense outside its niche. |
 
-Each review comes as three files: `review.md` (in character, as submitted), `review.json` (scores,
-a first-impression rating given after the skim and before the method, weaknesses with location,
-severity and how fixable they are), and `debrief.md`. The debrief is out
-of character: it quotes the sentence that caused each reaction and the smallest fix. It is the
-writer's main input.
+Persona definitions live in [03_personas/](03_personas/); their supporting research lives in [01_sources/](01_sources/).
 
-## Fight and satisfy the reviewers
+</details>
 
-1. **Review** (round 1): as in Quick start. `aggregate` also writes `round_01/FEEDBACK.md`, the
-   to-do list. It gives every point with its location, the complaint, the reviewer's suggested fix
-   and "what would satisfy them", decisive and major points first. Then come all section scores,
-   lowest first.
-2. **Answer**: `python3 $H stage mypaper writer` pre-fills `round_01/writer/RESPONSE.md` with one
-   block per point. You or the writer agent fill in `Decision`, `Changed (where in the new
-   draft)` and the answer, and revise the paper. Answers must point to the new draft; promises do
-   not count.
-3. **Reviewers judge**: `python3 $H round mypaper --paper <new main.pdf> --supp <new supp.pdf>`. Each
-   reviewer, a fresh instance of the same persona given its own thread, checks every answer
-   against the new draft. It marks each point satisfied, partly or not satisfied, may raise new
-   issues the revision introduced, and re-scores. Launch the printed `satisfy` prompts.
-4. **See where you stand**: `validate`, then `aggregate`. The `SCORES.md` headline shows
-   "Answers: N satisfied, M partly, K not satisfied" and the old -> new rating per reviewer. The
-   new `FEEDBACK.md` lists only what is still open, with the reviewer's reason.
-5. Repeat 2-4 until the reviewers are satisfied or the remaining points need new experiments.
+## The revision loop
 
-Add held-out reviewers at `new` time (e.g. `--heldout R02,R11`). They review every draft from
-scratch and never see the argument, so they show whether the paper improved or the reviewers were
-only talked round. Run them on a different model than the writer. `python3 $H retest mypaper`
-measures how much scores move by chance. `--loop fresh` replaces the dialogue with entirely new
-reviews each round; then also use `stage fixcheck` and `stage pairwise`.
+**Review → prioritize → revise → check the answers → review again.**
 
-The writer may not inflate claims, invent numbers or edit harness files
-(`02_protocol/writer_rules.md`). Put your project-specific limits (no new experiments of type X,
-names that must not appear, style rules) in the session's `AUTHOR_CONSTRAINTS.md`. Reviewers never
-see that file; the writer must respect it.
+1. **Prepare the writer.** After aggregation, generate the writer brief and answer sheet:
 
-## Limits
-- This is a simulation for improving drafts. It is not real CVPR feedback and not an acceptance
-  forecast.
-- All personas run on language models. They share some blind spots, e.g. a tendency toward
-  balanced, mid-scale scores. The personas, reading budgets and the hostile and LLM-assisted
-  reviewers push against this, but cannot remove it.
-- Scores move between runs. Measure the noise floor with `retest` before reading meaning into
-  small changes.
-- Personas, rubrics and panels are frozen within a session. Changing them starts a new session.
-- Reviews only: there is no rebuttal, discussion or area-chair stage.
+   ```sh
+   python 06_scripts/hx.py stage "<session>" writer
+   ```
+
+2. **Address every open point.** The writer fills in `writer/RESPONSE.md`, edits the paper sources, rebuilds the PDF, and records changes. Each answer should identify the evidence or exact change that resolves the concern.
+
+3. **Create the next round.** Supply the revised PDF and, if applicable, the revised supplement:
+
+   ```sh
+   python 06_scripts/hx.py round "<session>" --paper "path/to/revised-main.pdf"
+   ```
+
+4. **Run the printed prompts.** In the default `dialogue` loop, fresh instances of the same personas review their own feedback threads and mark each point satisfied, partly satisfied, or not satisfied. Held-out jobs receive fresh reviews of the draft.
+
+5. **Validate and aggregate again.** Read the updated `FEEDBACK.md` and session-wide `PROGRESS.md`, then start the next revision.
+
+**Continue for as many rounds as the task needs.** There is no fixed round cap or automatic stop after a score plateau. Keep working on actionable feedback within your requested scope; report blockers when further progress needs new evidence or input.
+
+Use the session's `AUTHOR_CONSTRAINTS.md` to record project requirements, permitted experiments, and writing preferences. The writer reads this file; reviewers do not.
+
+### Check whether a revision helped
+
+- **Held-out reviewers:** add `--heldout R02,R11` when creating a session. Their reviews stay separate from the writer's feedback. Use a different model from the writer for held-out reviews and blind judging.
+- **Repeatability:** `python 06_scripts/hx.py retest "<session>"` prepares fresh reviews of an unchanged draft. Run those prompts, validate, and aggregate to estimate score variability.
+- **Fresh reviews:** choose `--loop fresh` at session creation to use independent full reviews instead of feedback dialogue on later rounds.
+- **Fix checks and blind comparison:** after a revised round, use the commands below and run their printed prompts to check resolved weaknesses and compare changed sections.
+
+```sh
+python 06_scripts/hx.py stage "<session>" fixcheck
+python 06_scripts/hx.py stage "<session>" pairwise
+```
+
+Read scores alongside the underlying evidence. Language-model reviewers can share blind spots, and small score changes can be noise. [AGENTS.md](AGENTS.md) defines the independence and revision-acceptance rules.
+
+## Where to find everything
+
+| Artifact | Purpose |
+|---|---|
+| `round_NN/SCORES.md` · `SCORES.json` | Overall and section scores, reviewer comparisons, and decisive weaknesses. |
+| `round_NN/FEEDBACK.md` · `FEEDBACK.json` | Open issues, suggested fixes, and satisfaction criteria. |
+| `round_NN/reviews/<job>/` | Initial review, structured scores, and an explanatory debrief. |
+| `round_NN/satisfaction/<job>/` | Follow-up replies and point-by-point satisfaction judgments. |
+| `round_NN/writer/` | Answer sheet, change log, and experiment requests. |
+| `round_NN/snapshot/` | Frozen PDFs, extracted text, and section views for that round. |
+| `PROGRESS.md` | Session-wide score history and repeatability information. |
+
+<details>
+<summary><strong>Repository map and CLI reference</strong></summary>
+
+```text
+01_sources/       Research behind the review design
+02_protocol/      Review forms, scoring rubrics, and writer rules
+03_personas/      Sixteen persona cards and their registry
+04_panels/        Whole-paper and section panel definitions
+05_templates/     Output schemas and author constraints
+06_scripts/       Python CLI, harness library, and smoke test
+07_domain_packs/  Additional subfield knowledge
+assets/           README logo and banner
+sessions/         Local paper snapshots and review campaigns
+```
+
+| Command | Purpose |
+|---|---|
+| `personas` | List the available reviewer personas. |
+| `new` | Create a session and prepare the first review prompts. |
+| `status <session>` | Inspect jobs, output files, and launch instructions. |
+| `validate <session>` | Check review outputs against the expected schema. |
+| `aggregate <session>` | Generate scores, feedback, and progress reports. |
+| `stage <session> writer` | Prepare the writer brief and response scaffold. |
+| `round <session> --paper <pdf>` | Create the next round from a revised draft. |
+| `retest <session>` | Prepare fresh reviews of an unchanged snapshot. |
+| `stage <session> fixcheck` | Prepare a check of earlier weaknesses. |
+| `stage <session> pairwise` | Prepare a blind comparison of changed sections. |
+
+Use `python 06_scripts/hx.py <command> --help` for command-specific options. Set the venue, prior-work cutoff, and rating profile at session creation with `--venue`, `--cutoff`, and `--scale` as appropriate for your project.
+
+</details>
+
+## Development and sharing
+
+Run the mechanics check after changes to scripts, personas, panels, or protocol:
+
+```sh
+python 06_scripts/hx.py personas
+python 06_scripts/smoke_test.py
+```
+
+The smoke test uses a synthetic PDF and simulated review records; it makes no model calls.
+
+Sessions contain paper snapshots and reviews and are excluded from Git by default. To package the reusable harness without sessions, caches, or build notes:
+
+```sh
+python 06_scripts/export_public.py
+```
+
+The exporter writes a folder and ZIP under `release/` and scans exported text for identifying strings. Model execution and data handling depend on the agent environment you choose.

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">CVPR Review Harness logo</title>
+  <desc id="desc">A paper with review lines inside a cyan and violet viewfinder.</desc>
+  <rect width="96" height="96" rx="24" fill="#111b33"/>
+  <path d="M28 14H15v14M68 14h13v14M15 68v13h13M81 68v13H68" fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round"/>
+  <rect x="29" y="24" width="39" height="50" rx="6" fill="#eef2ff"/>
+  <path d="M38 36h21M38 44h16M38 52h12" stroke="#7c3aed" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="64" cy="65" r="14" fill="#5eead4" stroke="#111b33" stroke-width="3"/>
+  <path d="m58 65 4 4 8-9" fill="none" stroke="#111b33" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

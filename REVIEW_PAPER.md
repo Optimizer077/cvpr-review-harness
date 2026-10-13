@@ -66,4 +66,4 @@ Read the numbers as a simulation for improving the draft, not as a forecast. A s
    not satisfied and re-score.
 3. `validate` and `aggregate` again. The new `FEEDBACK.md` holds only what is still open. Repeat.
 
-Details and the anti-gaming rules: `README.md` ("Fight and satisfy the reviewers") and `AGENTS.md`.
+See [the revision loop](README.md#the-revision-loop) and [agent rules](AGENTS.md) for details.

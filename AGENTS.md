@@ -84,10 +84,12 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
    one place with regressions elsewhere is a trade-off, not progress; report it as such.
    Presentation-only rounds (CHANGES.md tags) need the pairwise and held-out confirmation; length
    growth is reported next to every gain.
-7. Stop when two consecutive rounds bring no held-out gain above the noise threshold, when the
-   remaining decisive weaknesses all need new experiments, or after 4 rounds, whichever comes
-   first. Then report to the user, who reads the final draft: simulated scores do not replace a
-   human read.
+7. There is no fixed round cap or automatic stop after a score plateau. Continue the requested
+   revision loop while there is actionable work within the user's scope. Report stalled scores
+   and experiment-dependent weaknesses, and continue addressing independent actionable points.
+   Finish when the requested work is complete or the user stops the loop; if further progress
+   requires missing evidence or input, report the blocker. Simulated scores do not replace a
+   human read of the final draft.
 8. Prompt hashes are stored in `ROUND.json`. Do not edit a prompt after it is launched.
 9. Check `injection_flags` in `SCORES.md` (hidden text or reviewer-directed sentences found in the
    PDF). Any flag must be removed from the paper before the round counts.
