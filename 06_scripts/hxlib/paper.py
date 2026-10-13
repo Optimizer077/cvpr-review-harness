@@ -1,4 +1,5 @@
-"""Paper snapshot: copy the PDF(s), extract line-anchored text, detect sections, build reading views.
+"""Paper snapshot: copy the PDF(s), extract line-anchored text, detect sections, build reading views,
+and render page images and figure crops with measurements (`figure_render`).
 
 Reviewers read what a real CVPR reviewer reads: the review-copy PDF. Text files carry the
 CVPR margin line numbers as `L###` anchors so reviews can cite locations the way real reviews do.
@@ -242,10 +243,30 @@ def snapshot_paper(pdf: Path, dest: Path, supp: Optional[Path] = None,
     save_json(dest / "sections.json", index)
     save_json(dest / "captions.json", captions)
     _write_views(dest, spans, main_txt, supp_txt, cap_text)
+    meta["figures"] = _snapshot_figures(dest, main_pages, supp_pages if supp is not None else None)
     if tex_dir is not None:
         meta["tex_files"] = _snapshot_tex(tex_dir, dest / "tex")
     meta["sections_found"] = [s["key"] for s in index]
     return meta
+
+
+def _snapshot_figures(dest: Path, main_pages: list[list[tuple[str, str]]],
+                      supp_pages: Optional[list[list[tuple[str, str]]]]) -> dict:
+    """Page images, figure crops and FIGURES.md (figure_render); returns the summary for ROUND.json.
+
+    Figure code never blocks a snapshot: on any error the snapshot keeps its text and reading views,
+    the inventory files are removed (prompts then fall back to PDF pages), and the summary is
+    {"error": message}.
+    """
+    try:
+        from .figure_render import snapshot_figures
+        return snapshot_figures(dest, dest / "main.pdf", main_pages,
+                                dest / "supplement.pdf" if supp_pages is not None else None, supp_pages)
+    except Exception as exc:  # noqa: BLE001 - any failure in figure code must leave the snapshot usable
+        logger.warning("figure snapshot failed; continuing without figures: %s", exc)
+        for name in ("FIGURES.md", "figures/figures.json"):
+            (dest / name).unlink(missing_ok=True)
+        return {"error": f"{type(exc).__name__}: {exc}"}
 
 
 def _write_views(dest: Path, spans: list[dict], main_txt: str, supp_txt: str, cap_text: str) -> None:

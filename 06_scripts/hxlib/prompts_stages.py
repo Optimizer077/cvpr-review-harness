@@ -1,7 +1,8 @@
 """Prompts for the writer loop after the independent reviews.
 
 fixcheck    - a neutral checker marks each previous-round weakness as resolved or not in the new draft
-pairwise    - a blind judge compares changed sections between two drafts (order randomized)
+pairwise    - a blind judge compares changed sections and changed figure crops between two drafts
+              (order randomized)
 writer      - the brief handed to the writer agent after a round
 """
 from __future__ import annotations
@@ -9,9 +10,11 @@ from __future__ import annotations
 import logging
 import random
 import re
+import shutil
 from pathlib import Path
 
 from .common import PROTOCOL_DIR, load_json, round_dir, save_json
+from .figure_render import load_inventory, measured_facts
 from .prompts import read_text
 from .venues import instrument
 
@@ -55,8 +58,35 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _figure_pairs(old_snap: Path, new_snap: Path, pdir: Path,
+                  rng: random.Random) -> tuple[dict[str, dict], list[str]]:
+    """Copy the crops of every figure whose crop changed to A_fig_<id>.png / B_fig_<id>.png.
+
+    A figure counts as changed when its id is in both inventories and the crop sha256 differs.
+    Returns the key entries ('figure:<id>') and one line of measured facts per pair.
+    """
+    old_items, new_items = load_inventory(old_snap) or {}, load_inventory(new_snap) or {}
+    key: dict[str, dict] = {}
+    facts: list[str] = []
+    for fid, new in new_items.items():
+        old = old_items.get(fid)
+        hashes = (old or {}).get("crop_sha256"), new.get("crop_sha256")
+        if None in hashes or hashes[0] == hashes[1]:
+            continue
+        new_is_a = rng.random() < 0.5
+        new_pair, old_pair = (new, new_snap / new["crop"]), (old, old_snap / old["crop"])
+        (a, a_png), (b, b_png) = (new_pair, old_pair) if new_is_a else (old_pair, new_pair)
+        pdir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(a_png, pdir / f"A_fig_{fid}.png")
+        shutil.copyfile(b_png, pdir / f"B_fig_{fid}.png")
+        key[f"figure:{fid}"] = {"A": "new" if new_is_a else "old", "B": "old" if new_is_a else "new"}
+        facts.append(f"- figure:{fid} ({new['label']}): A {measured_facts(a) or 'nothing measurable'}; "
+                     f"B {measured_facts(b) or 'nothing measurable'}.")
+    return key, facts
+
+
 def pairwise_prompt(session: dict, rnd: dict, round_path: Path, seed: int) -> str:
-    """Blind A/B comparison of each section that changed between the previous and this draft."""
+    """Blind A/B comparison of each section and figure that changed between the previous and this draft."""
     prev = round_dir(round_path.parent, rnd["round"] - 1)
     rng = random.Random(seed * 1000 + rnd["round"])
     pdir = round_path / "pairwise"
@@ -74,15 +104,26 @@ def pairwise_prompt(session: dict, rnd: dict, round_path: Path, seed: int) -> st
         (pdir / f"A_{sec_file.stem}.txt").write_text(a_text, encoding="utf-8")
         (pdir / f"B_{sec_file.stem}.txt").write_text(b_text, encoding="utf-8")
         key[sec_file.stem] = {"A": "new" if new_is_a else "old", "B": "old" if new_is_a else "new"}
+    sections = list(key)
+    fig_key, fig_facts = _figure_pairs(prev / "snapshot", round_path / "snapshot", pdir, rng)
+    key.update(fig_key)
     save_json(pdir / "_key" / "KEY.json", key)
     lines = [
         f"# Blind pairwise judgement - {session['venue']}",
         instrument(session, PROTOCOL_DIR / "pairwise_rules.md"),
-        "Sections to compare: " + (", ".join(key) or "none (no section changed)"),
+        "Sections to compare: " + (", ".join(sections) or "none (no section changed)"),
         f"Files: `{pdir}/A_<section>.txt` and `{pdir}/B_<section>.txt`. Do NOT open `{pdir / '_key'}`.",
+        "Figures to compare (the crop image changed): " + (", ".join(fig_key) or "none"),
+    ]
+    if fig_key:
+        lines.append(f"Figure files: `{pdir}/A_fig_<id>.png` and `{pdir}/B_fig_<id>.png` (figure with its "
+                     "caption, as printed). Open both images. Measured from the PDF (smallest vector text, "
+                     "lowest raster resolution):\n" + "\n".join(fig_facts))
+    lines += [
         f"Write `{pdir / 'pairwise.json'}` = [{{\"section\": str, \"preferred\": \"A|B|tie\", "
-        "\"margin\": 0-3, \"reason\": str, \"reviewer_types_that_care\": [str]}].",
-        "Reply with one line per section: preferred version and margin.",
+        "\"margin\": 0-3, \"reason\": str, \"reviewer_types_that_care\": [str]}]. For a figure, "
+        "`section` is its `figure:<id>` name.",
+        "Reply with one line per section or figure: preferred version and margin.",
     ]
     return "\n\n".join(lines) + "\n"
 
