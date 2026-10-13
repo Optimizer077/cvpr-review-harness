@@ -31,13 +31,13 @@
 <p align="center">
   <picture>
     <source media="(max-width: 640px)" srcset="assets/workflow-mobile.svg">
-    <img src="assets/workflow.svg" alt="Four-step loop: freeze the draft, run independent reviewer agents, validate and aggregate feedback, then revise. Each revised PDF starts a new round. CLI steps are cyan; reviewer and writer steps are violet." width="100%">
+    <img src="assets/workflow.svg" alt="One round of review and revision: (1) the Python CLI freezes the draft and writes one prompt per job; (2) each reviewer persona runs in a fresh agent; (3) the CLI validates and ranks the output into FEEDBACK.md and SCORES.md; (4) a writer agent or the author answers each point and rebuilds the PDF. In the next round each reviewer rechecks its own points: satisfied points close, partly and not satisfied points stay open, new issues are added." width="100%">
   </picture>
 </p>
 
-The **Python CLI** prepares snapshots and prompts, validates outputs, and builds reports. Your **agent environment** runs each reviewer in a separate context; a writer agent or the author revises the paper. The CLI does not launch agents or call a model API.
+The **Python CLI** (cyan) prepares snapshots and prompts, validates outputs, and builds reports. It does not launch agents or call a model API. Your **agent environment** (violet) runs each reviewer in a separate context; a writer agent or the author revises the paper.
 
-The figure shows the default `dialogue` loop. [Open the full-size figure](assets/workflow.svg) or its [vertical version](assets/workflow-mobile.svg).
+The figure shows the default `dialogue` loop. With `--loop fresh`, later rounds repeat full reviews from scratch instead of rechecking earlier points.
 
 ## Quick start
 
@@ -79,6 +79,15 @@ The environment sits beside the repository so it is not included in commits or e
 
 </details>
 
+> [!TIP]
+> **Let an agent run steps 2–4.** If your agent can read local files and start sub-agents, give it one line:
+>
+> ```text
+> Follow REVIEW_PAPER.md for PAPER=path/to/main.pdf NAME=mypaper
+> ```
+>
+> It creates the session, starts one fresh sub-agent per reviewer, validates, aggregates, and reports the scores. The steps below do the same by hand.
+
 ### 2. Create a review session
 
 ```sh
@@ -106,7 +115,7 @@ Give **each printed prompt to a fresh agent**, using exactly:
 Read <prompt path> and follow it exactly. Write only the files it names.
 ```
 
-Run the printed instructions in your agent environment, with separate contexts for each reviewer. Review files appear only after those agents finish. [REVIEW_PAPER.md](REVIEW_PAPER.md) gives the orchestrating agent the full procedure.
+Start them in parallel, each in its own context, and add nothing about the paper, your goals, or the other reviewers. Review files appear only after those agents finish. [REVIEW_PAPER.md](REVIEW_PAPER.md) gives the orchestrating agent the full procedure.
 
 ### 4. Validate and read the results
 
@@ -137,7 +146,7 @@ If a job fails validation, rerun that job with a fresh agent. Use `python 06_scr
 | `core` | R01 · R02 · R03 · R05 · R07 · R09 · R11 | Broad coverage with seven perspectives. |
 | `gauntlet` | All 16 personas | A comprehensive pass before submission. |
 
-**A practical starting point:** use `realistic` for a broad first review, `writing` to focus on presentation, or `stress` to probe difficult objections. Use `--mode full` when you want only whole-paper jobs; add `--mode both` when you also want dedicated section coverage.
+**A practical starting point:** use `realistic` for a broad first review, `writing` to focus on presentation, or `stress` to probe difficult objections.
 
 Use `--seed 1` to change a drawn panel or `--reviewers R03,R11` to select specific reviewers. The panel stays fixed across revisions within a session.
 
@@ -221,16 +230,20 @@ Read scores alongside the underlying evidence. Language-model reviewers can shar
 
 ### From criticism to a concrete next step
 
-The feedback format connects each objection to a location and a test for resolution. For example:
+Every point in `FEEDBACK.md` names a location, a fix, and a test for resolving it. After a revision, it also carries the reviewer's latest verdict. An invented example, in the exact format the harness writes after one revision:
 
-> **Illustrative feedback—not a result from an actual paper**
->
-> **Where:** Experiments, Table 2<br>
-> **Concern:** The runtime comparison omits hardware and batch size.<br>
-> **Suggested fix:** Add the measurement setup beside the table.<br>
-> **What would satisfy the reviewer:** Enough detail to determine whether the runtime measurements are comparable.
+```markdown
+### R06:W2 - major, efficiency - The Efficiency Pragmatist [partly]
+- **Where:** Sec. 5.3, Table 2
+- **Complaint:** The 3x speedup is reported without hardware or batch size, so it cannot be checked.
+- **Their suggested fix:** State the GPU, batch size, and resolution next to Table 2.
+- **What would satisfy them:** Enough setup detail to tell whether the runtimes are comparable.
+- **Fixable by (their guess):** writing
+- **Their last verdict (partly):** The GPU is now stated, but the baselines were timed at a different batch size.
+- **Still asking for:** Re-time the baselines at batch size 1, or explain why that is not possible.
+```
 
-The writer answers the point with a change or an evidence-backed explanation. A fresh instance of that persona then checks the revised paper and records whether the point is satisfied, partly satisfied, or still open.
+The writer answers each point in `RESPONSE.md` with a change or an evidence-backed explanation. In the next round, a fresh instance of the same persona rules it `satisfied` (closed), `partly`, or `not_satisfied` (both stay open).
 
 ### Understand the scores
 
@@ -270,7 +283,7 @@ The headline uses held-out reviewers when present; otherwise it uses feedback re
 05_templates/     Output schemas and author constraints
 06_scripts/       Python CLI, harness library, and smoke test
 07_domain_packs/  Additional subfield knowledge
-assets/           README logo, banner, and workflow figure
+assets/           README logo, banner, and workflow figures
 sessions/         Local paper snapshots and review campaigns
 ```
 

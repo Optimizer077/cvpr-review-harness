@@ -3,10 +3,10 @@
 This is the single entry point. Give it to an agent with the paper:
 
 > Follow <harness root>/REVIEW_PAPER.md for
-> PAPER=<path/main.pdf> SUPP=<path/supplement.pdf> NAME=<short name>
+> PAPER=<path/main.pdf> NAME=<short name> [SUPP=<path/supplement.pdf>]
 
 Optional settings (defaults in brackets): `PANEL` [realistic] (or quick, stress, writing, core,
-gauntlet, or `REVIEWERS=R03,R11`), `DOMAIN` [inr_neural_fields; omit for non-INR papers], `MODE`
+gauntlet, or `REVIEWERS=R03,R11`), `DOMAIN` [none; `inr_neural_fields` for neural-field papers], `MODE`
 [full; `sections` or `both` add the dedicated section panel], `SEED` [0], `SCALE` [cvpr26_5].
 
 ## Steps for the agent
@@ -14,8 +14,10 @@ gauntlet, or `REVIEWERS=R03,R11`), `DOMAIN` [inr_neural_fields; omit for non-INR
 ```bash
 cd <harness root>
 python3 06_scripts/hx.py new --paper "$PAPER" --supp "$SUPP" --name "$NAME" \
-    --panel realistic --mode full --domain inr_neural_fields
+    --panel realistic --mode full
 ```
+
+Omit `--supp` when there is no supplement. Add `--domain "$DOMAIN"` only when a domain is set.
 
 1. The command prints the session folder and one launch line per reviewer.
 2. Launch one NEW agent per launch line, all in one message (parallel). Each agent gets exactly:

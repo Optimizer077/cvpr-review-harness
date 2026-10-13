@@ -1,40 +1,118 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="1110" viewBox="0 0 480 1110" role="img" aria-labelledby="title desc">
-<title id="title">The review and revision loop, vertical layout</title>
-<desc id="desc">The CLI freezes the draft and prepares prompts. Fresh agents review it or check their own feedback points. The CLI validates and aggregates outputs. The writer answers open points and rebuilds the PDF. The revised PDF starts the next round. Default: dialogue loop; no fixed round cap.</desc>
-<rect x="1" y="1" width="478" height="1108" rx="20" fill="#0d172b" stroke="#2c3f5c" stroke-width="2"/>
-<g font-family="Arial, Helvetica, sans-serif">
-<text x="24" y="37" font-size="14" fill="#62e5d0" font-weight="700" letter-spacing="1.5">THE REVIEW &#8594; REVISION LOOP</text>
-<text x="24" y="75" font-size="30" fill="#f5f8ff" font-weight="700">Review. Revise. Recheck.</text>
-<text x="24" y="106" font-size="21" fill="#aabbd3" >A fresh context for every reviewer.</text>
-<rect x="24" y="130" width="432" height="180" rx="16" fill="#102638" stroke="#2d786f"/>
-<text x="44" y="160" font-size="15" fill="#62e5d0" font-weight="700" letter-spacing="1.2">01 / PYTHON CLI</text>
-<text x="44" y="197" font-size="28" fill="#f5f8ff" font-weight="700">Freeze &amp; prepare</text>
-<text x="44" y="231" font-size="22" fill="#d2deed" >Save a fixed copy of the draft.</text>
-<text x="44" y="260" font-size="22" fill="#d2deed" >Extract sections. Create prompts.</text>
-<text x="44" y="291" font-size="18" fill="#62e5d0" font-family="Consolas, monospace">hx.py new / hx.py round</text>
-<path d="M240 314v30m-7-8 7 8 7-8" fill="none" stroke="#93a8c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="24" y="350" width="432" height="180" rx="16" fill="#231f3c" stroke="#71639f"/>
-<text x="44" y="380" font-size="15" fill="#c5b4fa" font-weight="700" letter-spacing="1.2">02 / REVIEWER AGENTS</text>
-<text x="44" y="417" font-size="28" fill="#f5f8ff" font-weight="700">Review &amp; recheck</text>
-<text x="44" y="451" font-size="22" fill="#d2deed" >First round: review the draft.</text>
-<text x="44" y="480" font-size="22" fill="#d2deed" >Later: check your own points.</text>
-<text x="44" y="511" font-size="18" fill="#c5b4fa" >One fresh agent per job, every round</text>
-<path d="M240 534v30m-7-8 7 8 7-8" fill="none" stroke="#93a8c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="24" y="570" width="432" height="180" rx="16" fill="#102638" stroke="#2d786f"/>
-<text x="44" y="600" font-size="15" fill="#62e5d0" font-weight="700" letter-spacing="1.2">03 / PYTHON CLI</text>
-<text x="44" y="637" font-size="28" fill="#f5f8ff" font-weight="700">Validate &amp; prioritize</text>
-<text x="44" y="671" font-size="22" fill="#d2deed" >Check outputs. Aggregate scores.</text>
-<text x="44" y="700" font-size="22" fill="#d2deed" >Collect open points and fixes.</text>
-<text x="44" y="731" font-size="18" fill="#62e5d0" font-family="Consolas, monospace">SCORES.md + FEEDBACK.md</text>
-<path d="M240 754v30m-7-8 7 8 7-8" fill="none" stroke="#93a8c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="24" y="790" width="432" height="180" rx="16" fill="#231f3c" stroke="#71639f"/>
-<text x="44" y="820" font-size="15" fill="#c5b4fa" font-weight="700" letter-spacing="1.2">04 / WRITER AGENT OR AUTHOR</text>
-<text x="44" y="857" font-size="28" fill="#f5f8ff" font-weight="700">Answer &amp; revise</text>
-<text x="44" y="891" font-size="22" fill="#d2deed" >Address each open point.</text>
-<text x="44" y="920" font-size="22" fill="#d2deed" >Edit sources. Rebuild the PDF.</text>
-<text x="44" y="951" font-size="18" fill="#c5b4fa" font-family="Consolas, monospace">RESPONSE.md + revised paper</text>
-<path d="M43 1003H27v19h16m-6-25 6 6-6 6" fill="none" stroke="#62e5d0" stroke-width="2.5" stroke-linejoin="round"/>
-<text x="58" y="1017" font-size="21" fill="#f5f8ff" font-weight="700">Revised draft &#8594; step 1</text>
-<text x="24" y="1057" font-size="19" fill="#aabbd3" >Default: dialogue loop</text>
-<text x="24" y="1086" font-size="19" fill="#aabbd3" >No fixed round cap</text>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="1440" viewBox="0 0 480 1440" role="img" aria-labelledby="title desc">
+  <title id="title">One round of review and revision, vertical layout</title>
+  <desc id="desc">Four steps, repeated each round. 1, the Python CLI freezes the draft into a snapshot and writes one prompt per job. 2, reviewer personas such as the subfield expert, novelty skeptic and hostile Reviewer 2 each run in a fresh agent. 3, the CLI validates the outputs and ranks them into FEEDBACK.md and SCORES.md. 4, a writer agent or the author answers each open point in RESPONSE.md, logs edits in CHANGES.md and rebuilds the PDF. The revised PDF starts the next round, where each reviewer rechecks its own points: satisfied points close; partly and not satisfied points stay open; new issues are added. Held-out reviewers, retests, fix checks and blind pairwise comparison test whether a revision helped.</desc>
+  <defs>
+    <marker id="arrow-m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 9 5 1 9" fill="none" stroke="#93a8c6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect x="1" y="1" width="478" height="1438" rx="20" fill="#0d172b" stroke="#2c3f5c" stroke-width="2"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <!-- header and legend -->
+    <text x="24" y="50" font-size="24" font-weight="700" fill="#f5f8ff">One round of review and revision</text>
+    <text x="24" y="80" font-size="17" fill="#aabbd3">Repeat until the open points are resolved.</text>
+    <rect x="24" y="100" width="16" height="16" rx="4" fill="#102638" stroke="#62e5d0"/>
+    <text x="50" y="114" font-size="16" fill="#aabbd3">Python CLI: no model calls</text>
+    <rect x="24" y="126" width="16" height="16" rx="4" fill="#231f3c" stroke="#a78bfa"/>
+    <text x="50" y="140" font-size="16" fill="#aabbd3">Agents: your environment</text>
+
+    <!-- step connectors and the loop back to step 1 -->
+    <g fill="none" stroke="#93a8c6" stroke-width="2.5" marker-end="url(#arrow-m)">
+      <path d="M250 364V390"/>
+      <path d="M250 640V666"/>
+      <path d="M250 876V902"/>
+      <path d="M44 1008H28Q22 1008 22 1002V266Q22 260 28 260H40"/>
+    </g>
+
+    <!-- 1 freeze: CLI -->
+    <rect x="44" y="160" width="412" height="200" rx="16" fill="#102638" stroke="#2d786f"/>
+    <text x="64" y="190" font-size="14" font-weight="700" letter-spacing="1.5" fill="#62e5d0">1 · PYTHON CLI</text>
+    <text x="64" y="222" font-size="24" font-weight="700" fill="#f5f8ff">Freeze the draft</text>
+    <rect x="64" y="240" width="372" height="32" rx="8" fill="#0a1222"/>
+    <text x="78" y="261" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#7ef0df">snapshot/</text>
+    <text x="196" y="261" font-size="16" fill="#d2deed">frozen PDF + sections</text>
+    <rect x="64" y="278" width="372" height="32" rx="8" fill="#0a1222"/>
+    <text x="78" y="299" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#7ef0df">prompts/</text>
+    <text x="196" y="299" font-size="16" fill="#d2deed">one per reviewer job</text>
+
+    <rect x="64" y="318" width="372" height="30" rx="8" fill="#0a1222"/>
+    <text x="250" y="338" text-anchor="middle" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#7ef0df">hx.py new · round</text>
+
+    <!-- 2 review: agents -->
+    <rect x="44" y="396" width="412" height="240" rx="16" fill="#231f3c" stroke="#71639f"/>
+    <text x="64" y="426" font-size="14" font-weight="700" letter-spacing="1.5" fill="#c5b4fa">2 · REVIEWER AGENTS</text>
+    <text x="64" y="458" font-size="24" font-weight="700" fill="#f5f8ff">Review in parallel</text>
+    <g font-size="17" fill="#e6ebf5">
+      <rect x="64" y="476" width="372" height="32" rx="8" fill="#17142e" stroke="#71639f" stroke-opacity=".7"/>
+      <text x="78" y="498" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="14" fill="#c5b4fa">R03</text>
+      <text x="118" y="498">Subfield expert</text>
+      <rect x="64" y="514" width="372" height="32" rx="8" fill="#17142e" stroke="#71639f" stroke-opacity=".7"/>
+      <text x="78" y="536" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="14" fill="#c5b4fa">R02</text>
+      <text x="118" y="536">Novelty skeptic</text>
+      <rect x="64" y="552" width="372" height="32" rx="8" fill="#17142e" stroke="#71639f" stroke-opacity=".7"/>
+      <text x="78" y="574" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="14" fill="#c5b4fa">R11</text>
+      <text x="118" y="574">Hostile Reviewer 2</text>
+    </g>
+    <text x="64" y="614" font-size="16" fill="#d3c6ff">+ any of 16 personas · one fresh agent per job</text>
+
+    <!-- 3 rank: CLI -->
+    <rect x="44" y="672" width="412" height="200" rx="16" fill="#102638" stroke="#2d786f"/>
+    <text x="64" y="702" font-size="14" font-weight="700" letter-spacing="1.5" fill="#62e5d0">3 · PYTHON CLI</text>
+    <text x="64" y="734" font-size="24" font-weight="700" fill="#f5f8ff">Validate &amp; rank</text>
+    <rect x="64" y="752" width="372" height="32" rx="8" fill="#0a1222"/>
+    <text x="78" y="773" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#7ef0df">FEEDBACK.md</text>
+    <text x="196" y="773" font-size="16" fill="#d2deed">open points, worst first</text>
+    <rect x="64" y="790" width="372" height="32" rx="8" fill="#0a1222"/>
+    <text x="78" y="811" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#7ef0df">SCORES.md</text>
+    <text x="196" y="811" font-size="16" fill="#d2deed">overall + section scores</text>
+
+    <rect x="64" y="830" width="372" height="30" rx="8" fill="#0a1222"/>
+    <text x="250" y="850" text-anchor="middle" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#7ef0df">validate · aggregate</text>
+
+    <!-- 4 revise: writer -->
+    <rect x="44" y="908" width="412" height="200" rx="16" fill="#231f3c" stroke="#71639f"/>
+    <text x="64" y="938" font-size="14" font-weight="700" letter-spacing="1.5" fill="#c5b4fa">4 · WRITER OR AUTHOR</text>
+    <text x="64" y="970" font-size="24" font-weight="700" fill="#f5f8ff">Answer &amp; revise</text>
+    <rect x="64" y="988" width="372" height="32" rx="8" fill="#17142e"/>
+    <text x="78" y="1009" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#d3c6ff">RESPONSE.md</text>
+    <text x="196" y="1009" font-size="16" fill="#d2deed">one answer per point</text>
+    <rect x="64" y="1026" width="372" height="32" rx="8" fill="#17142e"/>
+    <text x="78" y="1047" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#d3c6ff">CHANGES.md</text>
+    <text x="196" y="1047" font-size="16" fill="#d2deed">edit log + rebuilt PDF</text>
+
+    <rect x="64" y="1066" width="372" height="30" rx="8" fill="#17142e"/>
+    <text x="250" y="1086" text-anchor="middle" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" font-size="15" fill="#d3c6ff">hx.py stage writer</text>
+
+    <!-- next round -->
+    <text x="44" y="1146" font-size="19" font-weight="700" fill="#f5f8ff">Revised PDF → next round</text>
+    <text x="44" y="1172" font-size="16" fill="#aabbd3">Each reviewer rechecks its own points:</text>
+    <g font-size="15" fill="#d2deed">
+      <rect x="44" y="1188" width="200" height="34" rx="17" fill="#0f2a26" stroke="#34d399" stroke-opacity=".6"/>
+      <circle cx="64" cy="1205" r="8" fill="#34d399"/>
+      <path d="m60 1205 3 3 5-6" fill="none" stroke="#0d172b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="80" y="1210">Satisfied: closed</text>
+      <rect x="256" y="1188" width="200" height="34" rx="17" fill="#2b2412" stroke="#fbbf24" stroke-opacity=".6"/>
+      <circle cx="276" cy="1205" r="7" fill="none" stroke="#fbbf24" stroke-width="1.6"/>
+      <path d="M276 1198a7 7 0 0 1 0 14z" fill="#fbbf24"/>
+      <text x="292" y="1210">Partly: stays open</text>
+      <rect x="44" y="1230" width="200" height="34" rx="17" fill="#2c1622" stroke="#fb7185" stroke-opacity=".6"/>
+      <circle cx="64" cy="1247" r="7" fill="none" stroke="#fb7185" stroke-width="1.6"/>
+      <text x="80" y="1252">Not satisfied: open</text>
+      <rect x="256" y="1230" width="200" height="34" rx="17" fill="#102638" stroke="#62e5d0" stroke-opacity=".6"/>
+      <path d="M276 1241v12M270 1247h12" stroke="#62e5d0" stroke-width="2" stroke-linecap="round"/>
+      <text x="292" y="1252">New issue: added</text>
+    </g>
+
+    <!-- progress checks -->
+    <path d="M24 1292H456" stroke="#2c3f5c"/>
+    <text x="24" y="1324" font-size="14" font-weight="700" letter-spacing="1.5" fill="#f5f8ff">DID THE REVISION HELP?</text>
+    <g font-size="15" fill="#d2deed" text-anchor="middle">
+      <rect x="24" y="1340" width="210" height="34" rx="17" fill="#132038" stroke="#2c3f5c"/>
+      <text x="129" y="1362">Held-out reviewers</text>
+      <rect x="246" y="1340" width="210" height="34" rx="17" fill="#132038" stroke="#2c3f5c"/>
+      <text x="351" y="1362">Fix check</text>
+      <rect x="24" y="1382" width="210" height="34" rx="17" fill="#132038" stroke="#2c3f5c"/>
+      <text x="129" y="1404">Retest unchanged draft</text>
+      <rect x="246" y="1382" width="210" height="34" rx="17" fill="#132038" stroke="#2c3f5c"/>
+      <text x="351" y="1404">Blind pairwise comparison</text>
+    </g>
+  </g>
+</svg>
