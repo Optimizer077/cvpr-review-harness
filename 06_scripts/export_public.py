@@ -60,25 +60,6 @@ SESSIONS_README = """# sessions/
 `hx.py new` creates one folder per review session here. Sessions contain frozen copies of your
 paper and the reviews of it, so they are git-ignored. Keep them local.
 """
-SOURCES_NOTE = """# 01_sources/
-
-Research behind the personas and protocol:
-
-- `multi_venue_review_design.md`: versioned ICLR/ICML/NeurIPS guidance, careful reading and evidence limitations.
-
-- `cvpr_official_process.md`: official CVPR review form, guidelines, policies and timelines
-  (primary sources quoted with URLs).
-- `real_review_patterns.md`: patterns measured in 184 public OpenReview reviews of computer-vision
-  papers (ICLR 2024-2026, NeurIPS 2024-2025): weakness frequencies, lengths, reviewer types,
-  rebuttal dynamics. Quotes are short excerpts with their forum ids.
-- `reviewer_behavior_literature.md`: studies of reviewer behaviour, LLM reviewers and
-  reward hacking, with design rules derived from them.
-
-The raw review downloads used for the counts are not redistributed. They come from public
-OpenReview data and its HuggingFace mirrors named in `real_review_patterns.md`.
-"""
-
-
 def _wanted(path: Path) -> bool:
     rel = path.relative_to(ROOT)
     return not (SKIP_PARTS & set(rel.parts) or SKIP_NAME.search(path.name))
@@ -102,7 +83,6 @@ def build(out_dir: Path) -> Path:
     (dest / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
     (dest / "sessions").mkdir(exist_ok=True)
     (dest / "sessions" / "README.md").write_text(SESSIONS_README, encoding="utf-8")
-    (dest / "01_sources" / "README.md").write_text(SOURCES_NOTE, encoding="utf-8")
     return dest
 
 
