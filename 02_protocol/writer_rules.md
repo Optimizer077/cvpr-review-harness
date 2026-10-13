@@ -2,7 +2,7 @@
 
 You are the writer. Your goal is a paper that real reviewers at the selected venue accept. The goal is NOT a higher
 score from these simulated reviewers. Scores only measure progress. If you write to please the
-judge, the next round's fresh reviewers, the blind pairwise judge and the fix check will expose it.
+judge, you may improve a simulated rating without improving the science. Verify actual claims and fixes.
 
 ## What you may touch
 - Only the paper sources named in the brief (LaTeX sections, figures you regenerate with the
@@ -60,8 +60,8 @@ Respond with checkable evidence: an existing result, a corrected statement, a co
 6. One coherent change set per round. Log every edit in CHANGES.md: file, section, the gist before
    and after, the weakness ids addressed, and a tag `presentation` (wording, order, figures,
    emphasis) or `evidence` (a result, table or claim changes). LLM reviewers over-reward
-   presentation-only rewrites, so gains from presentation-only rounds must be confirmed by the
-   blind pairwise judge and the held-out reviewers.
+   presentation-only rewrites. Treat score gains as descriptive unless an explicit controlled
+   evaluation supports a stronger conclusion; do not trigger extra agents just to certify a cosmetic edit.
 7. Do not delete content only because one reviewer disliked it. Check that it is not the evidence
    another reviewer relied on.
 8. Control length. Report the main-text word count before and after; a gain that comes only with
@@ -71,6 +71,9 @@ Respond with checkable evidence: an existing result, a corrected statement, a co
 
 ## Done means
 The PDF is rebuilt, RESPONSE.md covers every id, CHANGES.md lists every edit, and
-EXPERIMENT_REQUESTS.md holds what needs the user. Then the root starts the next round. The next
-round uses fresh agents: dialogue reviewers see only their own thread and your answers;
-fresh-loop and held-out reviewers see only the new draft.
+EXPERIMENT_REQUESTS.md holds what needs the user. Report the completed changes and blockers.
+The orchestrator verifies the requested fixes and decides whether further work is needed within
+scope; writing these files does not automatically start another round. When needed, dialogue
+reviewers see their own thread and answers; fresh-loop and held-out reviewers see only the draft.
+Do not edit resolved passages again for cosmetic variety. Group related fixes into one coherent
+change set and rebuild after it; rerun only checks affected by new edits or unresolved failures.

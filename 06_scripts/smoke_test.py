@@ -142,6 +142,10 @@ def check_dialogue(tmpd: Path, pdf1: Path, pdf2: Path) -> None:
     assert scores2["satisfaction"]["satisfied"] == 3 and scores2["satisfaction"]["new_issues"] == 3
     assert "Answers: 3 satisfied" in (r2 / "SCORES.md").read_text(encoding="utf-8")
     assert hx.main(["stage", str(session), "writer"]) == 0
+    sheet = r2 / "writer" / "RESPONSE.md"
+    sheet.write_text(sheet.read_text().replace("Decision:", "Decision: contest").replace(
+        "Answer to the reviewer (cite lines/tables/figures of the new draft):",
+        "Answer to the reviewer (cite lines/tables/figures of the new draft): See L012, which already resolves the new toy issue."))
     assert hx.main(["round", str(session), "--paper", str(pdf2)]) == 0
     r3 = round_dir(session, 3)
     assert load_json(r3 / "satisfaction" / "R03" / "OPEN_ITEMS.json")[0]["wid"] == "W99"
@@ -181,6 +185,7 @@ def main() -> int:
         assert hx.main(["stage", str(session), "writer"]) == 0
         assert hx.main(["retest", str(session)]) == 0
         write_reviews(round_dir(session, 2), 2)
+        assert hx.main(["aggregate", str(session)]) == 0
         assert hx.main(["round", str(session), "--paper", str(pdf2)]) == 0
         r3 = round_dir(session, 3)
         write_reviews(r3, 3)

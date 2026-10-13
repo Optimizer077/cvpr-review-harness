@@ -90,6 +90,10 @@ class VenueTests(unittest.TestCase):
                     self.assertTrue(all(not e for e in validate_round(rnd, r1).values()))
                     self.assertEqual(self.run_cli('aggregate', str(spath)), 0)
                     self.run_cli('stage', str(spath), 'writer')
+                    sheet = r1 / 'writer' / 'RESPONSE.md'
+                    sheet.write_text(sheet.read_text().replace('Decision:', 'Decision: contest').replace(
+                        'Answer to the reviewer (cite lines/tables/figures of the new draft):',
+                        'Answer to the reviewer (cite lines/tables/figures of the new draft): See existing Sec. 3 for the synthetic answer.'))
                     self.run_cli('round', str(spath), '--paper', str(self.pdf))
                     r2 = round_dir(spath, 2)
                     outputs(r2)

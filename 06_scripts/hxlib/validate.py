@@ -165,5 +165,12 @@ def check_satisfaction(job: dict, rnd: dict, round_path: Path) -> list[str]:
 
 def validate_round(rnd: dict, round_path: Path) -> dict[str, list[str]]:
     """Validate every job; return job_id -> problems."""
-    return {job["job_id"]: (check_satisfaction if job.get("stage") == "satisfy" else check_review)(
-        job, rnd, round_path) for job in rnd["jobs"]}
+    results = {}
+    for job in rnd["jobs"]:
+        check = check_satisfaction if job.get("stage") == "satisfy" else check_review
+        try:
+            results[job["job_id"]] = check(job, rnd, round_path)
+        except (TypeError, AttributeError, KeyError) as exc:
+            # Malformed model output must remain a pending job, not crash resume/status.
+            results[job["job_id"]] = [f"invalid output structure: {type(exc).__name__}: {exc}"]
+    return results

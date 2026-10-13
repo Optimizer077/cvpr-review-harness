@@ -32,6 +32,7 @@ from hxlib.prompts import write_initial_prompts  # noqa: E402
 from hxlib import dialogue  # noqa: E402
 from hxlib import prompts_stages as stages  # noqa: E402
 from hxlib.validate import validate_round  # noqa: E402
+from hxlib.efficiency import response_fingerprint, same_paper, changed_sections  # noqa: E402
 
 logger = logging.getLogger("hx")
 
@@ -58,6 +59,11 @@ def _make_round(session_path: Path, session: dict, number: int, pdf: Optional[Pa
            "panel": session["panel_ids"], "mode": session["mode"], "scale": session["scale"], "jobs": jobs}
     if "review_config" in session:
         rnd["review_config"] = session["review_config"]
+    if retest_of is None and number > 1:
+        previous = round_dir(session_path, dialogue.last_dialogue_round(session_path, number))
+        open_ids = {item["id"] for item in dialogue.round_items(load_json(previous / "ROUND.json"), previous)}
+        rnd["response_fingerprint"] = response_fingerprint(previous / "writer" / "RESPONSE.md", open_ids)
+        rnd["changes"] = changed_sections(previous / "snapshot", rpath / "snapshot")
     if retest_of is None and session.get("loop", "dialogue") == "dialogue" and number > 1:
         dialogue.prepare_satisfaction(session_path, rnd, rpath)
     paths = write_initial_prompts(session, rnd, personas, rpath)
@@ -120,6 +126,17 @@ def cmd_round(args: argparse.Namespace) -> None:
     spath = resolve_session(args.session)
     session = load_json(spath / "SESSION.json")
     number = (list_rounds(spath) or [0])[-1] + 1
+    previous_path = round_dir(spath, dialogue.last_dialogue_round(spath, number))
+    previous = load_json(previous_path / "ROUND.json")
+    paper_unchanged = same_paper(Path(args.paper), Path(args.supp) if args.supp else None, previous)
+    open_ids = {item["id"] for item in dialogue.round_items(previous, previous_path)}
+    answer_hash = response_fingerprint(previous_path / "writer" / "RESPONSE.md", open_ids)
+    new_answer = (session.get("loop", "dialogue") == "dialogue" and answer_hash is not None
+                  and answer_hash != previous.get("response_fingerprint"))
+    if paper_unchanged and not new_answer:
+        print("No new round: the PDFs and substantive author answers are unchanged. "
+              "Use status to resume pending jobs, or retest for an intentional repeat review.")
+        return
     tex = Path(args.tex) if args.tex else (Path(session["tex_dir"]) if session.get("tex_dir") else None)
     rpath = _make_round(spath, session, number, Path(args.paper), Path(args.supp) if args.supp else None, tex)
     print(f"round {number} -> {rpath}")
@@ -184,7 +201,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 def cmd_aggregate(args: argparse.Namespace) -> int:
     spath = resolve_session(args.session)
     session = load_json(spath / "SESSION.json")
-    numbers = [args.round] if args.round else list_rounds(spath)
+    numbers = list_rounds(spath) if args.all else [args.round or list_rounds(spath)[-1]]
     for n in numbers:
         rp = round_dir(spath, n)
         invalid = {jid: errors for jid, errors in validate_round(load_json(rp / "ROUND.json"), rp).items() if errors}
@@ -205,18 +222,26 @@ def cmd_aggregate(args: argparse.Namespace) -> int:
     return 0
 
 
-def _print_launch(rpath: Path, stage: str) -> None:
+def _print_launch(rpath: Path, stage: str, checks: Optional[dict] = None) -> None:
     pdir = rpath / "prompts" / stage
     if not pdir.exists():
         return
-    print(f"\nLaunch one fresh agent per prompt ({stage}); give each exactly this instruction:")
-    for p in sorted(pdir.glob("*.md")):
+    paths = sorted(pdir.glob("*.md"))
+    if stage in ("initial", "satisfy"):
+        if checks is None:
+            checks = validate_round(load_json(rpath / "ROUND.json"), rpath)
+        paths = [p for p in paths if checks.get(p.stem)]
+    if not paths:
+        return
+    print(f"\nLaunch one fresh agent per pending prompt ({stage}); give each exactly this instruction:")
+    for p in paths:
         print(f"  [{p.stem}] Read {p} and follow it exactly. Write only the files it names.")
 
 
 def cmd_status(args: argparse.Namespace) -> None:
     spath = resolve_session(args.session)
     number, rpath, rnd = _round_arg(spath, args.round)
+    checks = validate_round(rnd, rpath)
     print(f"{spath.name} round {number} (retest_of={rnd.get('retest_of')}), mode {rnd['mode']}")
     for job in rnd["jobs"]:
         if job.get("stage") == "satisfy":
@@ -226,8 +251,10 @@ def cmd_status(args: argparse.Namespace) -> None:
             have = [f for f in ("review.md", "review.json", "debrief.md") if (review_dir(rpath, job) / f).exists()]
         print(f"  {job['job_id']:<8} {job.get('group', 'feedback'):<8} {job.get('stage', 'initial'):<7} view={job['view']:<5} overall={job['overall']!s:<5} "
               f"sections={len(job['sections'])} files={have}")
-    _print_launch(rpath, "initial")
-    _print_launch(rpath, "satisfy")
+    pending = sum(bool(errors) for errors in checks.values())
+    print(f"{len(checks) - pending} complete; {pending} pending. Valid jobs do not need to run again.")
+    _print_launch(rpath, "initial", checks)
+    _print_launch(rpath, "satisfy", checks)
 
 
 def cmd_personas(args: argparse.Namespace) -> None:
@@ -283,7 +310,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     for name, fn in (("validate", cmd_validate), ("aggregate", cmd_aggregate), ("status", cmd_status)):
         q = sub.add_parser(name)
         q.add_argument("session")
-        q.add_argument("--round", type=int)
+        if name == "aggregate":
+            selection = q.add_mutually_exclusive_group()
+            selection.add_argument("--round", type=int)
+            selection.add_argument("--all", action="store_true", help="rebuild every round; default: latest only")
+        else:
+            q.add_argument("--round", type=int)
         q.set_defaults(fn=fn)
     args = ap.parse_args(argv)
     result = args.fn(args)

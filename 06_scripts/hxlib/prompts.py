@@ -146,16 +146,12 @@ def _output_block(out_dir: Path, job: dict, session: dict, rnd: dict) -> str:
         f"2. `{out_dir / 'review.json'}` - the same review, machine-readable, schema below. "
         f"`job_id`='{job['job_id']}', `reviewer_id`='{job['reviewer']}', `round`={rnd['round']}, "
         f"`stage`='initial', `paper_sha256`='{rnd['paper']['main_pdf_sha256']}'.",
-        f"3. `{out_dir / 'debrief.md'}` - OUT of character, for the authors' writer: for every "
-        "weakness and every section score below 8, quote the exact sentence, figure or table that "
-        "triggered your reaction, say why a reviewer like you reacts to it, and give the smallest "
-        "change (wording, order, a pointer to an existing result, a figure fix) that would have "
-        "prevented it, or say that no text change can fix it. Label each of your own comments that is "
-        "an unsupported heuristic under the selected venue rules (e.g. 'not novel' without a citation, 'needs more "
-        "experiments' with no specific experiment, 'not SOTA' as the only reason, a request for "
-        "contemporaneous work): `[lazy]`. List what you did not read and so could not credit, and "
-        "say what moved you between your first impression and your final rating. The debrief never "
-        "softens the in-character review.",
+        f"3. `{out_dir / 'debrief.md'}` - OUT of character: explain the smallest useful fixes and "
+        "any reviewer-specific reactions not already clear in the review. Reference weakness IDs "
+        "and exact evidence locations; do not repeat the full review or every section-score entry. "
+        "Group comments caused by the same issue. Identify fixes that need new evidence, unsupported "
+        "heuristics (`[lazy]`), and material reading gaps. Explain any first-impression change only "
+        "when that field is used. Be concise without omitting decisive scientific concerns.",
         "",
         f"Preliminary recommendation (overall rating) scale: {scale_wording(scales['overall'])}",
         f"Confidence scale: {scale_wording(scales['confidence'])}",

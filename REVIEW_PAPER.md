@@ -24,11 +24,14 @@ Default VENUE to cvpr when omitted. Pass the selected optional settings through 
    `Read <prompt path> and follow it exactly. Write only the files it names.`
    Do not add anything about the paper, the authors' goals or other reviewers.
 3. When all agents have finished: `python3 06_scripts/hx.py validate <session>`. Every job must
-   print OK. Re-launch a FAIL job with a fresh agent; never edit a review by hand.
+   print OK. `status` prints launch lines only for missing/invalid jobs. Re-launch only the failed
+   job with its concrete error; never rerun completed jobs or edit a review by hand. If the same
+   failure persists without a changed approach, report it instead of looping.
 4. For careful-mode reviews, inspect `evidence_audit`: do observations cite actual locations and support their conclusions? Report unchecked coverage, and re-launch a fresh reviewer to resolve consequential omissions when the material is accessible. Structural validation cannot certify scientific correctness. Never invent a finding or convert not_checked into a defect.
-5. `python3 06_scripts/hx.py aggregate <session>` computes the scores.
+5. `python3 06_scripts/hx.py aggregate <session>` validates and computes the latest round's scores. Use `--all` only to rebuild historical rounds.
 6. Report to the user: the headline line and the table from `round_01/SCORES.md`, the decisive
    weaknesses, and the path to the debriefs. Do not summarize the reviews more kindly than they are.
+   **For a review-only task, finish here.** Do not automatically revise, add panels or run retests.
 
 ## Where the scores are
 
@@ -59,7 +62,9 @@ Default VENUE to cvpr when omitted. Pass the selected optional settings through 
 Read the numbers as a simulation for improving the draft, not as a forecast. A second draw
 (`--seed 1`) or `hx.py retest` shows how much the scores move by chance.
 
-## Then: revise and recheck
+## When revision is requested
+
+Make the requested changes and verify them. Do not turn a single revision request into an open-ended score-optimization campaign.
 
 1. `python3 06_scripts/hx.py stage <session> writer` creates `round_01/writer/RESPONSE.md`, one
    block per point. Answer each point, either by fixing the paper or by arguing with a pointer to
@@ -67,7 +72,14 @@ Read the numbers as a simulation for improving the draft, not as a forecast. A s
 2. `python3 06_scripts/hx.py round <session> --paper <new main.pdf> --supp <new supp.pdf>`, then
    launch the printed `satisfy` prompts. The same reviewers rule each answer satisfied, partly or
    not satisfied and re-score.
-3. `validate` and `aggregate` again. The new `FEEDBACK.md` holds only what is still open. Repeat.
+3. `validate` and `aggregate` again. The new `FEEDBACK.md` holds only what is still open. Report
+   resolved issues and blockers. Continue only if the requested scope still has concrete useful
+   work; closed issues stay closed unless new evidence contradicts the fix.
+
+`round` creates no duplicate round for byte-identical PDFs and unchanged answers. A blank writer
+scaffold is not a new answer. Retests are explicit research runs, not the next automatic step.
+Follow-up prompts include changed-section navigation; use it to prioritize checks while inspecting
+relevant PDF figures and dependent claims.
 
 See [the revision loop](README.md#the-revision-loop) and [agent rules](AGENTS.md) for details.
 

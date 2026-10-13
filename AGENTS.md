@@ -44,8 +44,10 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
    freezes round 1 and writes prompts.
 2. Root launches one fresh agent per `prompts/initial/*.md`, all in parallel, with exactly:
    "Read <prompt> and follow it exactly. Write only the files it names."
-3. `hx.py validate <session>` must report every job OK. Re-launch any FAIL job with a fresh agent and
-   log it. Never hand-edit a review.
+3. `hx.py validate <session>` must report every job OK. Use `hx.py status <session>` to launch
+   only missing or invalid jobs; valid outputs are complete. Repair a failed job once with the
+   concrete validation error. If the same failure recurs without new evidence or a changed
+   approach, report the blocker instead of repeating identical launches. Never hand-edit a review.
 4. `hx.py aggregate <session>` writes `SCORES.md` and `PROGRESS.md`. If only reviews were asked
    for, stop here and report.
 5. `aggregate` also writes `FEEDBACK.md`: every open point with the reviewer's suggested fix and
@@ -56,12 +58,13 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
    dialogue`: each feedback reviewer gets `prompts/satisfy/<id>.md`, a fresh instance of the same
    persona with its own thread, and rules each point satisfied / partly / not_satisfied against
    the new draft, raises new issues and re-scores. Held-out reviewers get fresh `prompts/initial/`
-   prompts. Launch both, then validate, aggregate, and repeat from step 5 with the new
-   FEEDBACK.md (only unsatisfied and new points). With `--loop fresh`, every round is a full fresh
-   review; then also run `stage fixcheck` and `stage pairwise`.
-7. Measure the noise floor: `hx.py retest <session>` reviews an unchanged draft again with fresh
-   agents (once to start, three times before trusting small gains). `PROGRESS.md` turns the
-   test-retest SD into a threshold for each section mean.
+   prompts. Launch pending jobs, validate, aggregate and report whether the requested fixes are
+   resolved. Another round requires new evidence or a substantive new answer and useful work
+   within the requested scope. With `--loop fresh`, later rounds are independent reviews.
+7. Retests, extra panels, held-out benchmarking and blind comparisons are optional research
+   tools, not routine work added to a review request. Run them when the user requests that
+   evaluation or a specific unresolved concern warrants the check. Do not run repeated retests
+   merely because a noise estimate is absent. Without them, report score changes as descriptive.
 
 ## Independence and anti-gaming (non-negotiable)
 1. Every reviewer, checker and judge is a NEW agent instance. Never reuse one across rounds or
@@ -73,23 +76,20 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
    session, because scores are only comparable under fixed instruments.
 4. The writer never edits harness files. No number enters the paper without the paper project's
    own evidence check.
-5. Keep a held-out group for the loop (`hx.py new ... --heldout R02,R11`): their reviews go to
-   `round_NN/heldout/`, the writer never reads them, and their scores decide progress. Run the
-   held-out reviewers and the blind pairwise judge on a different model than the writer (e.g. Agent
-   `model: sonnet` when the writer is Opus, or Codex), because a judge from the writer's own model
-   prefers its own style.
-6. A revision is accepted only if the blind pairwise judge prefers it AND the held-out (or, without
-   held-out, feedback) section means rise above the noise threshold printed in `PROGRESS.md` AND
-   the fix check finds no new issues it introduced. Otherwise revert the losing sections. A gain in
-   one place with regressions elsewhere is a trade-off, not progress; report it as such.
-   Presentation-only rounds (CHANGES.md tags) need the pairwise and held-out confirmation; length
-   growth is reported next to every gain.
-7. There is no fixed round cap or automatic stop after a score plateau. Continue the requested
-   revision loop while there is actionable work within the user's scope. Report stalled scores
-   and experiment-dependent weaknesses, and continue addressing independent actionable points.
-   Finish when the requested work is complete or the user stops the loop; if further progress
-   requires missing evidence or input, report the blocker. Simulated scores do not replace a
-   human read of the final draft.
+5. If a held-out group is configured, its output is for the orchestrator's evaluation. Keep it
+   out of the writer's inputs. Prefer a different model for an explicitly requested blind or
+   held-out comparison. Do not add more agents solely to chase a higher simulated score.
+6. Verify a revision against the concrete issues and the paper's own evidence. Fix regressions
+   that matter; report unresolved scientific tradeoffs. Optional controlled comparisons may
+   measure score variability, but a routine edit does not require a statistically significant
+   score gain, repeated retests or a new panel before it can be delivered.
+7. Default to a bounded task, not an automatic campaign: a review request ends with the review;
+   a revision request ends when the requested changes are made and verified. There is no hard
+   round cap on an explicitly requested iterative campaign. Continue only with a concrete
+   actionable point and a changed draft, new evidence or substantive answer. Do not reopen
+   resolved points without contrary evidence, repeat unchanged work, or add cosmetic edits just
+   to keep the loop going. Report evidence/experiment blockers and finish the work that can be
+   completed in scope. Simulated scores do not replace a human read of the final draft.
 8. Prompt hashes are stored in `ROUND.json`. Do not edit a prompt after it is launched.
 9. Check `injection_flags` in `SCORES.md` (hidden text or reviewer-directed sentences found in the
    PDF). Any flag must be removed from the paper before the round counts.
@@ -104,6 +104,7 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
 - Python: `python3` >= 3.9 with PyMuPDF (`pip install pymupdf`); everything else is the standard library.
 - Smoke test: `python3 06_scripts/hx.py personas` and `python3 06_scripts/smoke_test.py` must pass
   after any change to scripts, personas, panels or protocol. Also run `python3 06_scripts/test_venues.py`.
+- Workflow regression checks: `python3 06_scripts/test_efficiency.py`.
 - Public copy: `python3 06_scripts/export_public.py` writes a de-identified `release/` folder and zip
   (no sessions, no build notes, no raw downloads) and fails if an identifying string remains.
 - Back up a protocol or persona file before editing it: `<file>.bak_before_<reason>_<YYYY-MM-DD>`.
@@ -121,3 +122,16 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, sections, views), `prompts/<s
   new session to adopt new rules. Record the repository commit in LOG.md for code reproducibility.
 - Keep the selected profile's rating provenance visible, especially the harness-defined ICLR
   scale. This is draft preparation, not the venue's official rebuttal procedure.
+
+## Efficient execution
+- Use the default full-paper panel for one initial pass; `both` and `gauntlet` are deliberate
+  expanded coverage options, not automatic follow-ups. Reviewers may run in parallel with
+  independent contexts, but do not create duplicate jobs.
+- `status` prints launch instructions only for missing/invalid jobs. Do not rerun valid outputs.
+- `round` skips byte-identical PDFs unless a filled, changed author answer warrants dialogue.
+  Blank answer templates do not count. Use `retest` only for an intentional repeat review.
+- `aggregate` validates and rebuilds the latest round by default; `--all` rebuilds history.
+  After repairing an older round, rebuild that round or use `--all` before interpreting progress.
+- Recheck changed evidence, affected claims and unresolved points first. Text-diff navigation
+  cannot prove figures unchanged; inspect relevant PDF evidence. Do not claim to reverify what
+  you only inherited from a previous pass.

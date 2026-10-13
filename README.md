@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.9 or newer">
   <img src="https://img.shields.io/badge/Reviewers-30_personas-7C3AED?style=flat-square" alt="30 reviewer personas">
   <img src="https://img.shields.io/badge/Venues-CVPR_%C2%B7_ICLR_%C2%B7_ICML_%C2%B7_NeurIPS-0891B2?style=flat-square" alt="CVPR, ICLR, ICML and NeurIPS">
-  <img src="https://img.shields.io/badge/Revision_rounds-No_fixed_cap-059669?style=flat-square" alt="No fixed revision-round cap">
+  <img src="https://img.shields.io/badge/Workflow-No_repeat_churn-059669?style=flat-square" alt="No repeat churn by default">
 </p>
 
 <p align="center">
@@ -26,6 +26,18 @@
 **Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
 > This is an independent research tool for simulated feedback. It is not affiliated with these conferences, and its scores are not acceptance predictions.
+
+## Finish the useful work, then stop
+
+A review request gets one careful panel review and its report. Revision is a separate requested task: make the changes, verify the evidence, and deliver. Additional panels, retests and score-optimization rounds are optional.
+
+- **Resume, do not restart:** `hx.py status <session>` prints launch lines only for missing or invalid jobs.
+- **Skip duplicates:** `round` creates no new round for byte-identical PDFs without changed, filled author answers. An empty response template does not count; use `retest` for an intentional repeat.
+- **Process the current work:** `aggregate` validates and rebuilds only the latest round. Use `--round N` for an older repair or `--all` to rebuild history. Progress uses the saved reports.
+- **Focus follow-ups:** changed-section hints direct attention to open points, changed evidence and dependent claims. Reviewers still inspect relevant figures; a text diff is not proof of unchanged visual evidence.
+- **Keep feedback concise:** group duplicate concerns, reference evidence once, and leave resolved points closed unless new contrary evidence appears.
+
+There is no hard cap on explicitly requested iterative work. Each additional pass needs a concrete purpose and new input; missing experiments are reported as blockers, not repeatedly requested through unchanged rounds. Existing sessions keep their frozen protocol text; start a new session to adopt the new concise review instructions.
 
 ## Choose your venue
 
@@ -176,7 +188,7 @@ python 06_scripts/hx.py aggregate "<session>"
 2. **`round_01/SCORES.md`** — overall recommendations and section-level weaknesses.
 3. **`round_01/reviews/<job>/debrief.md`** — what triggered a reviewer's reaction and the smallest useful change.
 
-If a job fails validation, rerun that job with a fresh agent. Use `python 06_scripts/hx.py status "<session>"` to inspect missing files and recover launch instructions.
+If a job fails validation, rerun that job with a fresh agent. Use `python 06_scripts/hx.py status "<session>"` to recover launch instructions for pending jobs only.
 
 ## Choose your panel
 
@@ -252,9 +264,9 @@ Persona definitions live in [03_personas/](03_personas/); their supporting resea
 
 4. **Run the printed prompts.** In the default `dialogue` loop, fresh instances of the same personas check their own feedback threads against the revised draft. A point can be `satisfied`, `partly`, or `not_satisfied`; new issues can be raised. Held-out reviewers assess the draft from scratch.
 
-5. **Validate and aggregate again.** Read the updated `FEEDBACK.md` and session-wide `PROGRESS.md`, then start the next revision.
+5. **Validate and aggregate again.** Read the updated `FEEDBACK.md` and session-wide `PROGRESS.md`, then report completed fixes and remaining blockers. Start another revision only when useful work remains within the requested scope.
 
-**Continue for as many rounds as the task needs.** There is no fixed round cap or automatic stop after a score plateau. Keep working on actionable feedback within your requested scope; report blockers when further progress needs new evidence or input.
+**Finish once the requested changes are verified.** Continue an explicitly requested iterative campaign only with a concrete unresolved issue and new evidence, a changed draft or a substantive answer. There is no hard round cap, but no automatic retesting, cosmetic churn or reopening of resolved points.
 
 Use the session's `AUTHOR_CONSTRAINTS.md` to record project requirements, permitted experiments, and writing preferences. The writer reads this file; reviewers do not.
 
@@ -338,7 +350,7 @@ sessions/         Local paper snapshots and review campaigns
 | `new` | Create a session and prepare the first review prompts. |
 | `status <session>` | Inspect jobs, output files, and launch instructions. |
 | `validate <session>` | Check review outputs against the expected schema. |
-| `aggregate <session>` | Generate scores, feedback, and progress reports. |
+| `aggregate <session> [--round N | --all]` | Generate scores, feedback, and progress reports. |
 | `stage <session> writer` | Prepare the writer brief and response scaffold. |
 | `round <session> --paper <pdf>` | Create the next round from a revised draft. |
 | `retest <session>` | Prepare fresh reviews of an unchanged snapshot. |
@@ -359,7 +371,7 @@ Use `python 06_scripts/hx.py <command> --help` for command-specific options. Sel
 | Prompts exist but no reviews | Run the printed reviewer jobs in your agent environment; `new` only prepares them. |
 | Validation reports `FAIL` | Inspect the reported errors and rerun the affected job with a fresh agent. |
 | Poor or missing extracted text | Inspect `snapshot/` and use a PDF with a usable text layer before starting the review. |
-| Small or inconsistent score gains | Use `retest` and inspect the underlying criticisms before treating a change as improvement. |
+| Small or inconsistent score gains | Inspect the underlying evidence; report score changes as descriptive. Use `retest` only when deliberately measuring variability. |
 
 ## Development and sharing
 

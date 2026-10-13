@@ -228,7 +228,7 @@ def write_progress(session: Path) -> str:
               if (round_dir(session, n) / "SCORES.json").exists()]
     lines = ["# Progress across rounds", "",
              "Test-retest SD per single score: " + (str(noise) if noise else
-                                                    "not measured yet - run `hx.py retest` (3 times for decisions)."),
+                                                    "not measured; score changes are descriptive. Retest only when explicitly studying score variability."),
              "Progress is decided by the heldout group when it exists, else by the feedback group.", ""]
     prev: Optional[dict] = None
     for agg in rounds:

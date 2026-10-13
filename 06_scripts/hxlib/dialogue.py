@@ -77,9 +77,10 @@ def write_feedback(rnd: dict, round_path: Path, personas: dict[str, dict]) -> li
     save_json(round_path / "FEEDBACK.json", items)
     n_dec = sum(i["decisive"] for i in items)
     lines = [f"# Feedback to act on - round {rnd['round']:02d}", "",
-             f"{len(items)} open points ({n_dec} decisive). Answer every point in `writer/RESPONSE.md`, "
-             "revise the paper, then start the next round: the same reviewers will check each answer "
-             "against the new draft.", ""]
+             f"{len(items)} open points ({n_dec} decisive). If the task is review-only, report these "
+             "findings and finish. If revision is requested, answer the points in `writer/RESPONSE.md` "
+             "and verify the changed evidence. Do not start another round without a new draft or "
+             "filled author answers; unresolved experiment requests are blockers, not a reason to repeat unchanged work.", ""]
     for i in items:
         name = personas.get(i["reviewer"], {}).get("name", i["reviewer"])
         tags = ", ".join(t for t in (i["severity"], "decisive" if i["decisive"] else "", i["category"]) if t)
@@ -206,6 +207,14 @@ def satisfy_prompt(session: dict, rnd: dict, job: dict, personas: dict[str, dict
     if job["sections"]:
         parts.append(f"## 6. Re-score these sections on the new draft: {', '.join(job['sections'])}\n\n"
                      + rubric_for(job["sections"], session))
+    if rnd.get("changes"):
+        parts.append("## Revision navigation\n\nExtracted sections changed: "
+                     + (", ".join(rnd["changes"]["changed"]) or "none")
+                     + ". " + rnd["changes"]["note"]
+                     + " Start with open points, the latest answers and changed evidence; consult older "
+                     "thread entries only when needed to resolve an issue. Check dependent claims and "
+                     "visual evidence before judging a fix. Do not reopen a resolved issue without "
+                     "new contrary evidence. Record checks you did not repeat honestly in the audit.")
     parts.append("\n".join([
         "## 7. What you write (exactly two files)",
         f"1. `{sdir / 'reply.md'}` - in character, addressed to the authors: point by point, what "
