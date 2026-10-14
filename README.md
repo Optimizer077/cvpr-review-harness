@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
+  <a href="#how-it-works">How it works</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#choose-your-venue">Venues</a> ·
-  <a href="#how-it-works">How it works</a> ·
   <a href="#choose-your-panel">Panels</a> ·
   <a href="#review-the-figures">Figures</a> ·
   <a href="#the-revision-loop">Revision loop</a> ·
@@ -27,6 +27,19 @@
 **Start here:** [Run a review with an agent](REVIEW_PAPER.md) · [Read the operating rules](AGENTS.md) · [Explore the supporting research](01_sources/README.md)
 
 > This is an independent research tool for simulated feedback. It is not affiliated with these conferences, and its scores are not acceptance predictions.
+
+## How it works
+
+<p align="center">
+  <picture>
+    <source media="(max-width: 640px)" srcset="assets/workflow-mobile.svg">
+    <img src="assets/workflow.svg" alt="One round of review and revision: (1) the Python CLI freezes the draft and writes one prompt per job; (2) each reviewer persona runs in a fresh agent; (3) the CLI validates and ranks the output into FEEDBACK.md and SCORES.md; (4) a writer agent or the author answers each point and rebuilds the PDF. In the next round each reviewer rechecks its own points: satisfied points close, partly and not satisfied points stay open, new issues are added." width="100%">
+  </picture>
+</p>
+
+The **Python CLI** (cyan) prepares snapshots and prompts, validates outputs, and builds reports. It does not launch agents or call a model API. Your **agent environment** (violet) runs each reviewer in a separate context; a writer agent or the author revises the paper.
+
+The figure shows the default `dialogue` loop. With `--loop fresh`, later rounds repeat full reviews from scratch instead of rechecking earlier points.
 
 ## Quick start
 
@@ -204,19 +217,6 @@ New panels are curated fixed sets, so `--seed` does not change them. They are no
 New sessions embed their rules, persona cards, rubrics, scales and section assignments so later rounds use the same instruments. Old sessions keep their legacy behavior. Scores from different profiles or reading modes are not directly comparable. Page budgets live in `AUTHOR_CONSTRAINTS.md`; ICLR 2027's budget requires confirmation before layout revisions.
 
 [Read the source-backed design and its limitations](01_sources/multi_venue_review_design.md). The revision loop is for preparing a draft; it does not reproduce official rebuttal submission rules.
-
-## How it works
-
-<p align="center">
-  <picture>
-    <source media="(max-width: 640px)" srcset="assets/workflow-mobile.svg">
-    <img src="assets/workflow.svg" alt="One round of review and revision: (1) the Python CLI freezes the draft and writes one prompt per job; (2) each reviewer persona runs in a fresh agent; (3) the CLI validates and ranks the output into FEEDBACK.md and SCORES.md; (4) a writer agent or the author answers each point and rebuilds the PDF. In the next round each reviewer rechecks its own points: satisfied points close, partly and not satisfied points stay open, new issues are added." width="100%">
-  </picture>
-</p>
-
-The **Python CLI** (cyan) prepares snapshots and prompts, validates outputs, and builds reports. It does not launch agents or call a model API. Your **agent environment** (violet) runs each reviewer in a separate context; a writer agent or the author revises the paper.
-
-The figure shows the default `dialogue` loop. With `--loop fresh`, later rounds repeat full reviews from scratch instead of rechecking earlier points.
 
 ## Choose your panel
 
