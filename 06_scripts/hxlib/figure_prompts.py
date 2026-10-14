@@ -198,9 +198,9 @@ def figure_initial_prompt(session: dict, rnd: dict, job: dict, personas: dict[st
               "text on the page image, not the crop. Check each strength against every figure it names."]
     parts.append("\n".join([
         "## 6. What you write (exactly three files)",
-        f"1. `{out_dir / 'review.md'}` - Summary, Strengths, Weaknesses (most important first, each naming "
-        "its figure id and defect), then a 'Figure scores' table (id | role | score | main issue) and a "
-        "'Section scores' table.",
+        f"1. `{out_dir / 'review.md'}` - Summary, Strengths, Weaknesses (a numbered list, most important "
+        "first, point n = Wn in review.json, each naming its figure id and defect), then a 'Figure scores' "
+        "table (id | role | score | main issue) and a 'Section scores' table.",
         f"2. `{out_dir / 'review.json'}` - schema below. `job_id`='{job['job_id']}', "
         f"`reviewer_id`='{job['reviewer']}', `round`={rnd['round']}, `stage`='initial', "
         f"`paper_sha256`='{rnd['paper']['main_pdf_sha256']}'.",
