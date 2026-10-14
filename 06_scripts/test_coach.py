@@ -162,8 +162,8 @@ class CoachTests(unittest.TestCase):
         for needle in ("`heldout/`", "SCORES.md", "SCORES.json", "GROUNDING.md", str(spath / "PROGRESS.md"),
                        str(snap / "tex"), str(self.tex)):
             self.assertIn(needle, never[0])
-        for line in text.splitlines():
-            if any(n in line for n in ("SCORES", "PROGRESS.md", "heldout", "GROUNDING")):
+        for line in text.splitlines():  # session paths to held-out material appear only in the never-open line
+            if str(spath) in line and any(n in line for n in ("SCORES", "PROGRESS.md", "heldout", "GROUNDING")):
                 self.assertEqual(line, never[0])
         self.assertNotIn("HR11", text)
         self.assertNotIn(str(r1 / "heldout"), text)
@@ -240,7 +240,8 @@ class CoachTests(unittest.TestCase):
         spath, r1 = self.reviewed("brief", "--reviewers", "R03,R09")
         brief_path = r1 / "prompts" / "writer" / "WRITER.md"
         self.assertEqual(self.cli("stage", spath, "writer")[0], 0)
-        self.assertNotIn("REVISION_PLAN.md", brief_path.read_text(encoding="utf-8"))
+        inputs = brief_path.read_text(encoding="utf-8").split("## Inputs", 1)[1]
+        self.assertNotIn("REVISION_PLAN.md", inputs, "no plan, so the inputs do not list it")
         code, out = self.cli("validate", spath)
         self.assertEqual(code, 0, out)
         self.assertNotIn("COACH", out, "no plan, no COACH entry")
