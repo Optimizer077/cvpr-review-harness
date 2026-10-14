@@ -125,3 +125,16 @@ old and the new crop of that figure. Sources for the numbers below: `figure_revi
    caption towards what a reviewer hoped to see.
 5. After a figure change, rebuild the PDF and compare the new crop with the old one: the targeted
    problem is gone and nothing else changed.
+
+## How to write, not only what to fix
+1. `02_protocol/writing_playbook.md` says how to write each part of a CV/ML paper, from the title
+   to the sentence; each guideline is a check with an id and a source. Apply it to every passage
+   you rewrite, and run its one-pass test (K1) on the new draft.
+2. When `round_NN/coach/REVISION_PLAN.md` exists, read it first and follow its priorities: "The
+   changes that matter most", then the full plan. Its proposed text is a draft: check every claim
+   and number against the paper's evidence and keep the paper's terms. It never overrides the hard
+   rules, AUTHOR_CONSTRAINTS.md or the DATA LOCK.
+3. RESPONSE.md still answers every open point, including points the plan merged or deferred. A
+   merged point names the shared change; a deferred point gives the plan's reason under
+   `low_value`, or another decision if you disagree. Where you depart from the plan, say why in
+   CHANGES.md.
