@@ -17,10 +17,10 @@ simulated score is not the aim.
 | Path | Content | Who writes |
 |---|---|---|
 | `01_sources/` | research behind the design: official CVPR process, real-review patterns, reviewer-behaviour literature, multi-venue design, figure research | root (read-only once done) |
-| `02_protocol/` | `venues.json` + `*_venue.md` (versioned venue profiles), `cvpr_form.md`, `scales.json`, `section_rubrics.md`, `section_criteria.json`, `taxonomy.json`; reviewer rules `reviewer_common.md`, `careful_review.md`, `careful_satisfaction.md`, `satisfaction_rules.md`; `fixcheck_rules.md`, `pairwise_rules.md`, `writer_rules.md`; figure job `figure_review_rules.md`, `figure_rubric.md`, `figure_criteria.json` | root only, with a backup first |
+| `02_protocol/` | `venues.json` + `*_venue.md` (versioned venue profiles), `cvpr_form.md`, `scales.json`, `section_rubrics.md`, `section_criteria.json`, `taxonomy.json`; reviewer rules `reviewer_common.md`, `careful_review.md`, `careful_satisfaction.md`, `satisfaction_rules.md`; `fixcheck_rules.md`, `pairwise_rules.md`, `writer_rules.md`; figure job `figure_review_rules.md`, `figure_rubric.md`, `figure_criteria.json`; coach `coach_rules.md`, `writing_playbook.md` | root only, with a backup first |
 | `03_personas/` | one card per persona (R01-R16 CVPR, I01-I04 ICLR, M01-M04 ICML, N01-N06 NeurIPS, F01 figure reader), `personas.json` registry | root only, with a backup first |
 | `04_panels/` | CVPR `panels.json` (panels) and `section_panel.json` (section -> personas); `iclr.json`, `icml.json`, `neurips.json` (panels and section map per venue) | root only |
-| `05_templates/` | `review_schema.md`, `satisfaction_schema.md`, `evidence_audit.md`, `figure_schema.md`, `AUTHOR_CONSTRAINTS.md` | root only |
+| `05_templates/` | `review_schema.md`, `satisfaction_schema.md`, `evidence_audit.md`, `figure_schema.md`, `revision_plan_schema.md`, `AUTHOR_CONSTRAINTS.md` | root only |
 | `06_scripts/` | `hx.py` CLI + `hxlib/`, `smoke_test.py`, `test_*.py`, `export_public.py` | root only; must pass the tests |
 | `assets/` | README banner, logo, venue and workflow figures | root only |
 | `sessions/<date>_<paper>[_<tag>]/` | one review campaign: `SESSION.json`, `AUTHOR_CONSTRAINTS.md`, `round_NN/`, `PROGRESS.md`, `LOG.md` | see roles |
@@ -29,7 +29,8 @@ Inside `round_NN/`: `snapshot/` (frozen PDF, text, `sections.json`, views, `page
 `figures/` crops with `_gray` and `_deuteranopia` previews and `figures.json`, and `FIGURES.md`
 with measured facts and flags), `prompts/<stage>/`, `reviews/<job>/{review.md, review.json,
 debrief.md}`, `heldout/<job>/` (same files, held-out group), `satisfaction/<job>/{reply.md,
-satisfaction.json, OPEN_ITEMS.json, AUTHOR_RESPONSE.md}`, `fixcheck/`, `pairwise/`, `writer/`,
+satisfaction.json, OPEN_ITEMS.json, AUTHOR_RESPONSE.md}`, `fixcheck/`, `pairwise/`,
+`coach/{REVISION_PLAN.md, revision_plan.json}`, `writer/`,
 `SCORES.{json,md}`, `FEEDBACK.{json,md}`, `ROUND.json`.
 
 **Persona card format.** R-cards and F01 follow the R07 structure: title, one-line summary,
@@ -48,6 +49,10 @@ Every card needs an entry in `personas.json`.
   prompt lists, and writes only its own `reviews/<job>/`, `heldout/<job>/` or
   `satisfaction/<job>/`.
 - **Checker and pairwise judge** (fresh agents): write `fixcheck/` or `pairwise/`.
+- **Coach** (one fresh agent, optional; a harness instrument, not a persona): reads its prompt,
+  `FEEDBACK.md/json`, the feedback reviewers' folders and replies, the snapshot and
+  `AUTHOR_CONSTRAINTS.md`; writes only `coach/`. It never opens held-out folders, SCORES,
+  PROGRESS, GROUNDING or LaTeX sources: it proposes text, the writer applies it.
 - **Writer** (a separate agent, or the user's paper agent): reads the writer brief, then edits the
   paper in its own project and writes `writer/`. It never edits anything else in the harness.
 
@@ -78,7 +83,11 @@ Every card needs an entry in `personas.json`.
    to run until that round validates, and pre-fills `writer/RESPONSE.md` (one block per point).
    The writer brief points to `FEEDBACK.md`, never to `SCORES.md` or `PROGRESS.md`, which can
    hold held-out results. The writer (or the user) answers every block, revises the paper and
-   rebuilds the PDF.
+   rebuilds the PDF. Optional, before the writer: `hx.py stage <session> coach` (same round
+   default and validation gate) prompts one fresh coach agent to merge the open points into
+   `coach/REVISION_PLAN.md` (shareable, constructive) and `coach/revision_plan.json`, which covers
+   every open point exactly once; `validate` checks it as the job COACH. The writer brief then
+   lists the plan first; RESPONSE.md still answers every point.
 6. `hx.py round <session> --paper <new main.pdf> ...` starts the next round; it refuses to run
    until the previous round validates. Default `--loop dialogue`: each feedback reviewer gets
    `prompts/satisfy/<id>.md`, a fresh instance of the same persona with its own thread, and rules
@@ -106,8 +115,9 @@ Every card needs an entry in `personas.json`.
    own evidence check. Figure fixes change presentation, not the data shown (`writer_rules.md`,
    DATA LOCK).
 5. If a held-out group is configured, its output is for the orchestrator's evaluation. Keep it
-   out of the writer's inputs. Prefer a different model for an explicitly requested blind or
-   held-out comparison. Do not add more agents solely to chase a higher simulated score.
+   out of the writer's and the coach's inputs. Prefer a different model for an explicitly
+   requested blind or held-out comparison. Do not add more agents solely to chase a higher
+   simulated score.
 6. Verify a revision against the concrete issues and the paper's own evidence. Fix regressions
    that matter; report unresolved scientific tradeoffs. Optional controlled comparisons may
    measure score variability, but a routine edit does not require a statistically significant
@@ -138,9 +148,9 @@ Every card needs an entry in `personas.json`.
 - Tests: `python3 06_scripts/hx.py personas`, `smoke_test.py`, `test_venues.py`,
   `test_efficiency.py`, `test_figures.py`, `test_figure_job.py`, `test_figure_locate.py`,
   `test_loop_regressions.py`, `test_validation_regressions.py`, `test_grounding.py`,
-  `test_anonymity.py`, `test_prompts.py` and `test_integration.py` (all in `06_scripts/`; run each
-  as `python3 06_scripts/<name>.py`) must pass after any change to scripts, personas, panels or
-  protocol.
+  `test_anonymity.py`, `test_prompts.py`, `test_integration.py` and `test_coach.py` (all in
+  `06_scripts/`; run each as `python3 06_scripts/<name>.py`) must pass after any change to
+  scripts, personas, panels or protocol.
 - Public copy: `python3 06_scripts/export_public.py` writes a `release/` folder and zip (no
   sessions, no build notes, no raw downloads). It fails if exported text matches a generic
   identity pattern (home-directory paths, e-mail addresses) or a private pattern from

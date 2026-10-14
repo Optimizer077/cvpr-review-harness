@@ -10,11 +10,13 @@
     hx.py retest SESSION [--of N]                    same draft again, fresh reviewers (noise floor)
     hx.py stage SESSION {fixcheck,pairwise,writer} [--round N]   writer loop helpers; default: the last
                                                      review round (retest rounds are refused)
+    hx.py stage SESSION coach [--round N]            revision plan from the feedback reviews (hxlib/coach.py)
     hx.py validate SESSION [--round N]
     hx.py aggregate SESSION [--round N | --all]      SCORES, FEEDBACK.md, PROGRESS.md (default: latest round)
     hx.py status SESSION [--round N]                 jobs, files present, launch lines for the orchestrator
 
-`round` and `stage writer` refuse to build on a review round with pending or invalid jobs.
+`round`, `stage writer` and `stage coach` refuse to build on a review round with pending or invalid
+jobs; `validate` also checks `round_NN/coach/revision_plan.json` (job COACH) when it exists.
 `new` and `round` refuse a PDF that shows author or publication information (hxlib/anonymity.py)
 unless `--allow-identified` is given; `validate` prints advisory warnings (hxlib/review_warnings.py).
 """
@@ -43,7 +45,7 @@ from hxlib.figure_prompts import figure_satisfy_prompt  # noqa: E402
 from hxlib.venues import profile_for, freeze  # noqa: E402
 from hxlib.paper import snapshot_paper  # noqa: E402
 from hxlib.prompts import write_initial_prompts  # noqa: E402
-from hxlib import dialogue  # noqa: E402
+from hxlib import coach, dialogue  # noqa: E402
 from hxlib import prompts_stages as stages  # noqa: E402
 from hxlib.validate import validate_round  # noqa: E402
 from hxlib.review_warnings import round_warnings, validation_report  # noqa: E402
@@ -267,8 +269,7 @@ def cmd_retest(args: argparse.Namespace) -> None:
 def _writer_brief(session: dict, rnd: dict, rpath: Path, spath: Path) -> str:
     """Answer sheet (and FEEDBACK if missing) for the writer, then the brief text."""
     (rpath / "writer").mkdir(exist_ok=True)
-    if not (rpath / "FEEDBACK.json").exists():
-        dialogue.write_feedback(rnd, rpath, session.get("instruments", {}).get("personas") or load_personas())
+    coach.ensure_feedback(session, rnd, rpath)
     print(f"answer sheet: {dialogue.write_response_scaffold(rpath)}")
     return stages.writer_prompt(session, rnd, rpath, spath)
 
@@ -277,10 +278,11 @@ def cmd_stage(args: argparse.Namespace) -> int:
     spath = resolve_session(args.session)
     session = load_json(spath / "SESSION.json")
     number, rpath, rnd = stage_round(spath, args.round)
-    if args.stage == "writer":
-        if not round_is_valid("stage writer", spath, number, rnd, rpath):
+    if args.stage in ("writer", "coach"):
+        if not round_is_valid(f"stage {args.stage}", spath, number, rnd, rpath):
             return 1
-        text = _writer_brief(session, rnd, rpath, spath)
+        brief = _writer_brief if args.stage == "writer" else coach.coach_brief
+        text = brief(session, rnd, rpath, spath)
     elif args.stage == "fixcheck":
         text = stages.fixcheck_prompt(session, rnd, rpath)
     else:
@@ -297,6 +299,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
     number, rpath, rnd = round_arg(spath, args.round)
     results = validate_round(rnd, rpath)
     warnings = round_warnings(rnd, rpath, [jid for jid, errs in results.items() if not errs])
+    results, warnings = coach.with_coach_check(rnd, rpath, results, warnings)
     print(validation_report(number, results, warnings))
     return 1 if any(results.values()) else 0
 
@@ -383,7 +386,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     q.set_defaults(fn=cmd_retest)
     q = sub.add_parser("stage")
     q.add_argument("session")
-    q.add_argument("stage", choices=("fixcheck", "pairwise", "writer"))
+    q.add_argument("stage", choices=("fixcheck", "pairwise", "writer", "coach"))
     q.add_argument("--round", type=int, help="review round to work on (default: the last non-retest round)")
     q.set_defaults(fn=cmd_stage)
     for name, fn in (("validate", cmd_validate), ("aggregate", cmd_aggregate), ("status", cmd_status)):

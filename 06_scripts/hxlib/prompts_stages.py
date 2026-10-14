@@ -4,7 +4,8 @@ fixcheck    - a neutral checker marks each point the writer was asked to fix as 
               the new draft
 pairwise    - a blind judge compares changed sections and changed figure crops between two drafts
               (order randomized)
-writer      - the brief handed to the writer agent after a round
+writer      - the brief handed to the writer agent after a round; when the coach wrote
+              `coach/revision_plan.json`, REVISION_PLAN.md is its first input
 
 fixcheck and pairwise compare a round with the last earlier review round, never a retest: a retest
 repeats an older draft, and in the dialogue loop the points to check are the open points that the
@@ -18,6 +19,7 @@ import re
 import shutil
 from pathlib import Path
 
+from .coach import plan_paths
 from .common import PROTOCOL_DIR, UNSCORED_SECTION, load_json, round_dir, save_json
 from .dialogue import last_dialogue_round, round_items
 from .figure_render import load_inventory, measured_facts
@@ -143,13 +145,20 @@ def pairwise_prompt(session: dict, rnd: dict, round_path: Path, seed: int) -> st
 
 
 def writer_prompt(session: dict, rnd: dict, round_path: Path, session_path: Path) -> str:
-    """Brief for the writer agent (or the user) after a round has been reviewed and aggregated."""
+    """Brief for the writer agent (or the user) after a round has been reviewed and aggregated.
+
+    When the coach's `coach/revision_plan.json` exists, its REVISION_PLAN.md is the first input.
+    """
+    plan_md, plan_json = plan_paths(round_path)
+    plan = [f"- First, the revision plan: `{plan_md}` - follow its priorities; RESPONSE.md still answers "
+            "every point."] if plan_json.exists() else []
     lines = [
         f"# Writer brief - {session['name']}, after round {rnd['round']:02d}",
         instrument(session, PROTOCOL_DIR / "writer_rules.md"),
         f"Venue: {session['venue']}; contribution type: {session.get('contribution_type', 'general')}. "
         "Use the submission-stage page budget in AUTHOR_CONSTRAINTS.md. This is author preparation, not an official rebuttal submission.",
         "## Inputs",
+        *plan,
         f"- The to-do list: `{round_path / 'FEEDBACK.md'}` - every open point with the reviewer's "
         "suggested fix and what would satisfy them, most important first, then the section scores "
         "(and the figure scores when the figure job ran). It carries every score you need.",
