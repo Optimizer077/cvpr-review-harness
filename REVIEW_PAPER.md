@@ -41,7 +41,12 @@ Default VENUE to cvpr when omitted. Pass the selected optional settings through 
    line, the warnings `validate` printed, the lowest rows of the "Figure scores
    (FIG job)" table when FIG ran, and the path to the debriefs. Do not summarize the reviews more
    kindly than they are.
-   **For a review-only task, finish here.** Do not automatically revise, add panels or run retests.
+   **For a review-only task, finish here** (step 7 only if the user asks for a revision plan). Do
+   not automatically revise, add panels or run retests.
+7. Optional revision plan: `python3 06_scripts/hx.py stage <session> coach`, then launch the
+   printed `[COACH]` line with one fresh agent, exactly as in step 2. Run `validate` again: `COACH`
+   must print OK. Give the user `round_NN/coach/REVISION_PLAN.md`, a prioritized, constructive plan
+   they can share; the coach never sees held-out reviews or scores.
 
 ## Where the scores are
 
@@ -52,6 +57,7 @@ Default VENUE to cvpr when omitted. Pass the selected optional settings through 
 | `.../round_01/reviews/<id>/review.md` | each review as a reviewer would submit it |
 | `.../round_01/reviews/<id>/debrief.md` | what caused each reaction and the smallest fix (for the writer) |
 | `.../round_01/FEEDBACK.md` | **the to-do list**: every point with location, suggested fix and what would satisfy the reviewer; section scores lowest first |
+| `.../round_01/coach/REVISION_PLAN.md` | optional (step 7): the open points merged into one prioritized plan with proposed text |
 | `.../round_01/snapshot/FIGURES.md` | every figure and table with its crop, gray and deuteranopia previews, smallest text in pt, raster ppi, first mention and flags |
 | `sessions/<date>_<name>/PROGRESS.md` | scores across rounds, when the paper is revised and re-reviewed |
 
@@ -85,8 +91,8 @@ Make the requested changes and verify them. Do not turn a single revision reques
 1. `python3 06_scripts/hx.py stage <session> writer` creates `round_NN/writer/RESPONSE.md` for the
    latest non-retest round, one block per point; it refuses to run until that round validates.
    The writer brief points to `FEEDBACK.md`, never to `SCORES.md` or `PROGRESS.md` (they can hold
-   held-out results). Answer each point, either by fixing the paper or by arguing with a pointer
-   to the paper, and rebuild the PDF.
+   held-out results); when a revision plan exists it is listed first. Answer each point, either
+   by fixing the paper or by arguing with a pointer to the paper, and rebuild the PDF.
 2. `python3 06_scripts/hx.py round <session> --paper <new main.pdf> --supp <new supp.pdf>` (it
    refuses to run until the previous round validates), then launch every printed prompt
    (`satisfy`, plus `initial` for held-out reviewers or `--loop fresh`). The same reviewers rule

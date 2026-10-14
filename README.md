@@ -15,6 +15,7 @@
   <a href="#choose-your-venue">Venues</a> ·
   <a href="#choose-your-panel">Panels</a> ·
   <a href="#review-the-figures">Figures</a> ·
+  <a href="#turn-reviews-into-a-revision-plan">Revision plan</a> ·
   <a href="#the-revision-loop">Revision loop</a> ·
   <a href="#reading-the-results">Results</a> ·
   <a href="#troubleshooting">Troubleshooting</a>
@@ -289,6 +290,21 @@ This adds one job, `FIG`, run by persona F01, "The Figure Reader", with any venu
 
 Rules and anchors: [figure_review_rules.md](02_protocol/figure_review_rules.md), [figure_rubric.md](02_protocol/figure_rubric.md).
 
+## Turn reviews into a revision plan
+
+The reviews are deliberately realistic: terse, sometimes harsh, one list per reviewer. After `aggregate`, an optional coach agent merges them into one prioritized, constructive plan:
+
+```sh
+python 06_scripts/hx.py stage "<session>" coach
+```
+
+Give the printed `[COACH]` line to one fresh agent. Like `stage writer`, the command works on the latest non-retest round and refuses to run until that round validates. The coach writes two files in `round_NN/coach/`:
+
+- **`REVISION_PLAN.md`**: where the paper stands, strengths to keep, the 3–5 changes that matter most with proposed text, the full plan by section, experiments to consider (and what to write if you cannot run them), where reviewers disagree, and points not worth acting on.
+- **`revision_plan.json`**: the same plan for tools. `validate` checks it as the job `COACH`: every open point is planned, requested as an experiment or deferred, exactly once.
+
+The plan has no scores and no reviewer voice, so you can share it with co-authors. The coach reads `FEEDBACK.md`, the feedback reviewers' files, the snapshot and `AUTHOR_CONSTRAINTS.md`. It never opens held-out reviews, `SCORES.md`, `PROGRESS.md` or the LaTeX sources, and it proposes text without inventing results. When a plan exists, the writer brief lists it first.
+
 ## The revision loop
 
 **Review → prioritize → revise → check the answers → review again.**
@@ -299,7 +315,7 @@ Rules and anchors: [figure_review_rules.md](02_protocol/figure_review_rules.md),
    python 06_scripts/hx.py stage "<session>" writer
    ```
 
-   It works on the latest non-retest round and refuses to run until that round validates. The brief points to `FEEDBACK.md` and the feedback reviewers' files, never to `SCORES.md` or `PROGRESS.md`, which can contain held-out results.
+   It works on the latest non-retest round and refuses to run until that round validates. The brief points to `FEEDBACK.md` and the feedback reviewers' files, never to `SCORES.md` or `PROGRESS.md`, which can contain held-out results. If you ran `stage coach`, the brief lists `REVISION_PLAN.md` first; `RESPONSE.md` still answers every point.
 
 2. **Address every open point.** Run the printed writer prompt with a writer agent, or follow it yourself. Fill in `writer/RESPONSE.md`, edit the paper sources, rebuild the PDF, and record changes. Each answer should identify the evidence or exact change that resolves the concern. The `stage` command only prepares the brief and answer sheet.
 
@@ -377,6 +393,7 @@ The headline uses held-out reviewers when present; otherwise it uses feedback re
 | `round_NN/reviews/<job>/` | Initial review, structured scores, and an explanatory debrief. |
 | `round_NN/heldout/<job>/` | Held-out reviews; kept out of `FEEDBACK.md` and the writer brief. |
 | `round_NN/satisfaction/<job>/` | Follow-up replies and point-by-point satisfaction judgments. |
+| `round_NN/coach/` | Optional revision plan: `REVISION_PLAN.md` (shareable) and `revision_plan.json`. |
 | `round_NN/writer/` | Answer sheet, change log, and experiment requests. |
 | `round_NN/snapshot/` | Frozen PDFs, extracted text, and section views for that round. |
 | `round_NN/snapshot/FIGURES.md` · `figures/` · `pages/` | Figure inventory with measured facts, figure crops with gray and deuteranopia previews, and page images. |
@@ -403,6 +420,7 @@ sessions/         Local paper snapshots and review campaigns
 | `status <session>` | Inspect jobs, output files, and launch instructions. |
 | `validate <session>` | Check review outputs against the expected schema; print advisory warnings. |
 | `aggregate <session> [--round N | --all]` | Generate scores, feedback, grounding, and progress reports. |
+| `stage <session> coach` | Prepare the coach prompt: one prioritized revision plan from the feedback reviews. |
 | `stage <session> writer` | Prepare the writer brief and response scaffold. |
 | `round <session> --paper <pdf>` | Create the next round from a revised draft. |
 | `retest <session>` | Prepare fresh reviews of an unchanged snapshot. |
@@ -446,6 +464,7 @@ python 06_scripts/test_grounding.py
 python 06_scripts/test_anonymity.py
 python 06_scripts/test_prompts.py
 python 06_scripts/test_integration.py
+python 06_scripts/test_coach.py
 ```
 
 The tests use synthetic PDFs and simulated review records; they make no model calls.
