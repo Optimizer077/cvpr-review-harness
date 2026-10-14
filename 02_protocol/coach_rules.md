@@ -32,7 +32,8 @@ prompt). A tag in parentheses names the evidence behind a rule; the list is at t
    STEM researchers had received one (Silbiger & Stubler 2019).
 6. **Constructive, specific, kind, plain.** No persona voice, sarcasm or verdicts; quote a reviewer
    only for a fact (a location, a number, the words they reacted to). No scores, ratings,
-   acceptance forecasts or "this will raise R03's score".
+   acceptance forecasts or "this will raise R03's score". This includes section scores, figure
+   scores and phrases such as "rates Fig. N lowest".
 7. **Specific or nothing.** Every item names a location (page, section, paragraph, figure, table,
    equation) and quotes the words or number at issue. Test each item: could it be pasted into
    another paper's plan unchanged? If so, rewrite or delete it. Researchers find LLM feedback
@@ -69,7 +70,11 @@ prompt). A tag in parentheses names the evidence behind a rule; the list is at t
       raise them as often (reject-side vs accept-side: clarity 43% vs 56%, baselines 43% vs 41%,
       ablations 32% vs 35%), so they rarely decide a rating alone: fix the cheap ones, batch the
       rest.
-    - Within a tier: writing-fixable before experiments, then smaller effort first.
+    - Within a tier: the decisive point and its writing fallback are always priorities 1-2; then
+      points raised by two or more reviewers; then writing before experiments, smaller effort
+      first. A second-tier point raised by two reviewers outranks a single-reviewer point of a
+      lower tier. An item whose numbers other items reuse (a figure-text mismatch) says in
+      `action` which items wait for it.
 13. **Use what moved real reviewers** (`real_review_patterns.md`, sec. 6): differentiating from the
     one prior work a novelty skeptic names and rewriting the contribution list is the only observed
     way a novelty reject flipped; narrowing a claim (retitling, conceding a scope error) appears
@@ -81,7 +86,12 @@ prompt). A tag in parentheses names the evidence behind a rule; the list is at t
 ## Write each item
 14. **`problem`**: what a reader misunderstands or doubts, specific to this paper, with the paper's
     words quoted. **`why_it_matters`**: which reviewer types react and how it costs them, from the
-    evidence above. **`action`**: the concrete change, one step per sentence.
+    evidence above. **`action`**: the concrete change, one step per sentence. Represent reviewers
+    faithfully: when a writing change is a fallback for a run, name which points' would_change_mind
+    accept it and which do not ("accepted by R08:W1, R09:W1; R03:W1 accepts only the new table");
+    never write "every reviewer accepts" unless each named point says so. In "Where the paper
+    stands", give each reviewer's main concerns as that reviewer numbers them. Relay a reviewer's
+    fact with its own tag ("about", "read off", "from memory") and the curve or method it refers to.
 15. **`proposed_text`** for every item that changes a sentence (always for `writing`; also the
     pointer sentence for `existing_evidence`, the caption for `figure`, the limitation sentence
     for `not_fixable`). Leave it '' for `new_experiment` items and for figure regenerations that
@@ -91,8 +101,20 @@ prompt). A tag in parentheses names the evidence behind a rule; the list is at t
     - add no new number, result or citation: reuse numbers printed in the paper (give where) or a
       placeholder `[number from Tab. N]`; a reviewer-named citation is marked `[verify]`;
     - show only the changed sentences: `Old: "..." New: "..."` or `Add after "...": "..."`;
-    - keep the page budget in `AUTHOR_CONSTRAINTS.md`: prefer replacing to adding, and for any
-      addition name what to cut or move to the supplement;
+    - assert no fact the paper does not state about the protocol (iterations, stopping rule,
+      tuning, seeds, parameter matching, what a metric is computed against) or about prior work;
+      write it as a bracketed choice for the authors: "[the same / a different] number of
+      iterations", "PSNR against [the clean / the noisy] image". A description of cited work
+      ends with "[check against [N]]";
+    - carry a reviewer's plot reading into proposed text only as "[verify: <reading>]";
+    - name every method as the paper does (a "multiplicative filter network" is not an
+      "activation") and keep the paper's spelling variety;
+    - never contradict another item's proposed text; a sentence that uses a number another item
+      questions ends with "[after Pn]";
+    - keep the page budget with a ledger, not a promise: per item, count New and Add words minus
+      Old words; convert at about 10 words per column line; list each saving with its lines and
+      use each saving once. Put the ledger as the last paragraph of "Where the paper stands". If
+      additions exceed savings, name the lowest-priority additions that move to the supplement;
     - contain no text addressed to reviewers (`writer_rules.md`, hard rule 3).
 16. **`verification`**: a check anyone can run on the next PDF ("the abstract's last sentence names
     the baseline and the margin printed in Tab. 2"), close to the reviewer's `would_change_mind`.
@@ -125,7 +147,9 @@ prompt). A tag in parentheses names the evidence behind a rule; the list is at t
 23. **Resolve conflicts explicitly** in `conflicts` (ids may repeat there): satisfy both when
     possible (detail in the supplement with a one-line pointer); otherwise favour the point tied to
     a decisive reason or to more reviewers, and say why. Never plan to cut content another reviewer
-    named as a strength.
+    named as a strength. List a conflict only when acting on one point works against another point
+    or a stated strength; a strength no point asks to cut is not a conflict, and the page plan
+    belongs in the ledger (rule 15), not in `conflicts`.
 24. **Defer lazy, generic or out-of-scope points** in `deferred`, with a specific, polite reason:
     requests that fit any paper; lazy heuristics (LazyReview, Purkayastha et al. 2025) such as
     "not novel" with no named prior work, "does not beat the state of the art", "could also run
@@ -156,7 +180,19 @@ prompt). A tag in parentheses names the evidence behind a rule; the list is at t
     prompt wins.
 30. Plain English, short paragraphs, source ids in parentheses so the writer can map each item to
     `RESPONSE.md`. `REVISION_PLAN.md` and `revision_plan.json` hold the same items in the same
-    priority order.
+    priority order. Write `REVISION_PLAN.md` for a co-author who has never seen the harness: no
+    file names, rule names ("DATA LOCK"), playbook ids, field values (`existing_evidence`) or
+    "[lazy]"; say "this changes plotted data, so agree it with all co-authors first" and "not
+    checkable from the paper". Playbook ids go in `revision_plan.json` only.
+31. **Length.** `REVISION_PLAN.md` targets 3,000-3,500 words (proposed text included) and never
+    exceeds 4,000. "Where the paper stands" at most 150 words (plus the page ledger); "Keep these
+    strengths" at most 120 (one line each); each priority 1-5 item at most 250 words of prose
+    (problem 70, why it matters 35, action 110, check 35) plus at most 300 words of proposed text
+    (split an item that needs more); "Full plan by section" is the table plus at most 80 words per
+    later item, whose proposed text stays in `revision_plan.json`; "Experiments to consider",
+    "Where reviewers disagree" and "Points not worth acting on" at most 120, 120 and 80 words.
+    State each fact once and refer back ("margins: see P1"); cite real-review percentages once per
+    tier.
 
 ## Sources
 - Hattie & Timperley 2007, The Power of Feedback: https://doi.org/10.3102/003465430298487

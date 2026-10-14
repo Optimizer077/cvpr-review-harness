@@ -13,7 +13,7 @@
     "section": "<a section key or 'global'>",
     "location": "p.2, Sec. 1, para. 3",
     "problem": "<what readers misunderstand or doubt, specific to this paper>",
-    "why_it_matters": "<which reviewer types react and how it moves their rating>",
+    "why_it_matters": "<which reviewer types react and what they doubt as a result; no scores or ratings>",
     "action": "<the concrete change>",
     "proposed_text": "<replacement or new text for writing/figure items; '' otherwise>",
     "verification": "<how the next round or the writer can confirm it is fixed>",

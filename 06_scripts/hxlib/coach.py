@@ -35,6 +35,9 @@ COACH_JOB = "COACH"
 ITEM_TYPES = ("writing", "existing_evidence", "new_experiment", "figure", "not_fixable")
 EFFORTS = ("small", "medium", "large")
 MAX_ITEMS = 12  # a plan, not a list: the prompt's target; more items is a validation warning
+MAX_PLAN_WORDS = 4000  # REVISION_PLAN.md length cap (coach_rules.md rule 31); more is a warning
+NET_WORDS_WARN = 150  # net words the proposed text may add before the page ledger must cover them
+_QUOTED = re.compile(r'(Old|New[^:]*|[Aa]dd[^:]*): "([^"]*)"')
 PLAN_HEADINGS = ("Where the paper stands", "Keep these strengths", "The changes that matter most",
                  "Full plan by section", "Experiments to consider", "Where reviewers disagree",
                  "Points not worth acting on")
@@ -215,7 +218,10 @@ def coach_prompt(session: dict, rnd: dict, round_path: Path, session_path: Path)
             "important get priorities 1-5.",
             f"- Cover each of the {len(points)} open points exactly once, in `items[].from`, "
             "`experiment_requests[].from` or `deferred[].from`.",
-            "- Every writing item carries `proposed_text`: the replacement or new text, ready to paste.",
+            "- Every writing item carries `proposed_text`: the replacement or new text, ready to paste; "
+            "protocol facts the paper does not state stay bracketed choices for the authors.",
+            f"- Length: REVISION_PLAN.md 3,000-3,500 words, at most {MAX_PLAN_WORDS}; 'Where the paper "
+            "stands' at most 150 words plus the page ledger (rules 15 and 31).",
             "- Tone: constructive, specific, plain. No persona voice, no harshness, no scores."]),
         "## 1. Coach rules\n\n" + coach_text(session, PROTOCOL_DIR / "coach_rules.md").strip(),
         "## 2. Writing playbook (how the proposed text should read)\n\n"
@@ -382,10 +388,20 @@ def check_revision_plan(rnd: dict, round_path: Path) -> list[str]:
 
 
 def plan_warnings(round_path: Path) -> list[str]:
-    """Advisory findings on a valid plan: more items than the prompt's target."""
-    items = load_json(plan_paths(round_path)[1]).get("items", [])
-    return [f"revision_plan.json has {len(items)} items; the coach targets at most {MAX_ITEMS}"] \
-        if len(items) > MAX_ITEMS else []
+    """Advisory findings on a valid plan: item count, plan length and net words added to the paper."""
+    md_path, json_path = plan_paths(round_path)
+    items = load_json(json_path).get("items", [])
+    warns: list[str] = []
+    if len(items) > MAX_ITEMS:
+        warns.append(f"revision_plan.json has {len(items)} items; the coach targets at most {MAX_ITEMS}")
+    words = len(md_path.read_text(encoding="utf-8-sig").split()) if md_path.exists() else 0
+    if words > MAX_PLAN_WORDS:
+        warns.append(f"REVISION_PLAN.md has {words} words; the coach targets at most {MAX_PLAN_WORDS}")
+    net = sum((-1 if kind == "Old" else 1) * len(text.split())
+              for item in items for kind, text in _QUOTED.findall(str(item.get("proposed_text", ""))))
+    if net > NET_WORDS_WARN:
+        warns.append(f"proposed text adds about {net} words net; the plan must name savings for them")
+    return warns
 
 
 def with_coach_check(rnd: dict, round_path: Path, results: dict[str, list[str]],
